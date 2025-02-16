@@ -6,7 +6,7 @@
   "license": "MIT",
   "main": "dist/index.js",
   "bin": {
-    "frourio": "bin/index.js"
+    "frourio-next": "bin/index.js"
   },
   "scripts": {
     "dev": "npm run build && ts-node projects/dev.ts",

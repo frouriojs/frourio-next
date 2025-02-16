@@ -18,7 +18,7 @@
 
 ## Features
 
-- **Type safety**. Automatically generate type definition files for manipulating internal links in Next.js.
+- **Type safety**. Automatically generate type definition files for Next.js Route Handlers.
 - **Zero configuration**. No configuration required can be used immediately after installation.
 - **Zero runtime**. Lightweight because runtime code is not included in the bundle.
 
@@ -33,6 +33,7 @@
 ## Install
 
 ```sh
+$ npm install next zod
 $ npm install @frourio/next --save-dev
 ```
 
@@ -54,7 +55,7 @@ $ npm install @frourio/next --save-dev
       <td></td>
       <td>
         Enable watch mode.<br />
-        Regenerate <code>$path.ts</code>.
+        Regenerate <code>frourio.server.ts</code>.
       </td>
     </tr>
   </tbody>
@@ -69,58 +70,54 @@ $ npm install @frourio/next --save-dev
   "scripts": {
     "dev": "run-p dev:*",
     "dev:next": "next dev",
-    "dev:frourio": "frourio --watch",
-    "build": "frourio && next build"
+    "dev:frourio": "frourio-next --watch",
+    "build": "frourio-next && next build"
   }
 }
 ```
 
 ## Usage
 
+`app/<Route Handlers Dir>/frourio.ts` or `src/app/<Route Handlers Dir>/frourio.ts`
+
+```ts
+import type { FrourioSpec } from '@frourio/next';
+import { z } from 'zod';
+
+export const frourioSpec = {
+  get: {
+    headers: z.object({ cookie: z.string().optional() }),
+    query: z.object({ aa: z.string() }),
+    res: {
+      200: { body: z.string() },
+      201: { body: z.array(z.number()), headers: z.object({ 'Set-Cookie': z.string() }) },
+      404: { body: z.undefined() },
+    },
+  },
+  post: {
+    body: z.object({ bb: z.number() }),
+    res: {
+      '200': { body: z.object({ cc: z.number() }) },
+    },
+  },
+} satisfies FrourioSpec;
 ```
-pages/index.tsx
-pages/post/create.tsx
-pages/post/[pid].tsx
-pages/post/[...slug].tsx
 
-lib/$path.ts or utils/$path.ts // Generated automatically by pathpida
+```sh
+$ npm run dev # Automatically generate <Route Handlers Dir>/frourio.server.ts
 ```
 
-or
+`app/<Route Handlers Dir>/route.ts` or `src/app/<Route Handlers Dir>/route.ts`
 
-```
-src/pages/index.tsx
-src/pages/post/create.tsx
-src/pages/post/[pid].tsx
-src/pages/post/[...slug].tsx
+```ts
+import { createRoute } from './frourio.server';
 
-src/lib/$path.ts or src/utils/$path.ts // Generated automatically by pathpida
-```
-
-`pages/index.tsx`
-
-```tsx
-import Link from 'next/link';
-import { pagesPath } from '../lib/$path';
-
-console.log(pagesPath.post.create.$url()); // { pathname: '/post/create' }
-console.log(pagesPath.post._pid(1).$url()); // { pathname: '/post/[pid]', query: { pid: 1 }}
-console.log(pagesPath.post._slug(['a', 'b', 'c']).$url()); // { pathname: '/post//[...slug]', query: { slug: ['a', 'b', 'c'] }}
-
-export default () => {
-  const onClick = useCallback(() => {
-    router.push(pagesPath.post._pid(1).$url());
-  }, []);
-
-  return (
-    <>
-      <Link href={pagesPath.post._slug(['a', 'b', 'c']).$url()} />
-      <div onClick={onClick} />
-    </>
-  );
-};
+export const { GET, POST } = createRoute({
+  get: async () => ({ status: 200, body: 'ok' }),
+  post: async ({ body }) => ({ status: 200, body: { cc: body.bb } }),
+});
 ```
 
 ## License
 
-pathpida is licensed under a [MIT License](https://github.com/aspida/pathpida/blob/master/LICENSE).
+NextFrourio is licensed under a [MIT License](https://github.com/frouriojs/next-frourio/blob/main/LICENSE).

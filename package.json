@@ -35,6 +35,7 @@
     "minimist": "^1.2.8"
   },
   "devDependencies": {
+    "@frourio/next": "file:./dist",
     "@types/eslint-config-prettier": "^6.11.3",
     "@types/minimist": "^1.2.2",
     "@types/react": "^18.3.18",

@@ -1,42 +1,18 @@
 import fs from 'fs';
 import path from 'path';
-import { parseQueryFromTS } from './parseQueryFromTS';
 import { replaceWithUnderscore } from './replaceWithUnderscore';
 
 type Slugs = string[];
 
-export const createMethods = (
-  indent: string,
-  importName: string | undefined,
-  slugs: Slugs,
-  pathname: string,
-) =>
-  `${indent}  $url: (url${importName?.startsWith('Query') ? '' : '?'}: { ${
-    importName ? `query${importName.startsWith('Optional') ? '?' : ''}: ${importName}, ` : ''
-  }hash?: string }) => ({ pathname: '${pathname}' as const${
-    slugs.length
-      ? `, query: { ${slugs.join(', ')}${
-          importName ? `, ...url${importName.startsWith('Query') ? '' : '?'}.query` : ''
-        } }`
-      : importName
-        ? `, query: url${importName.startsWith('Query') ? '' : '?'}.query`
-        : ''
-  }, hash: url${importName?.startsWith('Query') ? '' : '?'}.hash, path: \`${pathname
+export const createMethods = (indent: string, slugs: Slugs, pathname: string) =>
+  `${indent}  $url: (url?: { hash?: string }) => ({ pathname: '${pathname}' as const${
+    slugs.length ? `, query: { ${slugs.join(', ')} }` : ''
+  }, hash: url?.hash, path: \`${pathname
     .replace(/\[\[?\.\.\.(.*?)\]\]?/g, `\${$1?.join('/')}`)
     .replace(/\[(.*?)\]/g, `\${$1}`)}\${buildSuffix(url)}\` })`;
 
-export const parseAppDir = (input: string, output: string): { imports: string[]; text: string } => {
+export const parseAppDir = (input: string): string => {
   const pageFileNames = ['page.tsx', 'page.jsx', 'page.js'];
-  const imports: string[] = [];
-  const getImportName = (file: string) => {
-    const result = parseQueryFromTS(output, file);
-
-    if (result) {
-      imports.push(result.importString);
-      return result.importName;
-    }
-  };
-
   const createPathObjString = (
     targetDir: string,
     parentIndent: string,
@@ -61,13 +37,7 @@ export const parseAppDir = (input: string, output: string): { imports: string[];
             url,
             newSlugs,
             '<% props %>',
-            indexFile &&
-              createMethods(
-                indent.slice(2),
-                getImportName(path.posix.join(target, indexFile)),
-                newSlugs,
-                url,
-              ),
+            indexFile && createMethods(indent.slice(2), newSlugs, url),
           );
         }
 
@@ -92,13 +62,7 @@ export const parseAppDir = (input: string, output: string): { imports: string[];
           newUrl,
           newSlugs,
           valFn.replace('<% next %>', '<% props %>'),
-          indexFile &&
-            createMethods(
-              indent,
-              getImportName(path.posix.join(target, indexFile)),
-              newSlugs,
-              newUrl,
-            ),
+          indexFile && createMethods(indent, newSlugs, newUrl),
         );
       })
       .filter(Boolean);
@@ -136,15 +100,8 @@ export const parseAppDir = (input: string, output: string): { imports: string[];
   let rootMethods;
 
   if (rootIndexFile) {
-    rootMethods = createMethods(
-      rootIndent,
-      getImportName(path.posix.join(input, rootIndexFile)),
-      [],
-      '/',
-    );
+    rootMethods = createMethods(rootIndent, [], '/');
   }
 
-  const text = createPathObjString(input, rootIndent, '', [], '<% props %>', rootMethods);
-  // console.log({ input, rootIndent, rootMethods, text })
-  return { imports, text };
+  return createPathObjString(input, rootIndent, '', [], '<% props %>', rootMethods);
 };

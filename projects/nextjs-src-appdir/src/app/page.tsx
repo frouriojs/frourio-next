@@ -6,8 +6,6 @@ import { apiClient } from '~/utils/apiClient'
 import { Task } from '$/types'
 import UserBanner from '~/components/UserBanner'
 
-export type Query = { hoge: string }
-
 const Home = () => {
   const { data: tasks, error, revalidate } = useAspidaSWR(apiClient.tasks)
   const [label, setLabel] = useState('')

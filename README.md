@@ -28,7 +28,6 @@
 - [Command Line Interface Options](#CLI-options)
 - [Setup](#Setup)
 - [Usage](#Usage)
-- [Define query](#Define-query)
 - [License](#License)
 
 ## Install
@@ -112,57 +111,6 @@ import { pagesPath } from '../lib/$path';
 console.log(pagesPath.post.create.$url()); // { pathname: '/post/create' }
 console.log(pagesPath.post._pid(1).$url()); // { pathname: '/post/[pid]', query: { pid: 1 }}
 console.log(pagesPath.post._slug(['a', 'b', 'c']).$url()); // { pathname: '/post//[...slug]', query: { slug: ['a', 'b', 'c'] }}
-
-export default () => {
-  const onClick = useCallback(() => {
-    router.push(pagesPath.post._pid(1).$url());
-  }, []);
-
-  return (
-    <>
-      <Link href={pagesPath.post._slug(['a', 'b', 'c']).$url()} />
-      <div onClick={onClick} />
-    </>
-  );
-};
-```
-
-<a id="Define-query"></a>
-
-## Define query
-
-`pages/post/create.tsx`
-
-```tsx
-export type Query = {
-  userId: number;
-  name?: string;
-};
-
-export default () => <div />;
-```
-
-`pages/post/[pid].tsx`
-
-```tsx
-export type OptionalQuery = {
-  limit: number;
-  label?: string;
-};
-
-export default () => <div />;
-```
-
-`pages/index.tsx`
-
-```tsx
-import Link from 'next/link';
-import { pagesPath } from '../lib/$path';
-
-console.log(pagesPath.post.create.$url({ query: { userId: 1 } })); // { pathname: '/post/create', query: { userId: 1 }}
-console.log(pagesPath.post.create.$url()); // type error
-console.log(pagesPath.post._pid(1).$url()); // { pathname: '/post/[pid]', query: { pid: 1 }}
-console.log(pagesPath.post._pid(1).$url({ query: { limit: 10 }, hash: 'sample' })); // { pathname: '/post/[pid]', query: { pid: 1, limit: 10 }, hash: 'sample' }
 
 export default () => {
   const onClick = useCallback(() => {

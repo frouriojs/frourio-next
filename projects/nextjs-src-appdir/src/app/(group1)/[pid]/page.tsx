@@ -1,7 +1,5 @@
 import Link from 'next/link'
 
-export type OptionalQuery = { hoge: string }
-
 // `onClick`, `href`, and `ref` need to be passed to the DOM element
 // for proper handling
 const MyButton = React.forwardRef(({ onClick, href }, ref) => {

@@ -5,7 +5,7 @@ import type { Config } from './getConfig';
 export default ({ output, appDir }: Config) => {
   const emptyPathRegExp = /\n.+{\n+ +}.*/;
 
-  let text = createNextTemplate(output, appDir);
+  let text = createNextTemplate(appDir);
 
   while (emptyPathRegExp.test(text)) {
     text = text.replace(emptyPathRegExp, '');

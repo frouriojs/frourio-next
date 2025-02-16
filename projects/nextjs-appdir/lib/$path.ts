@@ -1,14 +1,7 @@
-import type { Query as Query_1j04kwd } from '../app/page';
-import type { OptionalQuery as OptionalQuery_1qd20e9 } from '../app/(group1)/[pid]/page';
-import type { Query as Query_g05ywg } from '../app/(group1)/blog/[...slug]/page';
-import type { OptionalQuery as OptionalQuery_s8tu8q } from '../app/xxx/(group3)/page';
-import type { OptionalQuery as OptionalQuery_ywjxi8 } from '../app/xxx/(group3)/yyy/page';
-
-const buildSuffix = (url?: { query?: any, hash?: string }) => {
-  const query = url?.query;
+const buildSuffix = (url?: { hash?: string }) => {
   const hash = url?.hash;
 
-  return `${query ? `?${new URLSearchParams(query)}` : ''}${hash ? `#${hash}` : ''}`;
+  return hash ? `#${hash}` : '';
 };
 
 export const pagesPath = {
@@ -16,11 +9,11 @@ export const pagesPath = {
     $url: (url?: { hash?: string }) => ({ pathname: '/%E6%97%A5%E6%9C%AC%E8%AA%9E' as const, hash: url?.hash, path: `/%E6%97%A5%E6%9C%AC%E8%AA%9E${buildSuffix(url)}` })
   },
   _pid: (pid: string | number) => ({
-    $url: (url?: { query?: OptionalQuery_1qd20e9, hash?: string }) => ({ pathname: '/[pid]' as const, query: { pid, ...url?.query }, hash: url?.hash, path: `/${pid}${buildSuffix(url)}` })
+    $url: (url?: { hash?: string }) => ({ pathname: '/[pid]' as const, query: { pid }, hash: url?.hash, path: `/${pid}${buildSuffix(url)}` })
   }),
   'blog': {
     _slug: (slug: string[]) => ({
-      $url: (url: { query: Query_g05ywg, hash?: string }) => ({ pathname: '/blog/[...slug]' as const, query: { slug, ...url.query }, hash: url.hash, path: `/blog/${slug?.join('/')}${buildSuffix(url)}` })
+      $url: (url?: { hash?: string }) => ({ pathname: '/blog/[...slug]' as const, query: { slug }, hash: url?.hash, path: `/blog/${slug?.join('/')}${buildSuffix(url)}` })
     }),
     'hoge': {
       _fuga: (fuga?: string[]) => ({
@@ -56,11 +49,11 @@ export const pagesPath = {
   }),
   'xxx': {
     'yyy': {
-      $url: (url?: { query?: OptionalQuery_ywjxi8, hash?: string }) => ({ pathname: '/xxx/yyy' as const, query: url?.query, hash: url?.hash, path: `/xxx/yyy${buildSuffix(url)}` })
+      $url: (url?: { hash?: string }) => ({ pathname: '/xxx/yyy' as const, hash: url?.hash, path: `/xxx/yyy${buildSuffix(url)}` })
     },
-    $url: (url?: { query?: OptionalQuery_s8tu8q, hash?: string }) => ({ pathname: '/xxx' as const, query: url?.query, hash: url?.hash, path: `/xxx${buildSuffix(url)}` })
+    $url: (url?: { hash?: string }) => ({ pathname: '/xxx' as const, hash: url?.hash, path: `/xxx${buildSuffix(url)}` })
   },
-  $url: (url: { query: Query_1j04kwd, hash?: string }) => ({ pathname: '/' as const, query: url.query, hash: url.hash, path: `/${buildSuffix(url)}` })
+  $url: (url?: { hash?: string }) => ({ pathname: '/' as const, hash: url?.hash, path: `/${buildSuffix(url)}` })
 };
 
 export type PagesPath = typeof pagesPath;

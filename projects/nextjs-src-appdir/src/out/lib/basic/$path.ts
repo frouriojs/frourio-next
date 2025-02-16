@@ -1,12 +1,7 @@
-import type { Query as Query_1yksaqv } from '../../../app/page';
-import type { OptionalQuery as OptionalQuery_a6l6vr } from '../../../app/(group1)/[pid]/page';
-import type { Query as Query_46sa06 } from '../../../app/(group1)/blog/[...slug]/page';
-
-const buildSuffix = (url?: { query?: any, hash?: string }) => {
-  const query = url?.query;
+const buildSuffix = (url?: { hash?: string }) => {
   const hash = url?.hash;
 
-  return `${query ? `?${new URLSearchParams(query)}` : ''}${hash ? `#${hash}` : ''}`;
+  return hash ? `#${hash}` : '';
 };
 
 export const pagesPath = {
@@ -14,11 +9,11 @@ export const pagesPath = {
     $url: (url?: { hash?: string }) => ({ pathname: '/%E6%97%A5%E6%9C%AC%E8%AA%9E' as const, hash: url?.hash, path: `/%E6%97%A5%E6%9C%AC%E8%AA%9E${buildSuffix(url)}` })
   },
   _pid: (pid: string | number) => ({
-    $url: (url?: { query?: OptionalQuery_a6l6vr, hash?: string }) => ({ pathname: '/[pid]' as const, query: { pid, ...url?.query }, hash: url?.hash, path: `/${pid}${buildSuffix(url)}` })
+    $url: (url?: { hash?: string }) => ({ pathname: '/[pid]' as const, query: { pid }, hash: url?.hash, path: `/${pid}${buildSuffix(url)}` })
   }),
   'blog': {
     _slug: (slug: string[]) => ({
-      $url: (url: { query: Query_46sa06, hash?: string }) => ({ pathname: '/blog/[...slug]' as const, query: { slug, ...url.query }, hash: url.hash, path: `/blog/${slug?.join('/')}${buildSuffix(url)}` })
+      $url: (url?: { hash?: string }) => ({ pathname: '/blog/[...slug]' as const, query: { slug }, hash: url?.hash, path: `/blog/${slug?.join('/')}${buildSuffix(url)}` })
     }),
     'hoge': {
       _fuga: (fuga?: string[]) => ({
@@ -52,7 +47,7 @@ export const pagesPath = {
       })
     }
   }),
-  $url: (url: { query: Query_1yksaqv, hash?: string }) => ({ pathname: '/' as const, query: url.query, hash: url.hash, path: `/${buildSuffix(url)}` })
+  $url: (url?: { hash?: string }) => ({ pathname: '/' as const, hash: url?.hash, path: `/${buildSuffix(url)}` })
 };
 
 export type PagesPath = typeof pagesPath;

@@ -1,10 +1,6 @@
 export const projects = [
-  { dir: 'nextjs', output: 'out/lib' },
   { dir: 'nextjs-appdir', output: 'out/lib' },
   { dir: 'nextjs-src-appdir', output: 'src/out/lib' },
-  { dir: 'nextjs-basepath', output: 'out/lib' },
-  { dir: 'nextjs-custom-ext', output: 'out/lib' },
-  { dir: 'nextjs-src', output: 'src/out/lib' },
   { dir: 'nextjs-stable-appdir', output: 'out/lib' },
 ].flatMap(
   (

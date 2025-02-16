@@ -1,6 +1,7 @@
 import minimist from 'minimist';
-import build from './buildTemplate';
+import { generate } from './generate';
 import getConfig from './getConfig';
+import build from './old/buildTemplate';
 import watch from './watchInputDir';
 import write from './writeRouteFile';
 
@@ -10,13 +11,12 @@ export const run = async (args: string[]) => {
     alias: { w: 'watch', o: 'output' },
   });
 
-  if (argv.watch !== undefined) {
-    const config = await getConfig(argv.output);
+  const { appDir, output } = getConfig(argv.output);
 
-    write(build(config));
+  if (!appDir) return;
 
-    if (config.appDir) watch(config.appDir.input, () => write(build(config)));
-  } else {
-    await getConfig(argv.output).then(build).then(write);
-  }
+  write(build({ appDir, output }));
+  await generate(appDir);
+
+  if (argv.watch !== undefined) watch(appDir, () => generate(appDir));
 };

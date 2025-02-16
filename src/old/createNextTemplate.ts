@@ -1,7 +1,7 @@
 import { parseAppDir } from './parseAppDir';
 
-export const createNextTemplate = (appDir: { input: string } | undefined): string => {
-  const text = appDir ? parseAppDir(appDir.input) : '';
+export const createNextTemplate = (appDir: string | undefined): string => {
+  const text = appDir ? parseAppDir(appDir) : '';
 
   return `${
     appDir

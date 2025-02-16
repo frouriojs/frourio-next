@@ -1,6 +1,6 @@
 import path from 'path';
+import type { Config } from '../getConfig';
 import { createNextTemplate } from './createNextTemplate';
-import type { Config } from './getConfig';
 
 export default ({ output, appDir }: Config) => {
   const emptyPathRegExp = /\n.+{\n+ +}.*/;
@@ -11,8 +11,5 @@ export default ({ output, appDir }: Config) => {
     text = text.replace(emptyPathRegExp, '');
   }
 
-  return {
-    text,
-    filePath: path.posix.join(output, '$path.ts'),
-  };
+  return { text, filePath: path.posix.join(output, '$path.ts') };
 };

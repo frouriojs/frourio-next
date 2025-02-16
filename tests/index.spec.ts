@@ -2,8 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import { expect, test } from 'vitest';
 import { projects } from '../projects/projects';
-import build from '../src/buildTemplate';
 import getConfig from '../src/getConfig';
+import build from '../src/old/buildTemplate';
 
 test('main', async () => {
   for (const project of projects) {

@@ -1,4 +1,4 @@
-import { defineMethods } from '@frourio/next/defineMethods';
+import { defineMethods } from '@frourio/next';
 import { z } from 'zod';
 
 export default defineMethods({

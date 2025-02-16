@@ -106,7 +106,7 @@ export const generate = async (appDir: string): Promise<void> => {
   await createFiles(appDir);
 };
 
-const defaultData = `import { defineMethods } from '@frourio/next/defineMethods';
+const defaultData = `import { defineMethods } from '@frourio/next';
 import { z } from 'zod';
 
 export default defineMethods({

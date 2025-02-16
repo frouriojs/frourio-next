@@ -50,11 +50,6 @@ $ npm install @frourio/next --save-dev
   </thead>
   <tbody>
     <tr>
-      <td nowrap><code>--output</code><br /><code>-o</code></td>
-      <td><code>string</code></td>
-      <td>Specify the output directory for <code>$path.ts</code>.</td>
-    </tr>
-    <tr>
       <td nowrap><code>--watch</code><br /><code>-w</code></td>
       <td></td>
       <td>
@@ -74,8 +69,8 @@ $ npm install @frourio/next --save-dev
   "scripts": {
     "dev": "run-p dev:*",
     "dev:next": "next dev",
-    "dev:path": "pathpida --ignorePath .gitignore --watch",
-    "build": "pathpida --ignorePath .gitignore && next build"
+    "dev:frourio": "frourio --watch",
+    "build": "frourio && next build"
   }
 }
 ```

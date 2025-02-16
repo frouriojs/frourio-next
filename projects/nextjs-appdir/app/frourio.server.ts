@@ -1,38 +1,38 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import type { z } from 'zod';
-import methods from './frourio';
+import { frourioSpec } from './frourio';
 import type { GET, POST } from './route';
 
-type MethodChecker = [typeof GET, typeof POST];
+type RouteChecker = [typeof GET, typeof POST];
 
-type MethodsType = typeof methods;
+type SpecType = typeof frourioSpec;
 
 type Controller = {
   get: (req: {
-    headers: z.infer<MethodsType['get']['headers']>;
-    query: z.infer<MethodsType['get']['query']>;
+    headers: z.infer<SpecType['get']['headers']>;
+    query: z.infer<SpecType['get']['query']>;
   }) => Promise<
     | {
         status: 200;
-        body: z.infer<MethodsType['get']['res'][200]['body']>;
+        body: z.infer<SpecType['get']['res'][200]['body']>;
       }
     | {
         status: 201;
-        headers: z.infer<MethodsType['get']['res'][201]['headers']>;
-        body: z.infer<MethodsType['get']['res'][201]['body']>;
+        headers: z.infer<SpecType['get']['res'][201]['headers']>;
+        body: z.infer<SpecType['get']['res'][201]['body']>;
       }
     | {
         status: 404;
-        body: z.infer<MethodsType['get']['res'][404]['body']>;
+        body: z.infer<SpecType['get']['res'][404]['body']>;
       }
   >;
   post: (req: {
-    body: z.infer<MethodsType['post']['body']>;
+    body: z.infer<SpecType['post']['body']>;
   }) => Promise<
     | {
         status: 200;
-        body: z.infer<MethodsType['post']['res'][200]['body']>;
+        body: z.infer<SpecType['post']['res'][200]['body']>;
       }
   >;
 };
@@ -42,16 +42,16 @@ type ResHandler = {
     req: NextRequest,
   ) => Promise<
     NextResponse<
-      | z.infer<MethodsType['get']['res'][200]['body']>
-      | z.infer<MethodsType['get']['res'][201]['body']>
-      | z.infer<MethodsType['get']['res'][404]['body']>
+      | z.infer<SpecType['get']['res'][200]['body']>
+      | z.infer<SpecType['get']['res'][201]['body']>
+      | z.infer<SpecType['get']['res'][404]['body']>
     >
   >;
   POST: (
     req: NextRequest,
   ) => Promise<
     NextResponse<
-      | z.infer<MethodsType['post']['res'][200]['body']>
+      | z.infer<SpecType['post']['res'][200]['body']>
     >
   >;
 };
@@ -60,22 +60,22 @@ const toHandler = (controller: Controller): ResHandler => {
   return {
     GET: async (req: NextRequest) => {
       const res = await controller.get({
-        headers: methods.get.headers.parse(Object.fromEntries(req.headers)),
-        query: methods.get.query.parse(Object.fromEntries(req.nextUrl.searchParams)),
+        headers: frourioSpec.get.headers.parse(Object.fromEntries(req.headers)),
+        query: frourioSpec.get.query.parse(Object.fromEntries(req.nextUrl.searchParams)),
       });
 
       switch (res.status) {
         case 200:
-          return NextResponse.json(methods.get.res[200].body.parse(res.body), {
+          return NextResponse.json(frourioSpec.get.res[200].body.parse(res.body), {
             status: 200,
           });
         case 201:
-          return NextResponse.json(methods.get.res[201].body.parse(res.body), {
+          return NextResponse.json(frourioSpec.get.res[201].body.parse(res.body), {
             status: 201,
-            headers: methods.get.res[201].headers.parse(res.headers),
+            headers: frourioSpec.get.res[201].headers.parse(res.headers),
           });
         case 404:
-          return NextResponse.json(methods.get.res[404].body.parse(res.body), {
+          return NextResponse.json(frourioSpec.get.res[404].body.parse(res.body), {
             status: 404,
           });
         default:
@@ -84,12 +84,12 @@ const toHandler = (controller: Controller): ResHandler => {
     },
     POST: async (req: NextRequest) => {
       const res = await controller.post({
-        body: methods.post.body.parse(await req.json()),
+        body: frourioSpec.post.body.parse(await req.json()),
       });
 
       switch (res.status) {
         case 200:
-          return NextResponse.json(methods.post.res[200].body.parse(res.body), {
+          return NextResponse.json(frourioSpec.post.res[200].body.parse(res.body), {
             status: 200,
           });
         default:
@@ -99,12 +99,12 @@ const toHandler = (controller: Controller): ResHandler => {
   };
 };
 
-export function defineRoute(controller: Controller): ResHandler;
-export function defineRoute<T extends Record<string, unknown>>(
+export function createRoute(controller: Controller): ResHandler;
+export function createRoute<T extends Record<string, unknown>>(
   deps: T,
   cb: (d: T) => Controller,
 ): ResHandler & { inject: (d: T) => ResHandler };
-export function defineRoute<T extends Record<string, unknown>>(
+export function createRoute<T extends Record<string, unknown>>(
   controllerOrDeps: Controller | T,
   cb?: (d: T) => Controller,
 ) {

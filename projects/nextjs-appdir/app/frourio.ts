@@ -1,7 +1,7 @@
-import { defineMethods } from '@frourio/next';
+import type { FrourioSpec } from '@frourio/next';
 import { z } from 'zod';
 
-export default defineMethods({
+export const frourioSpec = {
   get: {
     headers: z.object({ cookie: z.string().optional() }),
     query: z.object({ aa: z.string() }),
@@ -17,4 +17,4 @@ export default defineMethods({
       '200': { body: z.object({ cc: z.number() }) },
     },
   },
-});
+} satisfies FrourioSpec;

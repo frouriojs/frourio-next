@@ -1,8 +1,6 @@
-import { readdirSync } from 'fs';
 import ts from 'typescript';
-import { FROURIO_FILE } from './constants';
 
-export const initTSC = (appDir: string) => {
+export const initTSC = (frourioFiles: string[]) => {
   const configDir = process.cwd();
   const configFileName = ts.findConfigFile(configDir, ts.sys.fileExists);
 
@@ -14,20 +12,7 @@ export const initTSC = (appDir: string) => {
       )
     : undefined;
 
-  const program = ts.createProgram(findFrourioFiles(appDir), compilerOptions?.options ?? {});
+  const program = ts.createProgram(frourioFiles, compilerOptions?.options ?? {});
 
   return { program, checker: program.getTypeChecker() };
 };
-
-const findFrourioFiles = (dir: string): string[] =>
-  readdirSync(dir, { withFileTypes: true }).reduce<string[]>(
-    (prev, d) => [
-      ...prev,
-      ...(d.isDirectory()
-        ? findFrourioFiles(`${dir}/${d.name}`)
-        : d.name === FROURIO_FILE
-          ? [`${dir}/${d.name}`]
-          : []),
-    ],
-    [],
-  );

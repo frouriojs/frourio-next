@@ -8,23 +8,11 @@ export const projects = [
   ): {
     dir: string;
     output: string | undefined;
-    enableStatic: boolean;
   }[] => [
-    { ...project, output: undefined, enableStatic: true },
+    { ...project, output: undefined },
     {
       ...project,
       output: `${project.output}/basic`,
-      enableStatic: false,
-    },
-    {
-      ...project,
-      output: `${project.output}/static`,
-      enableStatic: true,
-    },
-    {
-      ...project,
-      output: `${project.output}/ignore`,
-      enableStatic: true,
     },
   ],
 );

@@ -29,7 +29,6 @@
 - [Setup](#Setup)
 - [Usage](#Usage)
 - [Define query](#Define-query)
-- [Generate static files path](#Generate-static-files-path)
 - [License](#License)
 
 ## Install
@@ -51,11 +50,6 @@ $ npm install @frourio/next --save-dev
     </tr>
   </thead>
   <tbody>
-    <tr>
-      <td nowrap><code>--enableStatic</code><br /><code>-s</code></td>
-      <td></td>
-      <td>Generate static files path in <code>$path.ts</code>.</td>
-    </tr>
     <tr>
       <td nowrap><code>--output</code><br /><code>-o</code></td>
       <td><code>string</code></td>
@@ -184,67 +178,6 @@ export default () => {
     <>
       <Link href={pagesPath.post._slug(['a', 'b', 'c']).$url()} />
       <div onClick={onClick} />
-    </>
-  );
-};
-```
-
-<a id="Generate-static-files-path"></a>
-
-## Generate static files path
-
-`package.json`
-
-```json
-{
-  "scripts": {
-    "dev": "run-p dev:*",
-    "dev:next": "next dev",
-    "dev:path": "pathpida --enableStatic --watch",
-    "build": "pathpida --enableStatic && next build"
-  }
-}
-```
-
-```
-pages/index.tsx
-pages/post/create.tsx
-pages/post/[pid].tsx
-pages/post/[...slug].tsx
-
-public/aa.json
-public/bb/cc.png
-
-lib/$path.ts or utils/$path.ts // Generated automatically by pathpida
-```
-
-or
-
-```
-src/pages/index.tsx
-src/pages/post/create.tsx
-src/pages/post/[pid].tsx
-src/pages/post/[...slug].tsx
-
-public/aa.json
-public/bb/cc.png
-
-src/lib/$path.ts or src/utils/$path.ts // Generated automatically by pathpida
-```
-
-`pages/index.tsx`
-
-```tsx
-import Link from 'next/link';
-import { pagesPath, staticPath } from '../lib/$path';
-
-console.log(staticPath.aa_json); // /aa.json
-
-export default () => {
-  return (
-    <>
-      <Link href={pagesPath.post._slug(['a', 'b', 'c']).$url()} />
-      <img src={staticPath.bb.cc_png} />
     </>
   );
 };

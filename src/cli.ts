@@ -6,8 +6,8 @@ import write from './writeRouteFile';
 
 export const run = async (args: string[]) => {
   const argv = minimist(args, {
-    string: ['version', 'watch', 'enableStatic', 'output'],
-    alias: { v: 'version', w: 'watch', s: 'enableStatic', o: 'output' },
+    string: ['version', 'watch', 'output'],
+    alias: { v: 'version', w: 'watch', o: 'output' },
   });
 
   if (argv.version !== undefined) {
@@ -17,14 +17,13 @@ export const run = async (args: string[]) => {
 
   if (argv.watch !== undefined) {
     await (async () => {
-      const config = await getConfig(argv.enableStatic !== undefined, argv.output);
+      const config = await getConfig(argv.output);
 
       write(build(config));
 
-      if (config.appDir) watch(config.appDir.input, () => write(build(config, 'pages')));
-      if (config.staticDir) watch(config.staticDir, () => write(build(config, 'static')));
+      if (config.appDir) watch(config.appDir.input, () => write(build(config)));
     })();
   } else {
-    write(build(await getConfig(argv.enableStatic !== undefined, argv.output)));
+    await getConfig(argv.output).then(build).then(write);
   }
 };

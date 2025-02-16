@@ -24,15 +24,13 @@ describe('cli test', () => {
       resetCache();
 
       const workingDir = path.join(process.cwd(), 'projects', project.dir);
-      const { staticDir, output, appDir } = await getConfig(
-        project.enableStatic,
+      const { output, appDir } = await getConfig(
         project.output && path.join(workingDir, project.output),
         workingDir,
       );
 
       const result = fs.readFileSync(`${output}/$path.ts`, 'utf8');
-      const basepath = /-basepath$/.test(project.dir) ? '/foo/bar' : undefined;
-      const { filePath, text } = build({ staticDir, output, appDir, basepath });
+      const { filePath, text } = build({ output, appDir });
 
       expect(filePath).toBe(`${output}/$path.ts`);
       expect(

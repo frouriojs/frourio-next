@@ -3,7 +3,7 @@ import path from 'path';
 import { describe, expect, test, vi } from 'vitest';
 import { version } from '../package.json';
 import { projects } from '../projects/projects';
-import build, { resetCache } from '../src/buildTemplate';
+import build from '../src/buildTemplate';
 import { run } from '../src/cli';
 import getConfig from '../src/getConfig';
 
@@ -21,8 +21,6 @@ describe('cli test', () => {
 
   test('main', async () => {
     for (const project of projects) {
-      resetCache();
-
       const workingDir = path.join(process.cwd(), 'projects', project.dir);
       const { output, appDir } = await getConfig(
         project.output && path.join(workingDir, project.output),

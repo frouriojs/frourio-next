@@ -1,12 +1,6 @@
 import path from 'path';
+import { createNextTemplate } from './createNextTemplate';
 import type { Config } from './getConfig';
-import { createNextTemplate } from './nextjs/createNextTemplate';
-
-let prevPagesText = '';
-
-export const resetCache = () => {
-  prevPagesText = '';
-};
 
 export default ({ output, appDir }: Config) => {
   const emptyPathRegExp = /\n.+{\n+ +}.*/;
@@ -17,10 +11,8 @@ export default ({ output, appDir }: Config) => {
     text = text.replace(emptyPathRegExp, '');
   }
 
-  prevPagesText = text;
-
   return {
-    text: prevPagesText,
+    text,
     filePath: path.posix.join(output, '$path.ts'),
   };
 };

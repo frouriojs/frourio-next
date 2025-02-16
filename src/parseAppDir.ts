@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import { parseQueryFromTS } from '../parseQueryFromTS';
-import { replaceWithUnderscore } from '../replaceWithUnderscore';
+import { parseQueryFromTS } from './parseQueryFromTS';
+import { replaceWithUnderscore } from './replaceWithUnderscore';
 
 type Slugs = string[];
 

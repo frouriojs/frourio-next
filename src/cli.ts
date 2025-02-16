@@ -21,7 +21,6 @@ export const run = async (args: string[]) => {
 
       write(build(config));
 
-      if (config.input) watch(config.input, () => write(build(config, 'pages')));
       if (config.appDir) watch(config.appDir.input, () => write(build(config, 'pages')));
       if (config.staticDir) watch(config.staticDir, () => write(build(config, 'static')));
     })();

@@ -1,17 +1,12 @@
 import { parseAppDir } from './parseAppDir';
-import { parsePagesDir } from './parsePagesDir';
 
 export const createNextTemplate = (
-  input: string | undefined,
   output: string,
   appDir: { input: string } | undefined,
-  pageExtensions = ['tsx', 'ts', 'jsx', 'js'],
 ): string => {
   const appDirData = appDir ? parseAppDir(appDir.input, output) : { imports: [], text: '' };
-  const pagesDir = input ? parsePagesDir(input, output, pageExtensions) : { imports: [], text: '' };
-  const imports = [...appDirData.imports, ...pagesDir.imports];
 
-  return `${imports.join('\n')}${imports.length ? '\n\n' : ''}${
+  return `${appDirData.imports.join('\n')}${appDirData.imports.length ? '\n\n' : ''}${
     appDir
       ? `const buildSuffix = (url?: { query?: any, hash?: string }) => {
   const query = url?.query;
@@ -23,7 +18,7 @@ export const createNextTemplate = (
 `
       : ''
   }export const pagesPath = {
-${appDirData.text}${appDirData.text && pagesDir.text ? ',\n' : ''}${pagesDir.text}
+${appDirData.text}
 };
 
 export type PagesPath = typeof pagesPath;

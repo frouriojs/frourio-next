@@ -11,14 +11,11 @@ export const resetCache = () => {
   prevStaticText = '';
 };
 
-export default (
-  { input, staticDir, output, basepath, pageExtensions, appDir }: Config,
-  mode?: 'pages' | 'static',
-) => {
+export default ({ staticDir, output, basepath, appDir }: Config, mode?: 'pages' | 'static') => {
   const emptyPathRegExp = /\n.+{\n+ +}.*/;
 
   if (mode !== 'static') {
-    let text = createNextTemplate(input, output, appDir, pageExtensions);
+    let text = createNextTemplate(output, appDir);
 
     while (emptyPathRegExp.test(text)) {
       text = text.replace(emptyPathRegExp, '');

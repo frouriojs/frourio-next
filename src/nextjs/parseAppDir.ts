@@ -2,7 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import { parseQueryFromTS } from '../parseQueryFromTS';
 import { replaceWithUnderscore } from '../replaceWithUnderscore';
-import type { Slugs } from './parsePagesDir';
+
+type Slugs = string[];
 
 export const createMethods = (
   indent: string,

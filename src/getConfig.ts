@@ -4,12 +4,10 @@ import type { NextConfig } from 'next';
 import path from 'path';
 
 export type Config = {
-  input: string | undefined;
   appDir: { input: string } | undefined;
   staticDir: string | undefined;
   output: string;
   basepath?: string | undefined;
-  pageExtensions?: string[] | undefined;
 };
 
 export default async (
@@ -50,14 +48,10 @@ export default async (
 
   if (!fs.existsSync(outDir)) fs.mkdirSync(outDir);
 
-  const inputDir = path.posix.join(srcDir, 'pages');
-
   return {
-    input: fs.existsSync(inputDir) ? inputDir : undefined,
     staticDir: enableStatic ? path.posix.join(dir, 'public') : undefined,
     output: outDir,
     appDir: isAppDirUsed ? { input: path.posix.join(srcDir, 'app') } : undefined,
-    pageExtensions: config.pageExtensions,
     basepath: config.basePath,
   };
 };

@@ -57,11 +57,6 @@ $ npm install @frourio/next --save-dev
       <td>Generate static files path in <code>$path.ts</code>.</td>
     </tr>
     <tr>
-      <td nowrap><code>--ignorePath</code><br /><code>-p</code></td>
-      <td><code>string</code></td>
-      <td>Specify the ignore pattern file path.</td>
-    </tr>
-    <tr>
       <td nowrap><code>--output</code><br /><code>-o</code></td>
       <td><code>string</code></td>
       <td>Specify the output directory for <code>$path.ts</code>.</td>
@@ -122,12 +117,12 @@ src/lib/$path.ts or src/utils/$path.ts // Generated automatically by pathpida
 `pages/index.tsx`
 
 ```tsx
-import Link from "next/link";
-import { pagesPath } from "../lib/$path";
+import Link from 'next/link';
+import { pagesPath } from '../lib/$path';
 
 console.log(pagesPath.post.create.$url()); // { pathname: '/post/create' }
 console.log(pagesPath.post._pid(1).$url()); // { pathname: '/post/[pid]', query: { pid: 1 }}
-console.log(pagesPath.post._slug(["a", "b", "c"]).$url()); // { pathname: '/post//[...slug]', query: { slug: ['a', 'b', 'c'] }}
+console.log(pagesPath.post._slug(['a', 'b', 'c']).$url()); // { pathname: '/post//[...slug]', query: { slug: ['a', 'b', 'c'] }}
 
 export default () => {
   const onClick = useCallback(() => {
@@ -136,7 +131,7 @@ export default () => {
 
   return (
     <>
-      <Link href={pagesPath.post._slug(["a", "b", "c"]).$url()} />
+      <Link href={pagesPath.post._slug(['a', 'b', 'c']).$url()} />
       <div onClick={onClick} />
     </>
   );
@@ -172,13 +167,13 @@ export default () => <div />;
 `pages/index.tsx`
 
 ```tsx
-import Link from "next/link";
-import { pagesPath } from "../lib/$path";
+import Link from 'next/link';
+import { pagesPath } from '../lib/$path';
 
 console.log(pagesPath.post.create.$url({ query: { userId: 1 } })); // { pathname: '/post/create', query: { userId: 1 }}
 console.log(pagesPath.post.create.$url()); // type error
 console.log(pagesPath.post._pid(1).$url()); // { pathname: '/post/[pid]', query: { pid: 1 }}
-console.log(pagesPath.post._pid(1).$url({ query: { limit: 10 }, hash: "sample" })); // { pathname: '/post/[pid]', query: { pid: 1, limit: 10 }, hash: 'sample' }
+console.log(pagesPath.post._pid(1).$url({ query: { limit: 10 }, hash: 'sample' })); // { pathname: '/post/[pid]', query: { pid: 1, limit: 10 }, hash: 'sample' }
 
 export default () => {
   const onClick = useCallback(() => {
@@ -187,7 +182,7 @@ export default () => {
 
   return (
     <>
-      <Link href={pagesPath.post._slug(["a", "b", "c"]).$url()} />
+      <Link href={pagesPath.post._slug(['a', 'b', 'c']).$url()} />
       <div onClick={onClick} />
     </>
   );
@@ -240,15 +235,15 @@ src/lib/$path.ts or src/utils/$path.ts // Generated automatically by pathpida
 `pages/index.tsx`
 
 ```tsx
-import Link from "next/link";
-import { pagesPath, staticPath } from "../lib/$path";
+import Link from 'next/link';
+import { pagesPath, staticPath } from '../lib/$path';
 
 console.log(staticPath.aa_json); // /aa.json
 
 export default () => {
   return (
     <>
-      <Link href={pagesPath.post._slug(["a", "b", "c"]).$url()} />
+      <Link href={pagesPath.post._slug(['a', 'b', 'c']).$url()} />
       <img src={staticPath.bb.cc_png} />
     </>
   );

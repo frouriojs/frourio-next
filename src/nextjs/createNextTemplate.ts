@@ -4,16 +4,11 @@ import { parsePagesDir } from './parsePagesDir';
 export const createNextTemplate = (
   input: string | undefined,
   output: string,
-  ignorePath: string | undefined,
   appDir: { input: string } | undefined,
   pageExtensions = ['tsx', 'ts', 'jsx', 'js'],
 ): string => {
-  const appDirData = appDir
-    ? parseAppDir(appDir.input, output, ignorePath)
-    : { imports: [], text: '' };
-  const pagesDir = input
-    ? parsePagesDir(input, output, ignorePath, pageExtensions)
-    : { imports: [], text: '' };
+  const appDirData = appDir ? parseAppDir(appDir.input, output) : { imports: [], text: '' };
+  const pagesDir = input ? parsePagesDir(input, output, pageExtensions) : { imports: [], text: '' };
   const imports = [...appDirData.imports, ...pagesDir.imports];
 
   return `${imports.join('\n')}${imports.length ? '\n\n' : ''}${

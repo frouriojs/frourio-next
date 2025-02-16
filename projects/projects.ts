@@ -9,26 +9,22 @@ export const projects = [
     dir: string;
     output: string | undefined;
     enableStatic: boolean;
-    ignorePath: string | undefined;
   }[] => [
-    { ...project, output: undefined, enableStatic: true, ignorePath: undefined },
+    { ...project, output: undefined, enableStatic: true },
     {
       ...project,
       output: `${project.output}/basic`,
       enableStatic: false,
-      ignorePath: '.pathpidaignore',
     },
     {
       ...project,
       output: `${project.output}/static`,
       enableStatic: true,
-      ignorePath: undefined,
     },
     {
       ...project,
       output: `${project.output}/ignore`,
       enableStatic: true,
-      ignorePath: '.pathpidaignore',
     },
   ],
 );

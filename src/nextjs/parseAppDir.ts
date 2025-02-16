@@ -1,6 +1,5 @@
 import fs from 'fs';
 import path from 'path';
-import { createIg, isIgnored } from '../isIgnored';
 import { parseQueryFromTS } from '../parseQueryFromTS';
 import { replaceWithUnderscore } from '../replaceWithUnderscore';
 import type { Slugs } from './parsePagesDir';
@@ -25,12 +24,7 @@ export const createMethods = (
     .replace(/\[\[?\.\.\.(.*?)\]\]?/g, `\${$1?.join('/')}`)
     .replace(/\[(.*?)\]/g, `\${$1}`)}\${buildSuffix(url)}\` })`;
 
-export const parseAppDir = (
-  input: string,
-  output: string,
-  ignorePath: string | undefined,
-): { imports: string[]; text: string } => {
-  const ig = createIg(ignorePath);
+export const parseAppDir = (input: string, output: string): { imports: string[]; text: string } => {
   const pageFileNames = ['page.tsx', 'page.jsx', 'page.js'];
   const imports: string[] = [];
   const getImportName = (file: string) => {
@@ -53,12 +47,7 @@ export const parseAppDir = (
     const indent = `  ${parentIndent}`;
     const props: string[] = fs
       .readdirSync(targetDir)
-      .filter((file) =>
-        [
-          !isIgnored(ig, ignorePath, targetDir, file),
-          fs.statSync(path.posix.join(targetDir, file)).isDirectory(),
-        ].every(Boolean),
-      )
+      .filter((file) => fs.statSync(path.posix.join(targetDir, file)).isDirectory())
       .sort()
       .map((file) => {
         const newSlugs = [...slugs];

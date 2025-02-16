@@ -1,14 +1,8 @@
 import fs from 'fs';
 import path from 'path';
-import { createIg, isIgnored } from './isIgnored';
 import { replaceWithUnderscore } from './replaceWithUnderscore';
 
-export const createStaticTemplate = (
-  input: string,
-  basepath: string | undefined,
-  ignorePath: string | undefined,
-) => {
-  const ig = createIg(ignorePath);
+export const createStaticTemplate = (input: string, basepath: string | undefined) => {
   const createPublicString = (
     targetDir: string,
     parentIndent: string,
@@ -26,9 +20,6 @@ export const createStaticTemplate = (
       .map((file, i) => {
         const newUrl = `${url}/${file}`;
         const target = path.posix.join(targetDir, file);
-
-        if (isIgnored(ig, ignorePath, targetDir, file)) return '';
-
         const replacedFile = replacedFiles[i];
         const valFn = `${indent}${
           duplicatedInfo[replacedFile].length > 1

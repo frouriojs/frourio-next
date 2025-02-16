@@ -42,6 +42,9 @@ export const pagesPath = {
     }),
     $url: (url?: { hash?: string }) => ({ pathname: '/x' as const, hash: url?.hash, path: `/x${buildSuffix(url)}` })
   },
+  '_ignore': {
+    $url: (url?: { hash?: string }) => ({ pathname: '/.ignore' as const, hash: url?.hash, path: `/.ignore${buildSuffix(url)}` })
+  },
   _a: (a: string | number) => ({
     'b': {
       _c: (c: string[]) => ({
@@ -57,6 +60,7 @@ export type PagesPath = typeof pagesPath;
 export const staticPath = {
   aa_json: '/aa.json',
   bb: {
+    _ignore: '/bb/.ignore',
     cc_png: '/bb/cc.png'
   },
   duplicate_json_0: {

@@ -24,10 +24,9 @@ describe('cli test', () => {
       resetCache();
 
       const workingDir = path.join(process.cwd(), 'projects', project.dir);
-      const { input, staticDir, output, ignorePath, pageExtensions, appDir } = await getConfig(
+      const { input, staticDir, output, pageExtensions, appDir } = await getConfig(
         project.enableStatic,
         project.output && path.join(workingDir, project.output),
-        project.ignorePath,
         workingDir,
       );
 
@@ -37,7 +36,6 @@ describe('cli test', () => {
         input,
         staticDir,
         output,
-        ignorePath,
         pageExtensions,
         appDir,
         basepath,

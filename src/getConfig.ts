@@ -8,7 +8,6 @@ export type Config = {
   appDir: { input: string } | undefined;
   staticDir: string | undefined;
   output: string;
-  ignorePath: string | undefined;
   basepath?: string | undefined;
   pageExtensions?: string[] | undefined;
 };
@@ -16,11 +15,8 @@ export type Config = {
 export default async (
   enableStatic: boolean,
   output: string | undefined,
-  igPath: string | undefined,
   dir = process.cwd(),
 ): Promise<Config> => {
-  const ignorePath = igPath && path.join(dir, igPath);
-
   let config: NextConfig;
 
   try {
@@ -60,7 +56,6 @@ export default async (
     input: fs.existsSync(inputDir) ? inputDir : undefined,
     staticDir: enableStatic ? path.posix.join(dir, 'public') : undefined,
     output: outDir,
-    ignorePath,
     appDir: isAppDirUsed ? { input: path.posix.join(srcDir, 'app') } : undefined,
     pageExtensions: config.pageExtensions,
     basepath: config.basePath,

@@ -46,6 +46,9 @@ export const pagesPath = {
     }),
     $url: (url?: { hash?: string }) => ({ pathname: '/x' as const, hash: url?.hash, path: `/x${buildSuffix(url)}` })
   },
+  '_ignore': {
+    $url: (url?: { hash?: string }) => ({ pathname: '/.ignore' as const, hash: url?.hash, path: `/.ignore${buildSuffix(url)}` })
+  },
   _a: (a: string | number) => ({
     'b': {
       _c: (c: string[]) => ({
@@ -63,6 +66,9 @@ export const pagesPath = {
   'children': {
     '%E6%97%A5%E6%9C%AC%E8%AA%9E': {
       $url: (url?: { hash?: string | undefined } | undefined) => ({ pathname: '/children/%E6%97%A5%E6%9C%AC%E8%AA%9E' as const, hash: url?.hash })
+    },
+    '_ignore': {
+      $url: (url?: { hash?: string | undefined } | undefined) => ({ pathname: '/children/.ignore' as const, hash: url?.hash })
     },
     _a: (a: string | number) => ({
       'b': {
@@ -117,6 +123,7 @@ export type PagesPath = typeof pagesPath;
 export const staticPath = {
   aa_json: '/aa.json',
   bb: {
+    _ignore: '/bb/.ignore',
     cc_png: '/bb/cc.png'
   },
   duplicate_json_0: {

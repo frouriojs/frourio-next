@@ -1,6 +1,5 @@
 import fs from 'fs';
 import path from 'path';
-import { createIg, isIgnored } from '../isIgnored';
 import { parseQueryFromTS } from '../parseQueryFromTS';
 import { replaceWithUnderscore } from '../replaceWithUnderscore';
 
@@ -30,10 +29,8 @@ export const createMethods = (
 export const parsePagesDir = (
   input: string,
   output: string,
-  ignorePath: string | undefined,
   pageExtensions = ['tsx', 'ts', 'jsx', 'js'],
 ): { imports: string[]; text: string } => {
-  const ig = createIg(ignorePath);
   const regExpChunk = `\\.(${pageExtensions.join('|').replace(/\./g, '\\.')})$`;
   const indexPageRegExp = new RegExp(`^index${regExpChunk}`);
   const pageExtRegExp = new RegExp(regExpChunk);
@@ -63,7 +60,6 @@ export const parsePagesDir = (
           !file.startsWith('_'),
           !file.endsWith('.d.ts'),
           `${url}/${file}` !== '/api',
-          !isIgnored(ig, ignorePath, targetDir, file),
           fs.statSync(path.posix.join(targetDir, file)).isDirectory() || pageExtRegExp.test(file),
         ].every(Boolean),
       )

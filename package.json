@@ -28,12 +28,10 @@
   "keywords": [
     "typescript",
     "nextjs",
-    "pages",
-    "path"
+    "frourio"
   ],
   "dependencies": {
     "chokidar": "^4.0.3",
-    "ignore": "^7.0.3",
     "minimist": "^1.2.8"
   },
   "devDependencies": {

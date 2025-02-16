@@ -42,6 +42,9 @@ export const pagesPath = {
     }),
     $url: (url?: { hash?: string }) => ({ pathname: '/x' as const, hash: url?.hash, path: `/x${buildSuffix(url)}` })
   },
+  '_ignore': {
+    $url: (url?: { hash?: string }) => ({ pathname: '/.ignore' as const, hash: url?.hash, path: `/.ignore${buildSuffix(url)}` })
+  },
   _a: (a: string | number) => ({
     'b': {
       _c: (c: string[]) => ({

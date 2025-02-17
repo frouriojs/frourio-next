@@ -4,10 +4,10 @@
 <img src="https://frouriojs.github.io/frourio/assets/images/ogp.png" width="1280" alt="frourio" />
 
 <div align="center">
-  <a href="https://www.npmjs.com/package/＠frourio/next">
+  <a href="https://www.npmjs.com/package/@frourio/next">
     <img src="https://img.shields.io/npm/v/＠frourio/next" alt="npm version" />
   </a>
-  <a href="https://www.npmjs.com/package/＠frourio/next">
+  <a href="https://www.npmjs.com/package/@frourio/next">
     <img src="https://img.shields.io/npm/dm/＠frourio/next" alt="npm download" />
   </a>
 </div>
@@ -21,14 +21,6 @@
 - **Type safety**. Automatically generate type definition files for Next.js Route Handlers.
 - **Zero configuration**. No configuration required can be used immediately after installation.
 - **Zero runtime**. Lightweight because runtime code is not included in the bundle.
-
-## Table of Contents
-
-- [Install](#Install)
-- [Command Line Interface Options](#CLI-options)
-- [Setup](#Setup)
-- [Usage](#Usage)
-- [License](#License)
 
 ## Install
 
@@ -112,8 +104,38 @@ $ npm run dev # Automatically generate <Route Handlers Dir>/frourio.server.ts
 import { createRoute } from './frourio.server';
 
 export const { GET, POST } = createRoute({
-  get: async ({ query }) => ({ status: 200, body: { bb: query.aa } }),
-  post: async ({ body }) => ({ status: 201, body: [body.bb], headers: { 'Set-Cookie': 'aaa' } }),
+  get: async ({ query }) => {
+    return { status: 200, body: { bb: query.aa } };
+  },
+  post: async ({ body }) => {
+    return { status: 201, body: [body.bb], headers: { 'Set-Cookie': 'aaa' } };
+  },
+});
+```
+
+## Test
+
+`(src)/tests/index.spec.ts`
+
+```ts
+import { execSync } from 'child_process';
+import { NextRequest } from 'next/server';
+import { expect, test } from 'vitest';
+import { GET, POST } from '../projects/nextjs-appdir/app/route';
+
+test('Route Handlers', async () => {
+  const val = 'foo';
+  const res1 = await GET(new NextRequest(`http://example.com/?aa=${val}`));
+
+  await expect(res1.json()).resolves.toEqual({ bb: val });
+
+  const body = { bb: 3 };
+  const res2 = await POST(
+    new NextRequest('http://example.com/', { method: 'POST', body: JSON.stringify(body) }),
+  );
+
+  await expect(res2.json()).resolves.toEqual([body.bb]);
+  expect(res2.headers.get('Set-Cookie')).toBe('aaa');
 });
 ```
 

@@ -32,6 +32,8 @@ export const frourioSpec = {
 const defaultRouteData = `import { createRoute } from './${SERVER_FILE.replace('.ts', '')}';
 
 export const { GET } = createRoute({
-  get: async () => ({ status: 200, body: 'ok' }),
+  get: async () => {
+    return { status: 200, body: 'ok' };
+  },
 });
 `;

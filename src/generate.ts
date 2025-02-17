@@ -197,7 +197,7 @@ type ResHandler = {
 ${methods
   .map(
     (m) => `  ${m.name.toUpperCase()}: (
-    req: NextRequest,${params ? '\n    option: { params: Promise<z.infer<typeof paramsValidator>> },' : ''}
+    req: NextRequest,${params ? '\n    option: { params: Promise<unknown> },' : ''}
   ) => Promise<
     NextResponse<
 ${m.res.map((r) => `      | z.infer<SpecType['${m.name}']['res'][${r.status}]['body']>`).join('\n')}

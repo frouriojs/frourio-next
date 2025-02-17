@@ -28,7 +28,7 @@ type FrourioErr =
 type ResHandler = {
   GET: (
     req: NextRequest,
-    option: { params: Promise<z.infer<typeof paramsValidator>> },
+    option: { params: Promise<unknown> },
   ) => Promise<
     NextResponse<
       | z.infer<SpecType['get']['res'][200]['body']>

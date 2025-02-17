@@ -89,7 +89,10 @@ export const frourioSpec = {
   post: {
     body: z.object({ bb: z.number() }),
     res: {
-      201: { body: z.array(z.number()), headers: z.object({ 'Set-Cookie': z.string() }) },
+      201: {
+        body: z.array(z.number()),
+        headers: z.object({ 'Set-Cookie': z.string() }),
+      },
     },
   },
 } satisfies FrourioSpec;
@@ -119,7 +122,6 @@ export const { GET, POST } = createRoute({
 `tests/index.spec.ts`
 
 ```ts
-import { execSync } from 'child_process';
 import { NextRequest } from 'next/server';
 import { expect, test } from 'vitest';
 import { GET, POST } from '../app/api/[slug]/route';

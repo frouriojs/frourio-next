@@ -82,7 +82,7 @@ export const generate = async (appDir: string): Promise<void> => {
       if (!spec) return;
 
       await writeFile(
-        path.join(filePath, '../', SERVER_FILE),
+        path.posix.join(filePath, '../', SERVER_FILE),
         serverData(pathToParams(frourioFiles, filePath, spec.hasParam), spec.methods),
         'utf8',
       );
@@ -107,11 +107,12 @@ const pathToParams = (
   if (!filePath.includes('[')) return undefined;
 
   const [, tail, ...heads] = filePath.split('/').reverse();
-  const ancestorIndex = heads.findIndex(
-    (head, i) =>
+  const ancestorIndex = heads.findIndex((head, i) => {
+    return (
       head.startsWith('[') &&
-      frourioFiles.includes(path.join(heads.slice(i).reverse().join('/'), FROURIO_FILE)),
-  );
+      frourioFiles.includes(path.posix.join(heads.slice(i).reverse().join('/'), FROURIO_FILE))
+    );
+  });
 
   return {
     ancestorFrourio:

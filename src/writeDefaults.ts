@@ -7,7 +7,7 @@ export const writeDefaults = async (frourioFiles: string[]) => {
   await Promise.all(
     frourioFiles.map(async (filePath) => {
       const fileText = await readFile(filePath, 'utf8');
-      const routePath = path.join(filePath, '../route.ts');
+      const routePath = path.posix.join(filePath, '../route.ts');
 
       if (fileText !== '' || existsSync(routePath)) return;
 

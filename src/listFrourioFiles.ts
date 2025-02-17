@@ -1,4 +1,5 @@
 import { readdirSync } from 'fs';
+import path from 'path';
 import { FROURIO_FILE } from './constants';
 
 export const listFrourioFiles = (dir: string): string[] =>
@@ -6,10 +7,10 @@ export const listFrourioFiles = (dir: string): string[] =>
     (prev, d) => [
       ...prev,
       ...(d.isFile() && d.name === FROURIO_FILE
-        ? [`${dir}/${d.name}`]
+        ? [path.posix.join(dir.replaceAll('\\', '/'), d.name)]
         : !d.isDirectory() || d.name.startsWith('_')
           ? []
-          : listFrourioFiles(`${dir}/${d.name}`)),
+          : listFrourioFiles(path.posix.join(dir, d.name))),
     ],
     [],
   );

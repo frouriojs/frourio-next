@@ -1,4 +1,4 @@
-# NextFrourio
+# FrourioNext
 
 <br />
 <img src="https://frouriojs.github.io/frourio/assets/images/ogp.png" width="1280" alt="frourio" />
@@ -26,7 +26,7 @@
 
 ```sh
 $ npm install next zod
-$ npm install @frourio/next --save-dev
+$ npm install @frourio/next npm-run-all --save-dev
 ```
 
 <a id="CLI-options"></a>
@@ -149,4 +149,4 @@ test('Route Handlers', async () => {
 
 ## License
 
-NextFrourio is licensed under a [MIT License](https://github.com/frouriojs/frourio-next/blob/main/LICENSE).
+FrourioNext is licensed under a [MIT License](https://github.com/frouriojs/frourio-next/blob/main/LICENSE).

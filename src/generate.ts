@@ -119,6 +119,10 @@ ${m.res
   .join('\n')}
 };
 
+type FrourioErr =
+  | { status: 422; error: string; issues: { path: (string | number)[]; message: string }[] }
+  | { status: 500; error: string; issues?: undefined };
+
 type ResHandler = {
 ${methods
   .map(
@@ -127,6 +131,7 @@ ${methods
   ) => Promise<
     NextResponse<
 ${m.res.map((r) => `      | z.infer<SpecType['${m.name}']['res'][${r.status}]['body']>`).join('\n')}
+      | FrourioErr
     >
   >;`,
   )
@@ -136,25 +141,40 @@ ${m.res.map((r) => `      | z.infer<SpecType['${m.name}']['res'][${r.status}]['b
 const toHandler = (controller: Controller): ResHandler => {
   return {
 ${methods
-  .map(
-    (m) => `    ${m.name.toUpperCase()}: async (req: NextRequest) => {
-      const res = await controller.${m.name}({${m.hasHeaders ? `\n        headers: frourioSpec.${m.name}.headers.parse(Object.fromEntries(req.headers)),` : ''}${m.hasQuery ? `\n        query: frourioSpec.${m.name}.query.parse(Object.fromEntries(req.nextUrl.searchParams)),` : ''}${m.hasBody ? `\n        body: frourioSpec.${m.name}.body.parse(await req.json()),` : ''}
-      });
+  .map((m) => {
+    const requests = [
+      m.hasHeaders && [
+        'headers',
+        `frourioSpec.${m.name}.headers.safeParse(Object.fromEntries(req.headers))`,
+      ],
+      m.hasQuery && [
+        'query',
+        `frourioSpec.${m.name}.query.safeParse(Object.fromEntries(req.nextUrl.searchParams))`,
+      ],
+      m.hasBody && [
+        'body',
+        `frourioSpec.${m.name}.body.safeParse(await req.json().catch(() => undefined))`,
+      ],
+    ].filter((r) => !!r);
+
+    return `    ${m.name.toUpperCase()}: async (req: NextRequest) => {${requests.map((r) => `\n      const ${r[0]} = ${r[1]};\n\n      if (${r[0]}.error) return createReqErr(${r[0]}.error);\n`).join('')}
+      const res = await controller.${m.name}({ ${requests.map((r) => `${r[0]}: ${r[0]}.data`).join(', ')} });
 
       switch (res.status) {
 ${m.res
-  .map(
-    (r) => `        case ${r.status}:
-          return NextResponse.json(frourioSpec.${m.name}.res[${r.status}].body.parse(res.body), {
-            status: ${r.status},${r.hasHeaders ? `\n            headers: frourioSpec.${m.name}.res[${r.status}].headers.parse(res.headers),` : ''}
-          });`,
-  )
+  .map((r) => {
+    const resTypes = [r.hasHeaders && 'headers', 'body'].filter((r) => r !== false);
+
+    return `        case ${r.status}: {${resTypes.map((t) => `\n          const ${t} = frourioSpec.${m.name}.res[${r.status}].${t}.safeParse(res.${t});\n\n          if (${t}.error) return createResErr();\n`).join('')}
+          return NextResponse.json(body.data, { status: ${r.status}${r.hasHeaders ? ', headers: headers.data' : ''} });
+        }`;
+  })
   .join('\n')}
         default:
           throw new Error(res${m.res.length <= 1 ? '.status' : ''} satisfies never);
       }
-    },`,
-  )
+    },`;
+  })
   .join('\n')}
   };
 };
@@ -172,4 +192,20 @@ export function createRoute<T extends Record<string, unknown>>(
 
   return { ...toHandler(cb(controllerOrDeps as T)), inject: (d: T) => toHandler(cb(d)) };
 }
+
+const createReqErr = (err: z.ZodError) =>
+  NextResponse.json<FrourioErr>(
+    {
+      status: 422,
+      error: 'Unprocessable Entity',
+      issues: err.issues.map((issue) => ({ path: issue.path, message: issue.message })),
+    },
+    { status: 422 },
+  );
+
+const createResErr = () =>
+  NextResponse.json<FrourioErr>(
+    { status: 500, error: 'Internal Server Error' },
+    { status: 500 },
+  );
 `;

@@ -46,7 +46,7 @@ $ npm install @frourio/next --save-dev
     <tr>
       <th>Option</th>
       <th>Type</th>
-      <th width="100%">Description</th>
+      <th>Description</th>
     </tr>
   </thead>
   <tbody>
@@ -78,7 +78,7 @@ $ npm install @frourio/next --save-dev
 
 ## Usage
 
-`app/<Route Handlers Dir>/frourio.ts` or `src/app/<Route Handlers Dir>/frourio.ts`
+`(src)/app/<Route Handlers Dir>/frourio.ts`
 
 ```ts
 import type { FrourioSpec } from '@frourio/next';
@@ -89,15 +89,14 @@ export const frourioSpec = {
     headers: z.object({ cookie: z.string().optional() }),
     query: z.object({ aa: z.string() }),
     res: {
-      200: { body: z.string() },
-      201: { body: z.array(z.number()), headers: z.object({ 'Set-Cookie': z.string() }) },
+      200: { body: z.object({ bb: z.string() }) },
       404: { body: z.undefined() },
     },
   },
   post: {
     body: z.object({ bb: z.number() }),
     res: {
-      '200': { body: z.object({ cc: z.number() }) },
+      201: { body: z.array(z.number()), headers: z.object({ 'Set-Cookie': z.string() }) },
     },
   },
 } satisfies FrourioSpec;
@@ -107,14 +106,14 @@ export const frourioSpec = {
 $ npm run dev # Automatically generate <Route Handlers Dir>/frourio.server.ts
 ```
 
-`app/<Route Handlers Dir>/route.ts` or `src/app/<Route Handlers Dir>/route.ts`
+`(src)/app/<Route Handlers Dir>/route.ts`
 
 ```ts
 import { createRoute } from './frourio.server';
 
 export const { GET, POST } = createRoute({
-  get: async () => ({ status: 200, body: 'ok' }),
-  post: async ({ body }) => ({ status: 200, body: { cc: body.bb } }),
+  get: async ({ query }) => ({ status: 200, body: { bb: query.aa } }),
+  post: async ({ body }) => ({ status: 201, body: [body.bb], headers: { 'Set-Cookie': 'aaa' } }),
 });
 ```
 

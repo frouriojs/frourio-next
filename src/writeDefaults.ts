@@ -24,7 +24,7 @@ import { z } from 'zod';
 
 export const frourioSpec = {
   get: {
-    res: { 200: { body: z.string() } },
+    res: { 200: { body: z.object({ value: z.string() }) } },
   },
 } satisfies FrourioSpec;
 `;
@@ -33,7 +33,7 @@ const defaultRouteData = `import { createRoute } from './${SERVER_FILE.replace('
 
 export const { GET } = createRoute({
   get: async () => {
-    return { status: 200, body: 'ok' };
+    return { status: 200, body: { value: 'ok' } };
   },
 });
 `;

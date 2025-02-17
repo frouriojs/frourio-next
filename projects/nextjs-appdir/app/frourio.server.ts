@@ -59,7 +59,7 @@ type ResHandler = {
 
 const toHandler = (controller: Controller): ResHandler => {
   return {
-    GET: async (req: NextRequest) => {
+    GET: async (req) => {
       const headers = frourioSpec.get.headers.safeParse(Object.fromEntries(req.headers));
 
       if (headers.error) return createReqErr(headers.error);
@@ -89,7 +89,7 @@ const toHandler = (controller: Controller): ResHandler => {
           throw new Error(res satisfies never);
       }
     },
-    POST: async (req: NextRequest) => {
+    POST: async (req) => {
       const body = frourioSpec.post.body.safeParse(await req.json().catch(() => undefined));
 
       if (body.error) return createReqErr(body.error);

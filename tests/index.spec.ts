@@ -5,7 +5,8 @@ import { unlink } from 'fs/promises';
 import { NextRequest } from 'next/server';
 import path from 'path';
 import { expect, test } from 'vitest';
-import { GET, POST } from '../projects/nextjs-appdir/app/route';
+import * as paramsRoute from '../projects/nextjs-appdir/app/[a]/[b]/[...c]/route';
+import * as baseRoute from '../projects/nextjs-appdir/app/route';
 import { SERVER_FILE } from '../src/constants';
 import { generate } from '../src/generate';
 import { getConfig } from '../src/getConfig';
@@ -33,25 +34,33 @@ test('generate', async () => {
   expect(out).toMatch('nothing to commit, working tree clean');
 });
 
-test('handler', async () => {
-  const res1 = await GET(new NextRequest('http://example.com/'));
+test('base handler', async () => {
+  const res1 = await baseRoute.GET(new NextRequest('http://example.com/'));
 
   expect(res1.status).toBe(422);
 
   const val = 'foo';
-  const res2 = await GET(new NextRequest(`http://example.com/?aa=${val}`));
+  const res2 = await baseRoute.GET(new NextRequest(`http://example.com/?aa=${val}`));
 
   await expect(res2.json()).resolves.toEqual({ bb: val });
 
-  const res3 = await POST(new NextRequest('http://example.com/'));
+  const res3 = await baseRoute.POST(new NextRequest('http://example.com/'));
 
   expect(res3.status).toBe(422);
 
   const body = { bb: 3 };
-  const res4 = await POST(
+  const res4 = await baseRoute.POST(
     new NextRequest('http://example.com/', { method: 'POST', body: JSON.stringify(body) }),
   );
 
   await expect(res4.json()).resolves.toEqual([body.bb]);
   expect(res4.headers.get('Set-Cookie')).toBe('aaa');
+});
+
+test('params handler', async () => {
+  const res = await paramsRoute.GET(new NextRequest('http://example.com/aaa/bbb/ccc'), {
+    params: Promise.resolve({ a: 'aaa', b: 'bbb', c: ['ccc'] }),
+  });
+
+  await expect(res.json()).resolves.toEqual({ value: ['aaa', 'bbb', 'ccc'] });
 });

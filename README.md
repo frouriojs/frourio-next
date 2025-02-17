@@ -5,10 +5,10 @@
 
 <div align="center">
   <a href="https://www.npmjs.com/package/@frourio/next">
-    <img src="https://img.shields.io/npm/v/＠frourio/next" alt="npm version" />
+    <img src="https://img.shields.io/npm/v/@frourio/next" alt="npm version" />
   </a>
   <a href="https://www.npmjs.com/package/@frourio/next">
-    <img src="https://img.shields.io/npm/dm/＠frourio/next" alt="npm download" />
+    <img src="https://img.shields.io/npm/dm/@frourio/next" alt="npm download" />
   </a>
 </div>
 <br />
@@ -70,18 +70,19 @@ $ npm install @frourio/next --save-dev
 
 ## Usage
 
-`(src)/app/<Route Handlers Dir>/frourio.ts`
+`app/api/[slug]/frourio.ts`
 
 ```ts
 import type { FrourioSpec } from '@frourio/next';
 import { z } from 'zod';
 
 export const frourioSpec = {
+  param: z.string(),
   get: {
     headers: z.object({ cookie: z.string().optional() }),
     query: z.object({ aa: z.string() }),
     res: {
-      200: { body: z.object({ bb: z.string() }) },
+      200: { body: z.object({ bb: z.array(z.string()) }) },
       404: { body: z.undefined() },
     },
   },
@@ -95,47 +96,54 @@ export const frourioSpec = {
 ```
 
 ```sh
-$ npm run dev # Automatically generate <Route Handlers Dir>/frourio.server.ts
+$ npm run dev # Automatically generate app/api/[slug]/frourio.server.ts
 ```
 
-`(src)/app/<Route Handlers Dir>/route.ts`
+`app/api/[slug]/route.ts`
 
 ```ts
 import { createRoute } from './frourio.server';
 
 export const { GET, POST } = createRoute({
-  get: async ({ query }) => {
-    return { status: 200, body: { bb: query.aa } };
+  get: async ({ params, query }) => {
+    return { status: 200, body: { bb: [params.slug, query.aa] } };
   },
-  post: async ({ body }) => {
-    return { status: 201, body: [body.bb], headers: { 'Set-Cookie': 'aaa' } };
+  post: async ({ params, body }) => {
+    return { status: 201, body: [body.bb], headers: { 'Set-Cookie': params.slug } };
   },
 });
 ```
 
 ## Test
 
-`(src)/tests/index.spec.ts`
+`tests/index.spec.ts`
 
 ```ts
 import { execSync } from 'child_process';
 import { NextRequest } from 'next/server';
 import { expect, test } from 'vitest';
-import { GET, POST } from '../projects/nextjs-appdir/app/route';
+import { GET, POST } from '../app/api/[slug]/route';
 
 test('Route Handlers', async () => {
-  const val = 'foo';
-  const res1 = await GET(new NextRequest(`http://example.com/?aa=${val}`));
+  const slug = 'foo';
+  const query = 'bar';
+  const params = Promise.resolve({ slug });
+  const res1 = await GET(new NextRequest(`http://example.com/${slug}?aa=${query}`, { params }));
 
-  await expect(res1.json()).resolves.toEqual({ bb: val });
+  await expect(res1.json()).resolves.toEqual({ bb: [slug, query] });
 
   const body = { bb: 3 };
   const res2 = await POST(
-    new NextRequest('http://example.com/', { method: 'POST', body: JSON.stringify(body) }),
+    new NextRequest(`http://example.com/${slug}`, {
+      method: 'POST',
+      params,
+      body: JSON.stringify(body),
+    }),
   );
 
   await expect(res2.json()).resolves.toEqual([body.bb]);
-  expect(res2.headers.get('Set-Cookie')).toBe('aaa');
+
+  expect(res2.headers.get('Set-Cookie')).toBe(slug);
 });
 ```
 

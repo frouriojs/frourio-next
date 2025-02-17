@@ -6,7 +6,7 @@ type digit = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
 type Res = { [Status in `${2 | 4 | 5}${digit}${digit}`]?: ResValue };
 
-export type FrourioSpec = {
+export type FrourioSpec = { param?: z.ZodTypeAny } & {
   [method in 'get' | 'head' | 'options']?: {
     headers?: z.ZodTypeAny;
     query?: z.ZodTypeAny;

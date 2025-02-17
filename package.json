@@ -16,10 +16,10 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
-  "homepage": "https://github.com/frouriojs/next-frourio#readme",
+  "homepage": "https://github.com/frouriojs/frourio-next#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/frouriojs/next-frourio.git"
+    "url": "git+https://github.com/frouriojs/frourio-next.git"
   },
   "files": [
     "dist"

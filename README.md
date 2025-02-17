@@ -149,4 +149,4 @@ test('Route Handlers', async () => {
 
 ## License
 
-NextFrourio is licensed under a [MIT License](https://github.com/frouriojs/next-frourio/blob/main/LICENSE).
+NextFrourio is licensed under a [MIT License](https://github.com/frouriojs/frourio-next/blob/main/LICENSE).

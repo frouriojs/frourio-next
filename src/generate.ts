@@ -3,6 +3,7 @@ import { writeFile } from 'fs/promises';
 import path from 'path';
 import ts from 'typescript';
 import { FROURIO_FILE, SERVER_FILE } from './constants';
+import { getValidatorOption, inferZodType, type PropOption } from './getPropOptions';
 import { initTSC } from './initTSC';
 import { listFrourioFiles } from './listFrourioFiles';
 import { writeDefaults } from './writeDefaults';
@@ -30,9 +31,11 @@ export const generate = async (appDir: string): Promise<void> => {
         if (!decl?.initializer) return;
 
         const specProps = checker.getTypeAtLocation(decl.initializer).getProperties();
+        const paramSymbol = specProps.find((t) => t.escapedName === 'param');
+        const paramZodType = paramSymbol ? inferZodType(checker, paramSymbol) : null;
 
         return {
-          hasParam: specProps.some((t) => t.escapedName === 'param'),
+          param: paramZodType ? getValidatorOption(checker, paramZodType) : null,
           methods: specProps
             .map((t) => {
               const type =
@@ -83,7 +86,7 @@ export const generate = async (appDir: string): Promise<void> => {
 
       await writeFile(
         path.posix.join(filePath, '../', SERVER_FILE),
-        serverData(pathToParams(frourioFiles, filePath, spec.hasParam), spec.methods),
+        serverData(pathToParams(frourioFiles, filePath, spec.param), spec.methods),
         'utf8',
       );
     }),
@@ -93,7 +96,9 @@ export const generate = async (appDir: string): Promise<void> => {
 type ParamsInfo = {
   ancestorFrourio: string | undefined;
   middles: string[];
-  current: { name: string; hasParam: boolean; isArray: boolean; isOptional: boolean } | undefined;
+  current:
+    | { name: string; param: PropOption | null; array: { isOptional: boolean } | undefined }
+    | undefined;
 };
 
 const chunkToSlugName = (chunk: string) =>
@@ -102,7 +107,7 @@ const chunkToSlugName = (chunk: string) =>
 const pathToParams = (
   frourioFiles: string[],
   filePath: string,
-  hasParam: boolean,
+  param: PropOption | null,
 ): ParamsInfo | undefined => {
   if (!filePath.includes('[')) return undefined;
 
@@ -126,17 +131,17 @@ const pathToParams = (
     current: tail.startsWith('[')
       ? {
           name: chunkToSlugName(tail),
-          hasParam,
-          isArray: tail.includes('...'),
-          isOptional: tail.startsWith('[['),
+          param,
+          array: tail.includes('...') ? { isOptional: tail.startsWith('[[') } : undefined,
         }
       : undefined,
   };
 };
 
 const paramsToText = (params: ParamsInfo) => {
+  const paramText = 'frourioSpec.param';
   const current = params.current
-    ? `z.object({ ${params.current.name}: ${params.current.hasParam ? 'frourioSpec.param' : params.current.isArray ? 'z.array(z.string())' : 'z.string()'}${params.current.isOptional ? '.optional()' : ''} })`
+    ? `z.object({ ${params.current.name}: ${params.current.param ? (params.current.param.typeName === 'number' ? (params.current.param.isArray ? `paramToNumArr(${paramText})` : `paramToNum(${paramText})`) : paramText) : params.current.array ? `z.array(z.string())${params.current.array.isOptional ? '.optional()' : ''}` : 'z.string()'} })`
     : '';
   const ancestor = 'ancestorParamsValidator';
   const middles = `z.object({ ${params.middles.map((middle) => `${chunkToSlugName(middle)}: z.string()`).join(', ')} })`;
@@ -166,7 +171,7 @@ import { frourioSpec } from './frourio';
 import type { ${methods.map((m) => m.name.toUpperCase()).join(', ')} } from './route';
 
 type RouteChecker = [${methods.map((m) => `typeof ${m.name.toUpperCase()}`).join(', ')}];
-${params ? `\n${params.current ? 'export ' : ''}const paramsValidator = ${paramsToText(params)};\n` : ''}
+${params ? `\n${params.current ? `${params.current.param?.typeName !== 'number' ? '' : params.current.param.isArray ? paramToNumArrText : paramToNumText}export ` : ''}const paramsValidator = ${paramsToText(params)};\n` : ''}
 type SpecType = typeof frourioSpec;
 
 type Controller = {
@@ -278,4 +283,32 @@ const createResErr = () =>
     { status: 500, error: 'Internal Server Error' },
     { status: 500 },
   );
+`;
+
+const paramToNumText = `const paramToNum = <T extends z.ZodTypeAny>(validator: T) =>
+  z.string().transform<z.infer<T>>((val, ctx) => {
+    const numVal = Number(val);
+    const parsed = validator.safeParse(isNaN(numVal) ? val : numVal);
+
+    if (parsed.success) return parsed.data;
+
+    parsed.error.issues.forEach((issue) => ctx.addIssue(issue));
+  });
+
+`;
+
+const paramToNumArrText = `const paramToNumArr = <T extends z.ZodTypeAny>(validator: T) =>
+  z.array(z.string()).optional().transform<z.infer<T>>((val, ctx) => {
+    const numArr = val?.map((v) => {
+      const numVal = Number(v);
+
+      return isNaN(numVal) ? v : numVal;
+    });
+    const parsed = validator.safeParse(numArr);
+
+    if (parsed.success) return parsed.data;
+
+    parsed.error.issues.forEach((issue) => ctx.addIssue(issue));
+  });
+
 `;

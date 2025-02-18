@@ -6,7 +6,21 @@ import type { GET } from './route';
 
 type RouteChecker = [typeof GET];
 
-export const paramsValidator = z.object({ slug: frourioSpec.param });
+const paramToNumArr = <T extends z.ZodTypeAny>(validator: T) =>
+  z.array(z.string()).optional().transform<z.infer<T>>((val, ctx) => {
+    const numArr = val?.map((v) => {
+      const numVal = Number(v);
+
+      return isNaN(numVal) ? v : numVal;
+    });
+    const parsed = validator.safeParse(numArr);
+
+    if (parsed.success) return parsed.data;
+
+    parsed.error.issues.forEach((issue) => ctx.addIssue(issue));
+  });
+
+export const paramsValidator = z.object({ slug: paramToNumArr(frourioSpec.param) });
 
 type SpecType = typeof frourioSpec;
 

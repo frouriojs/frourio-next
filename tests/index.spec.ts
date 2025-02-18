@@ -59,8 +59,8 @@ test('base handler', async () => {
 
 test('params handler', async () => {
   const res = await paramsRoute.GET(new NextRequest('http://example.com/aaa/bbb/ccc'), {
-    params: Promise.resolve({ a: 'aaa', b: 'bbb', c: ['ccc'] }),
+    params: Promise.resolve({ a: '111', b: 'bbb', c: ['ccc'] }),
   });
 
-  await expect(res.json()).resolves.toEqual({ value: ['aaa', 'bbb', 'ccc'] });
+  await expect(res.json()).resolves.toEqual({ value: [111, 'bbb', 'ccc'] });
 });

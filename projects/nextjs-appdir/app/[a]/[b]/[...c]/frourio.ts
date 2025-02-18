@@ -3,6 +3,6 @@ import { z } from 'zod';
 
 export const frourioSpec = {
   get: {
-    res: { 200: { body: z.object({ value: z.array(z.string()) }) } },
+    res: { 200: { body: z.object({ value: z.array(z.string().or(z.number())) }) } },
   },
 } satisfies FrourioSpec;

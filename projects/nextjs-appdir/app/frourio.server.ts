@@ -64,7 +64,9 @@ const toHandler = (controller: Controller): ResHandler => {
 
       if (headers.error) return createReqErr(headers.error);
 
-      const query = frourioSpec.get.query.safeParse(Object.fromEntries(req.nextUrl.searchParams));
+      const query = frourioSpec.get.query.safeParse({
+        aa: req.nextUrl.searchParams.get('aa') ?? undefined,
+      });
 
       if (query.error) return createReqErr(query.error);
 

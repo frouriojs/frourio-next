@@ -13,6 +13,7 @@ type SpecType = typeof frourioSpec;
 type Controller = {
   get: (req: {
     params: z.infer<typeof paramsValidator>;
+    query: z.infer<SpecType['get']['query']>;
   }) => Promise<
     | {
         status: 200;
@@ -40,11 +41,32 @@ type ResHandler = {
 const toHandler = (controller: Controller): ResHandler => {
   return {
     GET: async (req, option) => {
+      const query = frourioSpec.get.query.safeParse({
+        requiredNum: queryToNum(req.nextUrl.searchParams.get('requiredNum') ?? undefined),
+        requiredNumArr: queryToNumArr(req.nextUrl.searchParams.getAll('requiredNumArr')),
+        id: req.nextUrl.searchParams.get('id') ?? undefined,
+        strArray: req.nextUrl.searchParams.getAll('strArray'),
+        disable: req.nextUrl.searchParams.get('disable') ?? undefined,
+        bool: queryToBool(req.nextUrl.searchParams.get('bool') ?? undefined),
+        boolArray: queryToBoolArr(req.nextUrl.searchParams.getAll('boolArray')),
+        symbolIds: req.nextUrl.searchParams.getAll('symbolIds'),
+        maybeIds: queryToNumArr(req.nextUrl.searchParams.getAll('maybeIds')),
+        optionalNum: queryToNum(req.nextUrl.searchParams.get('optionalNum') ?? undefined),
+        optionalNumArr: queryToNumArr(req.nextUrl.searchParams.getAll('optionalNumArr')),
+        emptyNum: queryToNum(req.nextUrl.searchParams.get('emptyNum') ?? undefined),
+        optionalStrArray: req.nextUrl.searchParams.getAll('optionalStrArray'),
+        optionalBool: queryToBool(req.nextUrl.searchParams.get('optionalBool') ?? undefined),
+        optionalBoolArray: queryToBoolArr(req.nextUrl.searchParams.getAll('optionalBoolArray')),
+        optionalZodIds: queryToNumArr(req.nextUrl.searchParams.getAll('optionalZodIds')),
+      });
+
+      if (query.error) return createReqErr(query.error);
+
       const params = paramsValidator.safeParse(await option.params);
 
       if (params.error) return createReqErr(params.error);
 
-      const res = await controller.get({ params: params.data });
+      const res = await controller.get({ params: params.data, query: query.data });
 
       switch (res.status) {
         case 200: {
@@ -90,3 +112,22 @@ const createResErr = () =>
     { status: 500, error: 'Internal Server Error' },
     { status: 500 },
   );
+
+const queryToNum = (val: string | undefined) => {
+  const num = Number(val);
+
+  return isNaN(num) ? val : num;
+};
+
+const queryToNumArr = (val: string[]) =>
+  val.map((v) => {
+    const numVal = Number(v);
+
+    return isNaN(numVal) ? v : numVal;
+  });
+
+const queryToBool = (val: string | undefined) =>
+  val === 'true' ? true : val === 'false' ? false : val;
+
+const queryToBoolArr = (val: string[]) =>
+  val.map((v) => (v === 'true' ? true : v === 'false' ? false : v));

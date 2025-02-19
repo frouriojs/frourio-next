@@ -3,7 +3,12 @@ import { writeFile } from 'fs/promises';
 import path from 'path';
 import ts from 'typescript';
 import { FROURIO_FILE, SERVER_FILE } from './constants';
-import { getValidatorOption, inferZodType, type PropOption } from './getPropOptions';
+import {
+  getPropOptions,
+  getValidatorOption,
+  inferZodType,
+  type PropOption,
+} from './getPropOptions';
 import { initTSC } from './initTSC';
 import { listFrourioFiles } from './listFrourioFiles';
 import { writeDefaults } from './writeDefaults';
@@ -31,7 +36,7 @@ export const generate = async (appDir: string): Promise<void> => {
         if (!decl?.initializer) return;
 
         const specProps = checker.getTypeAtLocation(decl.initializer).getProperties();
-        const paramSymbol = specProps.find((t) => t.escapedName === 'param');
+        const paramSymbol = specProps.find((t) => t.getName() === 'param');
         const paramZodType = paramSymbol ? inferZodType(checker, paramSymbol) : null;
 
         return {
@@ -44,7 +49,7 @@ export const generate = async (appDir: string): Promise<void> => {
               if (!type) return null;
 
               const props = type.getProperties();
-              const res = props.find((p) => p.escapedName === 'res');
+              const res = props.find((p) => p.getName() === 'res');
 
               if (!res) return null;
 
@@ -54,11 +59,14 @@ export const generate = async (appDir: string): Promise<void> => {
 
               if (!resType) return null;
 
+              const querySymbol = props.find((p) => p.getName() === 'query');
+              const queryZodType = querySymbol ? inferZodType(checker, querySymbol) : null;
+
               return {
-                name: t.escapedName.toString(),
-                hasHeaders: props.some((p) => p.escapedName === 'headers'),
-                hasQuery: props.some((p) => p.escapedName === 'query'),
-                hasBody: props.some((p) => p.escapedName === 'body'),
+                name: t.getName(),
+                hasHeaders: props.some((p) => p.getName() === 'headers'),
+                query: queryZodType ? getPropOptions(checker, queryZodType) : null,
+                hasBody: props.some((p) => p.getName() === 'body'),
                 res: resType
                   .getProperties()
                   .map((s) => {
@@ -71,8 +79,8 @@ export const generate = async (appDir: string): Promise<void> => {
                     const statusProps = statusType.getProperties();
 
                     return {
-                      status: s.escapedName.toString(),
-                      hasHeaders: statusProps.some((p) => p.escapedName === 'headers'),
+                      status: s.getName(),
+                      hasHeaders: statusProps.some((p) => p.getName() === 'headers'),
                     };
                   })
                   .filter((s) => s !== null),
@@ -160,7 +168,7 @@ const serverData = (
   methods: {
     name: string;
     hasHeaders: boolean;
-    hasQuery: boolean;
+    query: PropOption[] | null;
     hasBody: boolean;
     res: { status: string; hasHeaders: boolean }[];
   }[],
@@ -178,7 +186,7 @@ type Controller = {
 ${methods
   .map(
     (m) =>
-      `  ${m.name}: (req: {${params ? '\n    params: z.infer<typeof paramsValidator>;' : ''}${m.hasHeaders ? `\n    headers: z.infer<SpecType['${m.name}']['headers']>;` : ''}${m.hasQuery ? `\n    query: z.infer<SpecType['${m.name}']['query']>;` : ''}${m.hasBody ? `\n    body: z.infer<SpecType['${m.name}']['body']>;` : ''}
+      `  ${m.name}: (req: {${params ? '\n    params: z.infer<typeof paramsValidator>;' : ''}${m.hasHeaders ? `\n    headers: z.infer<SpecType['${m.name}']['headers']>;` : ''}${m.query ? `\n    query: z.infer<SpecType['${m.name}']['query']>;` : ''}${m.hasBody ? `\n    body: z.infer<SpecType['${m.name}']['body']>;` : ''}
   }) => Promise<
 ${m.res
   .map(
@@ -222,9 +230,11 @@ ${methods
         'headers',
         `frourioSpec.${m.name}.headers.safeParse(Object.fromEntries(req.headers))`,
       ],
-      m.hasQuery && [
+      m.query && [
         'query',
-        `frourioSpec.${m.name}.query.safeParse(Object.fromEntries(req.nextUrl.searchParams))`,
+        `frourioSpec.${m.name}.query.safeParse({
+${m.query.map((p) => `        ${p.name}: ${p.typeName === 'string' ? '' : `queryTo${p.typeName === 'number' ? 'Num' : 'Bool'}${p.isArray ? 'Arr' : ''}(`}req.nextUrl.searchParams.get${p.isArray ? 'All' : ''}('${p.name}')${p.isArray ? '' : ' ?? undefined'}${p.typeName === 'string' ? '' : ')'},`).join('\n')}
+      })`,
       ],
       m.hasBody && [
         'body',
@@ -283,7 +293,7 @@ const createResErr = () =>
     { status: 500, error: 'Internal Server Error' },
     { status: 500 },
   );
-`;
+${methods.some((m) => m.query?.some((q) => q.typeName === 'number' && !q.isArray)) ? queryToNumText : ''}${methods.some((m) => m.query?.some((q) => q.typeName === 'number' && q.isArray)) ? queryToNumArrText : ''}${methods.some((m) => m.query?.some((q) => q.typeName === 'boolean' && !q.isArray)) ? queryToBoolText : ''}${methods.some((m) => m.query?.some((q) => q.typeName === 'boolean' && q.isArray)) ? queryToBoolArrText : ''}`;
 
 const paramToNumText = `const paramToNum = <T extends z.ZodTypeAny>(validator: T) =>
   z.string().transform<z.infer<T>>((val, ctx) => {
@@ -311,4 +321,31 @@ const paramToNumArrText = `const paramToNumArr = <T extends z.ZodTypeAny>(valida
     parsed.error.issues.forEach((issue) => ctx.addIssue(issue));
   });
 
+`;
+
+const queryToNumText = `
+const queryToNum = (val: string | undefined) => {
+  const num = Number(val);
+
+  return isNaN(num) ? val : num;
+};
+`;
+
+const queryToNumArrText = `
+const queryToNumArr = (val: string[]) =>
+  val.map((v) => {
+    const numVal = Number(v);
+
+    return isNaN(numVal) ? v : numVal;
+  });
+`;
+
+const queryToBoolText = `
+const queryToBool = (val: string | undefined) =>
+  val === 'true' ? true : val === 'false' ? false : val;
+`;
+
+const queryToBoolArrText = `
+const queryToBoolArr = (val: string[]) =>
+  val.map((v) => (v === 'true' ? true : v === 'false' ? false : v));
 `;

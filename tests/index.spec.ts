@@ -5,6 +5,14 @@ import { unlink } from 'fs/promises';
 import { NextRequest } from 'next/server';
 import path from 'path';
 import { expect, test } from 'vitest';
+import type { z } from 'zod';
+import type {
+  frourioSpec,
+  MaybeId,
+  SymbolId,
+  ZodId,
+} from '../projects/nextjs-appdir/app/(group1)/[pid]/frourio';
+import * as queryRoute from '../projects/nextjs-appdir/app/(group1)/[pid]/route';
 import * as paramsRoute from '../projects/nextjs-appdir/app/[a]/[b]/[...c]/route';
 import * as baseRoute from '../projects/nextjs-appdir/app/route';
 import { SERVER_FILE } from '../src/constants';
@@ -54,6 +62,7 @@ test('base handler', async () => {
   );
 
   await expect(res4.json()).resolves.toEqual([body.bb]);
+
   expect(res4.headers.get('Set-Cookie')).toBe('aaa');
 });
 
@@ -63,4 +72,108 @@ test('params handler', async () => {
   });
 
   await expect(res.json()).resolves.toEqual({ value: [111, 'bbb', 'ccc'] });
+});
+
+type Query = z.infer<typeof frourioSpec.get.query>;
+
+test('query', async () => {
+  await Promise.all(
+    [
+      {
+        requiredNum: 1,
+        requiredNumArr: [1, 2],
+        id: '1',
+        strArray: [],
+        disable: 'false',
+        bool: true,
+        boolArray: [false, true],
+        symbolIds: ['aaa' as SymbolId],
+        optionalZodIds: [1 as ZodId],
+        maybeIds: [0 as MaybeId],
+      } satisfies Query,
+      {
+        requiredNum: 2,
+        emptyNum: 0,
+        requiredNumArr: [],
+        id: '1',
+        strArray: ['aa'],
+        disable: 'false',
+        bool: false,
+        optionalBool: true,
+        boolArray: [],
+        optionalBoolArray: [true, false, false],
+        symbolIds: [],
+        maybeIds: [],
+      } satisfies Query,
+    ].map(async (val) => {
+      const query = new URLSearchParams();
+
+      Object.entries(val).forEach(([key, value]) => {
+        if (Array.isArray(value)) {
+          value.forEach((item) => query.append(key, String(item)));
+        } else {
+          query.set(key, String(value));
+        }
+      });
+
+      const res = await queryRoute.GET(new NextRequest(`http://example.com/111?${query}`), {
+        params: Promise.resolve({ pid: '111' }),
+      });
+
+      await expect(res.json()).resolves.toEqual({ pid: '111', query: val });
+    }),
+  );
+
+  await Promise.all(
+    [
+      {
+        requiredNum: 0,
+        requiredNumArr: [],
+        id: '1',
+        disable: 'no boolean',
+        bool: false,
+        boolArray: [],
+      },
+      {
+        requiredNum: 0,
+        requiredNumArr: [],
+        id: '2',
+        disable: 'true',
+        bool: false,
+        boolArray: ['no boolean'],
+      },
+      {
+        requiredNum: 0,
+        requiredNumArr: ['no number'],
+        id: '3',
+        disable: 'true',
+        bool: false,
+        boolArray: [],
+      },
+      {
+        requiredNum: 1,
+        requiredNumArr: [1, 2],
+        id: 'no number',
+        disable: 'true',
+        bool: false,
+        boolArray: [],
+      },
+    ].map(async (val) => {
+      const query = new URLSearchParams();
+
+      Object.entries(val).forEach(([key, value]) => {
+        if (Array.isArray(value)) {
+          value.forEach((item) => query.append(key, String(item)));
+        } else {
+          query.set(key, String(value));
+        }
+      });
+
+      const res = await queryRoute.GET(new NextRequest(`http://example.com/111?${query}`), {
+        params: Promise.resolve({ pid: '111' }),
+      });
+
+      expect(res.status).toBe(422);
+    }),
+  );
 });

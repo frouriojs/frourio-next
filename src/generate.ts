@@ -233,7 +233,13 @@ ${methods
       m.query && [
         'query',
         `frourioSpec.${m.name}.query.safeParse({
-${m.query.map((p) => `        ${p.name}: ${p.typeName === 'string' ? '' : `queryTo${p.typeName === 'number' ? 'Num' : 'Bool'}${p.isArray ? 'Arr' : ''}(`}req.nextUrl.searchParams.get${p.isArray ? 'All' : ''}('${p.name}')${p.isArray ? '' : ' ?? undefined'}${p.typeName === 'string' ? '' : ')'},`).join('\n')}
+${m.query
+  .map((p) => {
+    const fn = `${p.typeName === 'string' ? '' : `queryTo${p.typeName === 'number' ? 'Num' : 'Bool'}${p.isArray ? 'Arr' : ''}(`}req.nextUrl.searchParams.get${p.isArray ? 'All' : ''}('${p.name}')${p.isArray ? '' : ' ?? undefined'}${p.typeName === 'string' ? '' : ')'}`;
+
+    return `        ${p.name}: ${p.isArray && p.isOptional ? `${fn}.length > 0 ? ${fn} : undefined` : fn},`;
+  })
+  .join('\n')}
       })`,
       ],
       m.hasBody && [

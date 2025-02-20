@@ -1,7 +1,7 @@
 import { createRoute } from './frourio.server';
 
 export const { GET } = createRoute({
-  get: async ({ params }) => {
-    return { status: 200, body: params.pid };
+  get: async ({ params, query }) => {
+    return { status: 200, body: { pid: params.pid, query} };
   },
 });

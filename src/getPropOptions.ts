@@ -81,10 +81,13 @@ const getPropOption = (
 
   for (const typeName of TYPE_NAMES) {
     const returnResult = (type: ts.Type): PropOption | null =>
-      (
-        type.isIntersection()
-          ? type.types.some((t) => checker.typeToString(t) === typeName)
-          : checker.typeToString(type) === typeName
+      checker.isTypeAssignableTo(
+        type,
+        typeName === 'boolean'
+          ? checker.getBooleanType()
+          : typeName === 'number'
+            ? checker.getNumberType()
+            : checker.getStringType(),
       )
         ? {
             name: prop.getName(),

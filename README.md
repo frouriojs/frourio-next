@@ -117,6 +117,48 @@ export const { GET, POST } = createRoute({
 });
 ```
 
+## LLM Streaming
+
+`app/api/chat/frourio.ts`
+
+If res property is not specified, any Response object can be returned.
+
+```ts
+import type { FrourioSpec } from '@frourio/next';
+import { z } from 'zod';
+
+export const frourioSpec = {
+  get: {
+    query: z.object({ message: z.string() }),
+  },
+} satisfies FrourioSpec;
+```
+
+```sh
+$ npm i ai @ai-sdk/openai --save-dev
+$ npm run dev # Automatically generate app/api/chat/frourio.server.ts
+```
+
+`app/api/chat/route.ts`
+
+```ts
+import { streamText } from 'ai';
+import { openai } from '@ai-sdk/openai';
+import { createRoute } from './frourio.server';
+
+export const { GET } = createRoute({
+  get: async ({ query }) => {
+    const result = streamText({
+      model: openai('gpt-4o'),
+      system: 'You are a helpful assistant.',
+      messages: [{ role: 'user', content: query.message }],
+    });
+
+    return result.toDataStreamResponse();
+  },
+});
+```
+
 ## Test
 
 `tests/index.spec.ts`

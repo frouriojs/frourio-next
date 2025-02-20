@@ -6,33 +6,15 @@ import type { GET } from './route';
 
 type RouteChecker = [typeof GET];
 
-const paramToNumArr = <T extends z.ZodTypeAny>(validator: T) =>
-  z.array(z.string()).optional().transform<z.infer<T>>((val, ctx) => {
-    const numArr = val?.map((v) => {
-      const numVal = Number(v);
-
-      return isNaN(numVal) ? v : numVal;
-    });
-    const parsed = validator.safeParse(numArr);
-
-    if (parsed.success) return parsed.data;
-
-    parsed.error.issues.forEach((issue) => ctx.addIssue(issue));
-  });
-
-export const paramsValidator = z.object({ slug: paramToNumArr(frourioSpec.param) });
+export const paramsValidator = z.object({ y: z.string() });
 
 type SpecType = typeof frourioSpec;
 
 type Controller = {
   get: (req: {
     params: z.infer<typeof paramsValidator>;
-  }) => Promise<
-    | {
-        status: 200;
-        body: z.infer<SpecType['get']['res'][200]['body']>;
-      }
-  >;
+    query: z.infer<SpecType['get']['query']>;
+  }) => Promise<Response>;
 };
 
 type FrourioError =
@@ -43,34 +25,25 @@ type ResHandler = {
   GET: (
     req: NextRequest,
     option: { params: Promise<unknown> },
-  ) => Promise<
-    NextResponse<
-      | z.infer<SpecType['get']['res'][200]['body']>
-      | FrourioError
-    >
-  >;
+  ) => Promise<Response>;
 };
 
 const toHandler = (controller: Controller): ResHandler => {
   return {
     GET: async (req, option) => {
+      const query = frourioSpec.get.query.safeParse({
+        message: req.nextUrl.searchParams.get('message') ?? undefined,
+      });
+
+      if (query.error) return createReqErr(query.error);
+
       const params = paramsValidator.safeParse(await option.params);
 
       if (params.error) return createReqErr(params.error);
 
-      const res = await controller.get({ params: params.data });
+      const res = await controller.get({ params: params.data, query: query.data });
 
-      switch (res.status) {
-        case 200: {
-          const body = frourioSpec.get.res[200].body.safeParse(res.body);
-
-          if (body.error) return createResErr();
-
-          return createResponse(body.data, { status: 200 });
-        }
-        default:
-          throw new Error(res.status satisfies never);
-      }
+      return res;
     },
   };
 };

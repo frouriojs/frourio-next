@@ -31,7 +31,7 @@ type Controller = {
   >;
 };
 
-type FrourioErr =
+type FrourioError =
   | { status: 422; error: string; issues: { path: (string | number)[]; message: string }[] }
   | { status: 500; error: string; issues?: undefined };
 
@@ -42,7 +42,7 @@ type ResHandler = {
   ) => Promise<
     NextResponse<
       | z.infer<SpecType['get']['res'][200]['body']>
-      | FrourioErr
+      | FrourioError
     >
   >;
 };
@@ -104,7 +104,7 @@ const createResponse = <T>(body: T, init: ResponseInit): NextResponse<T> => {
 };
 
 const createReqErr = (err: z.ZodError) =>
-  NextResponse.json<FrourioErr>(
+  NextResponse.json<FrourioError>(
     {
       status: 422,
       error: 'Unprocessable Entity',
@@ -114,7 +114,7 @@ const createReqErr = (err: z.ZodError) =>
   );
 
 const createResErr = () =>
-  NextResponse.json<FrourioErr>(
+  NextResponse.json<FrourioError>(
     { status: 500, error: 'Internal Server Error' },
     { status: 500 },
   );

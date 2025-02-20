@@ -13,6 +13,8 @@ import type {
   ZodId,
 } from '../projects/nextjs-appdir/app/(group1)/[pid]/frourio';
 import * as queryRoute from '../projects/nextjs-appdir/app/(group1)/[pid]/route';
+import * as numberRoute from '../projects/nextjs-appdir/app/(group1)/blog/[...slug]/route';
+import * as stringRoute from '../projects/nextjs-appdir/app/(group1)/blog/hoge/[[...fuga]]/route';
 import * as paramsRoute from '../projects/nextjs-appdir/app/[a]/[b]/[...c]/route';
 import * as baseRoute from '../projects/nextjs-appdir/app/route';
 import { SERVER_FILE } from '../src/constants';
@@ -72,6 +74,20 @@ test('params handler', async () => {
   });
 
   await expect(res.json()).resolves.toEqual({ value: [111, 'bbb', 'ccc'] });
+});
+
+test('response string or number', async () => {
+  const res1 = await stringRoute.GET(new NextRequest('http://example.com/blog/hoge/aaa'), {
+    params: Promise.resolve({ fuga: ['aaa'] }),
+  });
+
+  await expect(res1.text()).resolves.toEqual('aaa');
+
+  const res2 = await numberRoute.GET(new NextRequest('http://example.com/blog/123/456'), {
+    params: Promise.resolve({ slug: ['123', '456'] }),
+  });
+
+  await expect(res2.json()).resolves.toEqual(123);
 });
 
 type Query = z.infer<typeof frourioSpec.get.query>;

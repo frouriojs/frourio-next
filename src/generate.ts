@@ -43,24 +43,20 @@ export const generate = async (appDir: string): Promise<void> => {
           param: paramZodType ? getValidatorOption(checker, paramZodType) : null,
           methods: specProps
             .map((t) => {
+              if (t.getName() === 'param') return null;
+
               const type =
                 t.valueDeclaration && checker.getTypeOfSymbolAtLocation(t, t.valueDeclaration);
 
               if (!type) return null;
 
               const props = type.getProperties();
-              const res = props.find((p) => p.getName() === 'res');
-
-              if (!res) return null;
-
-              const resType =
-                res.valueDeclaration &&
-                checker.getTypeOfSymbolAtLocation(res, res.valueDeclaration);
-
-              if (!resType) return null;
-
               const querySymbol = props.find((p) => p.getName() === 'query');
               const queryZodType = querySymbol ? inferZodType(checker, querySymbol) : null;
+              const res = props.find((p) => p.getName() === 'res');
+              const resType =
+                res?.valueDeclaration &&
+                checker.getTypeOfSymbolAtLocation(res, res.valueDeclaration);
 
               return {
                 name: t.getName(),
@@ -68,7 +64,7 @@ export const generate = async (appDir: string): Promise<void> => {
                 query: queryZodType ? getPropOptions(checker, queryZodType) : null,
                 hasBody: props.some((p) => p.getName() === 'body'),
                 res: resType
-                  .getProperties()
+                  ?.getProperties()
                   .map((s) => {
                     const statusType =
                       s.valueDeclaration &&
@@ -170,7 +166,7 @@ const serverData = (
     hasHeaders: boolean;
     query: PropOption[] | null;
     hasBody: boolean;
-    res: { status: string; hasHeaders: boolean }[];
+    res: { status: string; hasHeaders: boolean }[] | undefined;
   }[],
 ) => `import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
@@ -187,22 +183,24 @@ ${methods
   .map(
     (m) =>
       `  ${m.name}: (req: {${params ? '\n    params: z.infer<typeof paramsValidator>;' : ''}${m.hasHeaders ? `\n    headers: z.infer<SpecType['${m.name}']['headers']>;` : ''}${m.query ? `\n    query: z.infer<SpecType['${m.name}']['query']>;` : ''}${m.hasBody ? `\n    body: z.infer<SpecType['${m.name}']['body']>;` : ''}
-  }) => Promise<
-${m.res
-  .map(
-    (r) =>
-      `    | {
+  }) => Promise<${
+    m.res
+      ? `\n${m.res
+          .map(
+            (r) =>
+              `    | {
         status: ${r.status};${r.hasHeaders ? `\n        headers: z.infer<SpecType['${m.name}']['res'][${r.status}]['headers']>;` : ''}
         body: z.infer<SpecType['${m.name}']['res'][${r.status}]['body']>;
       }`,
-  )
-  .join('\n')}
-  >;`,
+          )
+          .join('\n')}\n  `
+      : 'Response'
+  }>;`,
   )
   .join('\n')}
 };
 
-type FrourioErr =
+type FrourioError =
   | { status: 422; error: string; issues: { path: (string | number)[]; message: string }[] }
   | { status: 500; error: string; issues?: undefined };
 
@@ -211,12 +209,14 @@ ${methods
   .map(
     (m) => `  ${m.name.toUpperCase()}: (
     req: NextRequest,${params ? '\n    option: { params: Promise<unknown> },' : ''}
-  ) => Promise<
-    NextResponse<
+  ) => Promise<${
+    m.res
+      ? `\n    NextResponse<
 ${m.res.map((r) => `      | z.infer<SpecType['${m.name}']['res'][${r.status}]['body']>`).join('\n')}
-      | FrourioErr
-    >
-  >;`,
+      | FrourioError
+    >\n  `
+      : 'Response'
+  }>;`,
   )
   .join('\n')}
 };
@@ -251,7 +251,9 @@ ${m.query
     return `    ${m.name.toUpperCase()}: async (req${params ? ', option' : ''}) => {${requests.map((r) => `\n      const ${r[0]} = ${r[1]};\n\n      if (${r[0]}.error) return createReqErr(${r[0]}.error);\n`).join('')}${params ? '\n      const params = paramsValidator.safeParse(await option.params);\n\n      if (params.error) return createReqErr(params.error);\n' : ''}
       const res = await controller.${m.name}({ ${[...(params ? ['params: params.data'] : []), ...requests.map((r) => `${r[0]}: ${r[0]}.data`)].join(', ')} });
 
-      switch (res.status) {
+      ${
+        m.res
+          ? `switch (res.status) {
 ${m.res
   .map((r) => {
     const resTypes = [r.hasHeaders && 'headers', 'body'].filter((r) => r !== false);
@@ -263,6 +265,8 @@ ${m.res
   .join('\n')}
         default:
           throw new Error(res${m.res.length <= 1 ? '.status' : ''} satisfies never);
+      }`
+          : 'return res;'
       }
     },`;
   })
@@ -303,7 +307,7 @@ const createResponse = <T>(body: T, init: ResponseInit): NextResponse<T> => {
 };
 
 const createReqErr = (err: z.ZodError) =>
-  NextResponse.json<FrourioErr>(
+  NextResponse.json<FrourioError>(
     {
       status: 422,
       error: 'Unprocessable Entity',
@@ -313,7 +317,7 @@ const createReqErr = (err: z.ZodError) =>
   );
 
 const createResErr = () =>
-  NextResponse.json<FrourioErr>(
+  NextResponse.json<FrourioError>(
     { status: 500, error: 'Internal Server Error' },
     { status: 500 },
   );

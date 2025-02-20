@@ -52,7 +52,7 @@ const toHandler = (controller: Controller): ResHandler => {
 
           if (body.error) return createResErr();
 
-          return NextResponse.json(body.data, { status: 200 });
+          return createResponse(body.data, { status: 200 });
         }
         default:
           throw new Error(res.status satisfies never);
@@ -74,6 +74,24 @@ export function createRoute<T extends Record<string, unknown>>(
 
   return { ...toHandler(cb(controllerOrDeps as T)), inject: (d: T) => toHandler(cb(d)) };
 }
+
+const createResponse = <T>(body: T, init: ResponseInit): NextResponse<T> => {
+  if (
+    ArrayBuffer.isView(body) ||
+    body === undefined ||
+    body === null ||
+    body instanceof Blob ||
+    body instanceof ArrayBuffer ||
+    body instanceof FormData ||
+    body instanceof ReadableStream ||
+    body instanceof URLSearchParams ||
+    typeof body === 'string'
+  ) {
+    return new NextResponse(body as BodyInit, init);
+  }
+
+  return NextResponse.json(body, init);
+};
 
 const createReqErr = (err: z.ZodError) =>
   NextResponse.json<FrourioErr>(

@@ -6,7 +6,7 @@ type FrourioResponse = {
   [Status in `${2 | 4 | 5}${Digit}${Digit}`]?: {
     headers?: z.ZodTypeAny;
     format?: 'formData';
-    body: z.ZodTypeAny;
+    body?: z.ZodTypeAny;
   };
 };
 

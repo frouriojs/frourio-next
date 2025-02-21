@@ -7,7 +7,7 @@ export const frourioSpec = {
     query: z.object({ aa: z.string() }),
     res: {
       200: { body: z.object({ bb: z.string() }) },
-      404: { body: z.undefined() },
+      404: {},
     },
   },
   post: {

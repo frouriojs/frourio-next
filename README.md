@@ -96,7 +96,7 @@ export const frourioSpec = {
     }),
     res: {
       200: { body: z.object({ bb: z.array(z.string()) }) },
-      404: { body: z.undefined() },
+      404: {},
     },
   },
   post: {

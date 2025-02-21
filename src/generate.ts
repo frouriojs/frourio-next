@@ -21,7 +21,7 @@ type ServerMethod = {
     | { isFormData: true; data: PropOption[] | null }
     | { isFormData: false; data?: undefined }
     | null;
-  res: { status: string; hasHeaders: boolean; isFormData: boolean }[] | undefined;
+  res: { status: string; hasHeaders: boolean; body: { isFormData: boolean } | null }[] | undefined;
 };
 
 export const generate = async (appDir: string): Promise<void> => {
@@ -90,11 +90,14 @@ export const generate = async (appDir: string): Promise<void> => {
                     if (!statusType) return null;
 
                     const statusProps = statusType.getProperties();
+                    const body = statusProps.find((p) => p.getName() === 'body');
 
                     return {
                       status: s.getName(),
                       hasHeaders: statusProps.some((p) => p.getName() === 'headers'),
-                      isFormData: statusProps.some((p) => p.getName() === 'format'),
+                      body: body
+                        ? { isFormData: statusProps.some((p) => p.getName() === 'format') }
+                        : null,
                     };
                   })
                   .filter((s) => s !== null),
@@ -201,8 +204,7 @@ ${methods
           .map(
             (r) =>
               `    | {
-        status: ${r.status};${r.hasHeaders ? `\n        headers: z.infer<SpecType['${m.name}']['res'][${r.status}]['headers']>;` : ''}
-        body: z.infer<SpecType['${m.name}']['res'][${r.status}]['body']>;
+        status: ${r.status};${r.hasHeaders ? `\n        headers: z.infer<SpecType['${m.name}']['res'][${r.status}]['headers']>;` : ''}${r.body ? `\n        body: z.infer<SpecType['${m.name}']['res'][${r.status}]['body']>;` : ''}
       }`,
           )
           .join('\n')}\n  `
@@ -278,10 +280,10 @@ ${m.body.data
           ? `switch (res.status) {
 ${m.res
   .map((r) => {
-    const resTypes = [r.hasHeaders && 'headers', 'body'].filter((r) => r !== false);
+    const resTypes = [r.hasHeaders && 'headers', r.body && 'body'].filter((r) => !!r);
 
     return `        case ${r.status}: {${resTypes.map((t) => `\n          const ${t} = frourioSpec.${m.name}.res[${r.status}].${t}.safeParse(res.${t});\n\n          if (${t}.error) return createResErr();\n`).join('')}
-          return ${r.isFormData ? 'createFormDataResponse' : 'createResponse'}(body.data, { status: ${r.status}${r.hasHeaders ? ', headers: headers.data' : ''} });
+          return ${!r.body ? `new Response(null` : r.body.isFormData ? 'createFormDataResponse(body.data' : 'createResponse(body.data'}, { status: ${r.status}${r.hasHeaders ? ', headers: headers.data' : ''} });
         }`;
   })
   .join('\n')}
@@ -311,7 +313,7 @@ export function createRoute<T extends Record<string, unknown>>(
 }
 
 ${
-  methods.some((m) => m.res?.some((r) => !r.isFormData))
+  methods.some((m) => m.res?.some((r) => r.body && !r.body.isFormData))
     ? `const createResponse = (body: unknown, init: ResponseInit): Response => {
   if (
     ArrayBuffer.isView(body) ||
@@ -333,7 +335,7 @@ ${
 `
     : ''
 }${
-  methods.some((m) => m.res?.some((r) => r.isFormData))
+  methods.some((m) => m.res?.some((r) => r.body?.isFormData))
     ? `const createFormDataResponse = (
   body: Record<
     string,

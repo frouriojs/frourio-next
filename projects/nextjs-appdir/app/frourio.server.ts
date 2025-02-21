@@ -19,7 +19,6 @@ type Controller = {
       }
     | {
         status: 404;
-        body: z.infer<SpecType['get']['res'][404]['body']>;
       }
   >;
   post: (req: {
@@ -70,11 +69,7 @@ const toHandler = (controller: Controller): ResHandler => {
           return createResponse(body.data, { status: 200 });
         }
         case 404: {
-          const body = frourioSpec.get.res[404].body.safeParse(res.body);
-
-          if (body.error) return createResErr();
-
-          return createResponse(body.data, { status: 404 });
+          return new Response(null, { status: 404 });
         }
         default:
           throw new Error(res satisfies never);

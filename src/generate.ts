@@ -240,9 +240,10 @@ ${methods
         `frourioSpec.${m.name}.query.safeParse({
 ${m.query
   .map((p) => {
-    const fn = `${p.typeName === 'string' ? '' : `queryTo${p.typeName === 'number' ? 'Num' : 'Bool'}${p.isArray ? 'Arr' : ''}(`}req.nextUrl.searchParams.get${p.isArray ? 'All' : ''}('${p.name}')${p.isArray ? '' : ' ?? undefined'}${p.typeName === 'string' ? '' : ')'}`;
+    const fn = `req.nextUrl.searchParams.get${p.isArray ? 'All' : ''}('${p.name}')${p.isArray ? '' : ' ?? undefined'}`;
+    const wrapped = `${p.typeName === 'string' ? '' : `queryTo${p.typeName === 'number' ? 'Num' : 'Bool'}${p.isArray ? 'Arr' : ''}(`}${fn}${p.typeName === 'string' ? '' : ')'}`;
 
-    return `        '${p.name}': ${p.isArray && p.isOptional ? `${fn}.length > 0 ? ${fn} : undefined` : fn},`;
+    return `        '${p.name}': ${p.isArray && p.isOptional ? `${fn}.length > 0 ? ${wrapped} : undefined` : wrapped},`;
   })
   .join('\n')}
       })`,
@@ -250,16 +251,20 @@ ${m.query
       m.body && [
         'body',
         `frourioSpec.${m.name}.body.safeParse(${
-          m.body.isFormData && m.body.data
-            ? `{
+          m.body.data
+            ? `
+        Object.fromEntries(
+          [
 ${m.body.data
   .map((d) => {
-    const fn = `${d.typeName === 'string' || d.typeName === 'File' ? '' : `formDataTo${d.typeName === 'number' ? 'Num' : 'Bool'}${d.isArray ? 'Arr' : ''}(`}formData.get${d.isArray ? 'All' : ''}('${d.name}')${d.isArray ? '' : ' ?? undefined'}${d.typeName === 'string' || d.typeName === 'File' ? '' : ')'}`;
+    const fn = `formData.get${d.isArray ? 'All' : ''}('${d.name}')${d.isArray ? '' : ' ?? undefined'}`;
+    const wrapped = `${d.typeName === 'string' || d.typeName === 'File' ? '' : `formDataTo${d.typeName === 'number' ? 'Num' : 'Bool'}${d.isArray ? 'Arr' : ''}(`}${fn}${d.typeName === 'string' || d.typeName === 'File' ? '' : ')'}`;
 
-    return `        '${d.name}': ${d.isArray && d.isOptional ? `${fn}.length > 0 ? ${fn} : undefined` : fn},`;
+    return `            ['${d.name}', ${d.isArray && d.isOptional ? `${fn}.length > 0 ? ${wrapped} : undefined` : wrapped}],`;
   })
   .join('\n')}
-      }`
+          ].filter(entry => entry[1] !== undefined),
+        ),\n      `
             : 'await req.json().catch(() => undefined)'
         })`,
       ],

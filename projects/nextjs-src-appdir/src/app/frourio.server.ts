@@ -33,24 +33,28 @@ const toHandler = (controller: Controller): ResHandler => {
   return {
     POST: async (req) => {
       const formData = await req.formData();
-      const body = frourioSpec.post.body.safeParse({
-        'string': formData.get('string') ?? undefined,
-        'number': formDataToNum(formData.get('number') ?? undefined),
-        'boolean': formDataToBool(formData.get('boolean') ?? undefined),
-        'stringArr': formData.getAll('stringArr'),
-        'numberArr': formDataToNumArr(formData.getAll('numberArr')),
-        'booleanArr': formDataToBoolArr(formData.getAll('booleanArr')),
-        'file': formData.get('file') ?? undefined,
-        'fileArr': formData.getAll('fileArr'),
-        'optionalString': formData.get('optionalString') ?? undefined,
-        'optionalNumber': formDataToNum(formData.get('optionalNumber') ?? undefined),
-        'optionalBoolean': formDataToBool(formData.get('optionalBoolean') ?? undefined),
-        'optionalStringArr': formData.getAll('optionalStringArr').length > 0 ? formData.getAll('optionalStringArr') : undefined,
-        'optionalNumberArr': formDataToNumArr(formData.getAll('optionalNumberArr')).length > 0 ? formDataToNumArr(formData.getAll('optionalNumberArr')) : undefined,
-        'optionalBooleanArr': formDataToBoolArr(formData.getAll('optionalBooleanArr')).length > 0 ? formDataToBoolArr(formData.getAll('optionalBooleanArr')) : undefined,
-        'optionalFile': formData.get('optionalFile') ?? undefined,
-        'optionalFileArr': formData.getAll('optionalFileArr').length > 0 ? formData.getAll('optionalFileArr') : undefined,
-      });
+      const body = frourioSpec.post.body.safeParse(
+        Object.fromEntries(
+          [
+            ['string', formData.get('string') ?? undefined],
+            ['number', formDataToNum(formData.get('number') ?? undefined)],
+            ['boolean', formDataToBool(formData.get('boolean') ?? undefined)],
+            ['stringArr', formData.getAll('stringArr')],
+            ['numberArr', formDataToNumArr(formData.getAll('numberArr'))],
+            ['booleanArr', formDataToBoolArr(formData.getAll('booleanArr'))],
+            ['file', formData.get('file') ?? undefined],
+            ['fileArr', formData.getAll('fileArr')],
+            ['optionalString', formData.get('optionalString') ?? undefined],
+            ['optionalNumber', formDataToNum(formData.get('optionalNumber') ?? undefined)],
+            ['optionalBoolean', formDataToBool(formData.get('optionalBoolean') ?? undefined)],
+            ['optionalStringArr', formData.getAll('optionalStringArr').length > 0 ? formData.getAll('optionalStringArr') : undefined],
+            ['optionalNumberArr', formData.getAll('optionalNumberArr').length > 0 ? formDataToNumArr(formData.getAll('optionalNumberArr')) : undefined],
+            ['optionalBooleanArr', formData.getAll('optionalBooleanArr').length > 0 ? formDataToBoolArr(formData.getAll('optionalBooleanArr')) : undefined],
+            ['optionalFile', formData.get('optionalFile') ?? undefined],
+            ['optionalFileArr', formData.getAll('optionalFileArr').length > 0 ? formData.getAll('optionalFileArr') : undefined],
+          ].filter(entry => entry[1] !== undefined),
+        ),
+      );
 
       if (body.error) return createReqErr(body.error);
 

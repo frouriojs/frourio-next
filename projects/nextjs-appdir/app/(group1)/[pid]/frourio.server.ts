@@ -47,12 +47,12 @@ const toHandler = (controller: Controller): ResHandler => {
         'symbolIds': req.nextUrl.searchParams.getAll('symbolIds'),
         'maybeIds': queryToNumArr(req.nextUrl.searchParams.getAll('maybeIds')),
         'optionalNum': queryToNum(req.nextUrl.searchParams.get('optionalNum') ?? undefined),
-        'optionalNumArr': queryToNumArr(req.nextUrl.searchParams.getAll('optionalNumArr')).length > 0 ? queryToNumArr(req.nextUrl.searchParams.getAll('optionalNumArr')) : undefined,
+        'optionalNumArr': req.nextUrl.searchParams.getAll('optionalNumArr').length > 0 ? queryToNumArr(req.nextUrl.searchParams.getAll('optionalNumArr')) : undefined,
         'emptyNum': queryToNum(req.nextUrl.searchParams.get('emptyNum') ?? undefined),
         'optionalStrArray': req.nextUrl.searchParams.getAll('optionalStrArray').length > 0 ? req.nextUrl.searchParams.getAll('optionalStrArray') : undefined,
         'optionalBool': queryToBool(req.nextUrl.searchParams.get('optionalBool') ?? undefined),
-        'optionalBoolArray': queryToBoolArr(req.nextUrl.searchParams.getAll('optionalBoolArray')).length > 0 ? queryToBoolArr(req.nextUrl.searchParams.getAll('optionalBoolArray')) : undefined,
-        'optionalZodIds': queryToNumArr(req.nextUrl.searchParams.getAll('optionalZodIds')).length > 0 ? queryToNumArr(req.nextUrl.searchParams.getAll('optionalZodIds')) : undefined,
+        'optionalBoolArray': req.nextUrl.searchParams.getAll('optionalBoolArray').length > 0 ? queryToBoolArr(req.nextUrl.searchParams.getAll('optionalBoolArray')) : undefined,
+        'optionalZodIds': req.nextUrl.searchParams.getAll('optionalZodIds').length > 0 ? queryToNumArr(req.nextUrl.searchParams.getAll('optionalZodIds')) : undefined,
       });
 
       if (query.error) return createReqErr(query.error);

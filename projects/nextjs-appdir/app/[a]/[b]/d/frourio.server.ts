@@ -7,7 +7,7 @@ import type { GET } from './route';
 
 type RouteChecker = [typeof GET];
 
-const paramsValidator = ancestorParamsValidator.and(z.object({ b: z.string() }));
+const paramsValidator = ancestorParamsValidator.and(z.object({ 'b': z.string() }));
 
 type SpecType = typeof frourioSpec;
 

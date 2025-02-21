@@ -2,33 +2,19 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import type { z } from 'zod';
 import { frourioSpec } from './frourio';
-import type { GET, POST } from './route';
+import type { POST } from './route';
 
-type RouteChecker = [typeof GET, typeof POST];
+type RouteChecker = [typeof POST];
 
 type SpecType = typeof frourioSpec;
 
 type Controller = {
-  get: (req: {
-    headers: z.infer<SpecType['get']['headers']>;
-    query: z.infer<SpecType['get']['query']>;
-  }) => Promise<
-    | {
-        status: 200;
-        body: z.infer<SpecType['get']['res'][200]['body']>;
-      }
-    | {
-        status: 404;
-        body: z.infer<SpecType['get']['res'][404]['body']>;
-      }
-  >;
   post: (req: {
     body: z.infer<SpecType['post']['body']>;
   }) => Promise<
     | {
-        status: 201;
-        headers: z.infer<SpecType['post']['res'][201]['headers']>;
-        body: z.infer<SpecType['post']['res'][201]['body']>;
+        status: 200;
+        body: z.infer<SpecType['post']['res'][200]['body']>;
       }
   >;
 };
@@ -38,20 +24,11 @@ type FrourioError =
   | { status: 500; error: string; issues?: undefined };
 
 type ResHandler = {
-  GET: (
-    req: NextRequest,
-  ) => Promise<
-    NextResponse<
-      | z.infer<SpecType['get']['res'][200]['body']>
-      | z.infer<SpecType['get']['res'][404]['body']>
-      | FrourioError
-    >
-  >;
   POST: (
     req: NextRequest,
   ) => Promise<
     NextResponse<
-      | z.infer<SpecType['post']['res'][201]['body']>
+      | z.infer<SpecType['post']['res'][200]['body']>
       | FrourioError
     >
   >;
@@ -59,56 +36,38 @@ type ResHandler = {
 
 const toHandler = (controller: Controller): ResHandler => {
   return {
-    GET: async (req) => {
-      const headers = frourioSpec.get.headers.safeParse(Object.fromEntries(req.headers));
-
-      if (headers.error) return createReqErr(headers.error);
-
-      const query = frourioSpec.get.query.safeParse({
-        'aa': req.nextUrl.searchParams.get('aa') ?? undefined,
-      });
-
-      if (query.error) return createReqErr(query.error);
-
-      const res = await controller.get({ headers: headers.data, query: query.data });
-
-      switch (res.status) {
-        case 200: {
-          const body = frourioSpec.get.res[200].body.safeParse(res.body);
-
-          if (body.error) return createResErr();
-
-          return createResponse(body.data, { status: 200 });
-        }
-        case 404: {
-          const body = frourioSpec.get.res[404].body.safeParse(res.body);
-
-          if (body.error) return createResErr();
-
-          return createResponse(body.data, { status: 404 });
-        }
-        default:
-          throw new Error(res satisfies never);
-      }
-    },
     POST: async (req) => {
-      const body = frourioSpec.post.body.safeParse(await req.json().catch(() => undefined));
+      const formData = await req.formData();
+      const body = frourioSpec.post.body.safeParse({
+        'string': formData.get('string') ?? undefined,
+        'number': formDataToNum(formData.get('number') ?? undefined),
+        'boolean': formDataToBool(formData.get('boolean') ?? undefined),
+        'stringArr': formData.getAll('stringArr'),
+        'numberArr': formDataToNumArr(formData.getAll('numberArr')),
+        'booleanArr': formDataToBoolArr(formData.getAll('booleanArr')),
+        'file': formData.get('file') ?? undefined,
+        'fileArr': formData.getAll('fileArr'),
+        'optionalString': formData.get('optionalString') ?? undefined,
+        'optionalNumber': formDataToNum(formData.get('optionalNumber') ?? undefined),
+        'optionalBoolean': formDataToBool(formData.get('optionalBoolean') ?? undefined),
+        'optionalStringArr': formData.getAll('optionalStringArr').length > 0 ? formData.getAll('optionalStringArr') : undefined,
+        'optionalNumberArr': formDataToNumArr(formData.getAll('optionalNumberArr')).length > 0 ? formDataToNumArr(formData.getAll('optionalNumberArr')) : undefined,
+        'optionalBooleanArr': formDataToBoolArr(formData.getAll('optionalBooleanArr')).length > 0 ? formDataToBoolArr(formData.getAll('optionalBooleanArr')) : undefined,
+        'optionalFile': formData.get('optionalFile') ?? undefined,
+        'fileOptionalArr': formData.getAll('fileOptionalArr').length > 0 ? formData.getAll('fileOptionalArr') : undefined,
+      });
 
       if (body.error) return createReqErr(body.error);
 
       const res = await controller.post({ body: body.data });
 
       switch (res.status) {
-        case 201: {
-          const headers = frourioSpec.post.res[201].headers.safeParse(res.headers);
-
-          if (headers.error) return createResErr();
-
-          const body = frourioSpec.post.res[201].body.safeParse(res.body);
+        case 200: {
+          const body = frourioSpec.post.res[200].body.safeParse(res.body);
 
           if (body.error) return createResErr();
 
-          return createResponse(body.data, { status: 201, headers: headers.data });
+          return createResponse(body.data, { status: 200 });
         }
         default:
           throw new Error(res.status satisfies never);
@@ -164,3 +123,22 @@ const createResErr = () =>
     { status: 500, error: 'Internal Server Error' },
     { status: 500 },
   );
+
+const formDataToNum = (val: FormDataEntryValue | undefined) => {
+  const num = Number(val);
+
+  return isNaN(num) ? val : num;
+};
+
+const formDataToNumArr = (val: FormDataEntryValue[]) =>
+  val.map((v) => {
+    const numVal = Number(v);
+
+    return isNaN(numVal) ? v : numVal;
+  });
+
+const formDataToBool = (val: FormDataEntryValue | undefined) =>
+  val === 'true' ? true : val === 'false' ? false : val;
+
+const formDataToBoolArr = (val: FormDataEntryValue[]) =>
+  val.map((v) => (v === 'true' ? true : v === 'false' ? false : v));

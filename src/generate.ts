@@ -13,6 +13,17 @@ import { initTSC } from './initTSC';
 import { listFrourioFiles } from './listFrourioFiles';
 import { writeDefaults } from './writeDefaults';
 
+type ServerMethod = {
+  name: string;
+  hasHeaders: boolean;
+  query: PropOption[] | null;
+  body:
+    | { isFormData: true; data: PropOption[] | null }
+    | { isFormData: false; data?: undefined }
+    | null;
+  res: { status: string; hasHeaders: boolean }[] | undefined;
+};
+
 export const generate = async (appDir: string): Promise<void> => {
   const frourioFiles = listFrourioFiles(appDir);
 
@@ -42,7 +53,7 @@ export const generate = async (appDir: string): Promise<void> => {
         return {
           param: paramZodType ? getValidatorOption(checker, paramZodType) : null,
           methods: specProps
-            .map((t) => {
+            .map((t): ServerMethod | null => {
               if (t.getName() === 'param') return null;
 
               const type =
@@ -53,6 +64,8 @@ export const generate = async (appDir: string): Promise<void> => {
               const props = type.getProperties();
               const querySymbol = props.find((p) => p.getName() === 'query');
               const queryZodType = querySymbol ? inferZodType(checker, querySymbol) : null;
+              const bodySymbol = props.find((p) => p.getName() === 'body');
+              const bodyZodType = bodySymbol ? inferZodType(checker, bodySymbol) : null;
               const res = props.find((p) => p.getName() === 'res');
               const resType =
                 res?.valueDeclaration &&
@@ -62,7 +75,11 @@ export const generate = async (appDir: string): Promise<void> => {
                 name: t.getName(),
                 hasHeaders: props.some((p) => p.getName() === 'headers'),
                 query: queryZodType ? getPropOptions(checker, queryZodType) : null,
-                hasBody: props.some((p) => p.getName() === 'body'),
+                body: props.some((p) => p.getName() === 'body')
+                  ? props.some((p) => p.getName() === 'format') && bodyZodType
+                    ? { isFormData: true, data: getPropOptions(checker, bodyZodType) }
+                    : { isFormData: false }
+                  : null,
                 res: resType
                   ?.getProperties()
                   .map((s) => {
@@ -145,10 +162,10 @@ const pathToParams = (
 const paramsToText = (params: ParamsInfo) => {
   const paramText = 'frourioSpec.param';
   const current = params.current
-    ? `z.object({ ${params.current.name}: ${params.current.param ? (params.current.param.typeName === 'number' ? (params.current.param.isArray ? `paramToNumArr(${paramText})` : `paramToNum(${paramText})`) : paramText) : params.current.array ? `z.array(z.string())${params.current.array.isOptional ? '.optional()' : ''}` : 'z.string()'} })`
+    ? `z.object({ '${params.current.name}': ${params.current.param ? (params.current.param.typeName === 'number' ? (params.current.param.isArray ? `paramToNumArr(${paramText})` : `paramToNum(${paramText})`) : paramText) : params.current.array ? `z.array(z.string())${params.current.array.isOptional ? '.optional()' : ''}` : 'z.string()'} })`
     : '';
   const ancestor = 'ancestorParamsValidator';
-  const middles = `z.object({ ${params.middles.map((middle) => `${chunkToSlugName(middle)}: z.string()`).join(', ')} })`;
+  const middles = `z.object({ ${params.middles.map((middle) => `'${middle}': z.string()`).join(', ')} })`;
 
   return `${current}${
     params.current && params.ancestorFrourio
@@ -161,13 +178,7 @@ const paramsToText = (params: ParamsInfo) => {
 
 const serverData = (
   params: ParamsInfo | undefined,
-  methods: {
-    name: string;
-    hasHeaders: boolean;
-    query: PropOption[] | null;
-    hasBody: boolean;
-    res: { status: string; hasHeaders: boolean }[] | undefined;
-  }[],
+  methods: ServerMethod[],
 ) => `import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import ${params ? '' : 'type '}{ z } from 'zod';${params?.ancestorFrourio ? `\nimport { paramsValidator as ancestorParamsValidator } from '${params.ancestorFrourio}';` : ''}
@@ -182,7 +193,7 @@ type Controller = {
 ${methods
   .map(
     (m) =>
-      `  ${m.name}: (req: {${params ? '\n    params: z.infer<typeof paramsValidator>;' : ''}${m.hasHeaders ? `\n    headers: z.infer<SpecType['${m.name}']['headers']>;` : ''}${m.query ? `\n    query: z.infer<SpecType['${m.name}']['query']>;` : ''}${m.hasBody ? `\n    body: z.infer<SpecType['${m.name}']['body']>;` : ''}
+      `  ${m.name}: (req: {${params ? '\n    params: z.infer<typeof paramsValidator>;' : ''}${m.hasHeaders ? `\n    headers: z.infer<SpecType['${m.name}']['headers']>;` : ''}${m.query ? `\n    query: z.infer<SpecType['${m.name}']['query']>;` : ''}${m.body ? `\n    body: z.infer<SpecType['${m.name}']['body']>;` : ''}
   }) => Promise<${
     m.res
       ? `\n${m.res
@@ -237,18 +248,30 @@ ${m.query
   .map((p) => {
     const fn = `${p.typeName === 'string' ? '' : `queryTo${p.typeName === 'number' ? 'Num' : 'Bool'}${p.isArray ? 'Arr' : ''}(`}req.nextUrl.searchParams.get${p.isArray ? 'All' : ''}('${p.name}')${p.isArray ? '' : ' ?? undefined'}${p.typeName === 'string' ? '' : ')'}`;
 
-    return `        ${p.name}: ${p.isArray && p.isOptional ? `${fn}.length > 0 ? ${fn} : undefined` : fn},`;
+    return `        '${p.name}': ${p.isArray && p.isOptional ? `${fn}.length > 0 ? ${fn} : undefined` : fn},`;
   })
   .join('\n')}
       })`,
       ],
-      m.hasBody && [
+      m.body && [
         'body',
-        `frourioSpec.${m.name}.body.safeParse(await req.json().catch(() => undefined))`,
+        `frourioSpec.${m.name}.body.safeParse(${
+          m.body.isFormData && m.body.data
+            ? `{
+${m.body.data
+  .map((d) => {
+    const fn = `${d.typeName === 'string' || d.typeName === 'File' ? '' : `formDataTo${d.typeName === 'number' ? 'Num' : 'Bool'}${d.isArray ? 'Arr' : ''}(`}formData.get${d.isArray ? 'All' : ''}('${d.name}')${d.isArray ? '' : ' ?? undefined'}${d.typeName === 'string' || d.typeName === 'File' ? '' : ')'}`;
+
+    return `        '${d.name}': ${d.isArray && d.isOptional ? `${fn}.length > 0 ? ${fn} : undefined` : fn},`;
+  })
+  .join('\n')}
+      }`
+            : 'await req.json().catch(() => undefined)'
+        })`,
       ],
     ].filter((r) => !!r);
 
-    return `    ${m.name.toUpperCase()}: async (req${params ? ', option' : ''}) => {${requests.map((r) => `\n      const ${r[0]} = ${r[1]};\n\n      if (${r[0]}.error) return createReqErr(${r[0]}.error);\n`).join('')}${params ? '\n      const params = paramsValidator.safeParse(await option.params);\n\n      if (params.error) return createReqErr(params.error);\n' : ''}
+    return `    ${m.name.toUpperCase()}: async (req${params ? ', option' : ''}) => {${m.body?.isFormData ? '\n      const formData = await req.formData();' : ''}${requests.map((r) => `\n      const ${r[0]} = ${r[1]};\n\n      if (${r[0]}.error) return createReqErr(${r[0]}.error);\n`).join('')}${params ? '\n      const params = paramsValidator.safeParse(await option.params);\n\n      if (params.error) return createReqErr(params.error);\n' : ''}
       const res = await controller.${m.name}({ ${[...(params ? ['params: params.data'] : []), ...requests.map((r) => `${r[0]}: ${r[0]}.data`)].join(', ')} });
 
       ${
@@ -321,7 +344,7 @@ const createResErr = () =>
     { status: 500, error: 'Internal Server Error' },
     { status: 500 },
   );
-${methods.some((m) => m.query?.some((q) => q.typeName === 'number' && !q.isArray)) ? queryToNumText : ''}${methods.some((m) => m.query?.some((q) => q.typeName === 'number' && q.isArray)) ? queryToNumArrText : ''}${methods.some((m) => m.query?.some((q) => q.typeName === 'boolean' && !q.isArray)) ? queryToBoolText : ''}${methods.some((m) => m.query?.some((q) => q.typeName === 'boolean' && q.isArray)) ? queryToBoolArrText : ''}`;
+${methods.some((m) => m.query?.some((q) => q.typeName === 'number' && !q.isArray)) ? queryToNumText : ''}${methods.some((m) => m.query?.some((q) => q.typeName === 'number' && q.isArray)) ? queryToNumArrText : ''}${methods.some((m) => m.query?.some((q) => q.typeName === 'boolean' && !q.isArray)) ? queryToBoolText : ''}${methods.some((m) => m.query?.some((q) => q.typeName === 'boolean' && q.isArray)) ? queryToBoolArrText : ''}${methods.some((m) => m.body?.data?.some((b) => b.typeName === 'number' && !b.isArray)) ? formDataToNumText : ''}${methods.some((m) => m.body?.data?.some((b) => b.typeName === 'number' && b.isArray)) ? formDataToNumArrText : ''}${methods.some((m) => m.body?.data?.some((b) => b.typeName === 'boolean' && !b.isArray)) ? formDataToBoolText : ''}${methods.some((m) => m.body?.data?.some((b) => b.typeName === 'boolean' && b.isArray)) ? formDataToBoolArrText : ''}`;
 
 const paramToNumText = `const paramToNum = <T extends z.ZodTypeAny>(validator: T) =>
   z.string().transform<z.infer<T>>((val, ctx) => {
@@ -375,5 +398,32 @@ const queryToBool = (val: string | undefined) =>
 
 const queryToBoolArrText = `
 const queryToBoolArr = (val: string[]) =>
+  val.map((v) => (v === 'true' ? true : v === 'false' ? false : v));
+`;
+
+const formDataToNumText = `
+const formDataToNum = (val: FormDataEntryValue | undefined) => {
+  const num = Number(val);
+
+  return isNaN(num) ? val : num;
+};
+`;
+
+const formDataToNumArrText = `
+const formDataToNumArr = (val: FormDataEntryValue[]) =>
+  val.map((v) => {
+    const numVal = Number(v);
+
+    return isNaN(numVal) ? v : numVal;
+  });
+`;
+
+const formDataToBoolText = `
+const formDataToBool = (val: FormDataEntryValue | undefined) =>
+  val === 'true' ? true : val === 'false' ? false : val;
+`;
+
+const formDataToBoolArrText = `
+const formDataToBoolArr = (val: FormDataEntryValue[]) =>
   val.map((v) => (v === 'true' ? true : v === 'false' ? false : v));
 `;

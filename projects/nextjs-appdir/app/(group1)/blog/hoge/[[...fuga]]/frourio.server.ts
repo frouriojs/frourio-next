@@ -6,7 +6,7 @@ import type { GET } from './route';
 
 type RouteChecker = [typeof GET];
 
-export const paramsValidator = z.object({ fuga: frourioSpec.param });
+export const paramsValidator = z.object({ 'fuga': frourioSpec.param });
 
 type SpecType = typeof frourioSpec;
 

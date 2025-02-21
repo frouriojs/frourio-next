@@ -6,7 +6,7 @@ import type { GET } from './route';
 
 type RouteChecker = [typeof GET];
 
-export const paramsValidator = z.object({ pid: z.string() });
+export const paramsValidator = z.object({ 'pid': z.string() });
 
 type SpecType = typeof frourioSpec;
 
@@ -42,22 +42,22 @@ const toHandler = (controller: Controller): ResHandler => {
   return {
     GET: async (req, option) => {
       const query = frourioSpec.get.query.safeParse({
-        requiredNum: queryToNum(req.nextUrl.searchParams.get('requiredNum') ?? undefined),
-        requiredNumArr: queryToNumArr(req.nextUrl.searchParams.getAll('requiredNumArr')),
-        id: req.nextUrl.searchParams.get('id') ?? undefined,
-        strArray: req.nextUrl.searchParams.getAll('strArray'),
-        disable: req.nextUrl.searchParams.get('disable') ?? undefined,
-        bool: queryToBool(req.nextUrl.searchParams.get('bool') ?? undefined),
-        boolArray: queryToBoolArr(req.nextUrl.searchParams.getAll('boolArray')),
-        symbolIds: req.nextUrl.searchParams.getAll('symbolIds'),
-        maybeIds: queryToNumArr(req.nextUrl.searchParams.getAll('maybeIds')),
-        optionalNum: queryToNum(req.nextUrl.searchParams.get('optionalNum') ?? undefined),
-        optionalNumArr: queryToNumArr(req.nextUrl.searchParams.getAll('optionalNumArr')).length > 0 ? queryToNumArr(req.nextUrl.searchParams.getAll('optionalNumArr')) : undefined,
-        emptyNum: queryToNum(req.nextUrl.searchParams.get('emptyNum') ?? undefined),
-        optionalStrArray: req.nextUrl.searchParams.getAll('optionalStrArray').length > 0 ? req.nextUrl.searchParams.getAll('optionalStrArray') : undefined,
-        optionalBool: queryToBool(req.nextUrl.searchParams.get('optionalBool') ?? undefined),
-        optionalBoolArray: queryToBoolArr(req.nextUrl.searchParams.getAll('optionalBoolArray')).length > 0 ? queryToBoolArr(req.nextUrl.searchParams.getAll('optionalBoolArray')) : undefined,
-        optionalZodIds: queryToNumArr(req.nextUrl.searchParams.getAll('optionalZodIds')).length > 0 ? queryToNumArr(req.nextUrl.searchParams.getAll('optionalZodIds')) : undefined,
+        'requiredNum': queryToNum(req.nextUrl.searchParams.get('requiredNum') ?? undefined),
+        'requiredNumArr': queryToNumArr(req.nextUrl.searchParams.getAll('requiredNumArr')),
+        'id': req.nextUrl.searchParams.get('id') ?? undefined,
+        'strArray': req.nextUrl.searchParams.getAll('strArray'),
+        'disable': req.nextUrl.searchParams.get('disable') ?? undefined,
+        'bool': queryToBool(req.nextUrl.searchParams.get('bool') ?? undefined),
+        'boolArray': queryToBoolArr(req.nextUrl.searchParams.getAll('boolArray')),
+        'symbolIds': req.nextUrl.searchParams.getAll('symbolIds'),
+        'maybeIds': queryToNumArr(req.nextUrl.searchParams.getAll('maybeIds')),
+        'optionalNum': queryToNum(req.nextUrl.searchParams.get('optionalNum') ?? undefined),
+        'optionalNumArr': queryToNumArr(req.nextUrl.searchParams.getAll('optionalNumArr')).length > 0 ? queryToNumArr(req.nextUrl.searchParams.getAll('optionalNumArr')) : undefined,
+        'emptyNum': queryToNum(req.nextUrl.searchParams.get('emptyNum') ?? undefined),
+        'optionalStrArray': req.nextUrl.searchParams.getAll('optionalStrArray').length > 0 ? req.nextUrl.searchParams.getAll('optionalStrArray') : undefined,
+        'optionalBool': queryToBool(req.nextUrl.searchParams.get('optionalBool') ?? undefined),
+        'optionalBoolArray': queryToBoolArr(req.nextUrl.searchParams.getAll('optionalBoolArray')).length > 0 ? queryToBoolArr(req.nextUrl.searchParams.getAll('optionalBoolArray')) : undefined,
+        'optionalZodIds': queryToNumArr(req.nextUrl.searchParams.getAll('optionalZodIds')).length > 0 ? queryToNumArr(req.nextUrl.searchParams.getAll('optionalZodIds')) : undefined,
       });
 
       if (query.error) return createReqErr(query.error);

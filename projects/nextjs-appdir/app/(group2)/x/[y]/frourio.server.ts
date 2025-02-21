@@ -6,7 +6,7 @@ import type { GET } from './route';
 
 type RouteChecker = [typeof GET];
 
-export const paramsValidator = z.object({ y: z.string() });
+export const paramsValidator = z.object({ 'y': z.string() });
 
 type SpecType = typeof frourioSpec;
 
@@ -32,7 +32,7 @@ const toHandler = (controller: Controller): ResHandler => {
   return {
     GET: async (req, option) => {
       const query = frourioSpec.get.query.safeParse({
-        message: req.nextUrl.searchParams.get('message') ?? undefined,
+        'message': req.nextUrl.searchParams.get('message') ?? undefined,
       });
 
       if (query.error) return createReqErr(query.error);

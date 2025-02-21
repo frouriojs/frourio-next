@@ -20,7 +20,7 @@ const paramToNumArr = <T extends z.ZodTypeAny>(validator: T) =>
     parsed.error.issues.forEach((issue) => ctx.addIssue(issue));
   });
 
-export const paramsValidator = z.object({ slug: paramToNumArr(frourioSpec.param) });
+export const paramsValidator = z.object({ 'slug': paramToNumArr(frourioSpec.param) });
 
 type SpecType = typeof frourioSpec;
 

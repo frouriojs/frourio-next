@@ -1,6 +1,6 @@
 import ts from 'typescript';
 
-const TYPE_NAMES = ['string', 'number', 'boolean'] as const;
+const TYPE_NAMES = ['string', 'boolean', 'number', 'File'] as const;
 
 type TypeName = (typeof TYPE_NAMES)[number];
 
@@ -70,6 +70,24 @@ const getArrayElementType = (type: ts.Type): ts.Type | null => {
   return null;
 };
 
+let globalFileType: ts.Type | undefined;
+
+const getGlobalFileType = (checker: ts.TypeChecker): ts.Type | undefined => {
+  const symbol = checker.resolveName(
+    'File',
+    undefined,
+    ts.SymbolFlags.Interface |
+      ts.SymbolFlags.TypeAlias |
+      ts.SymbolFlags.Class |
+      ts.SymbolFlags.Value,
+    false,
+  );
+
+  if (!symbol) return;
+
+  return checker.getDeclaredTypeOfSymbol(symbol);
+};
+
 const getPropOption = (
   checker: ts.TypeChecker,
   type: ts.Type,
@@ -79,6 +97,8 @@ const getPropOption = (
   const arrayElementType = getArrayElementType(nonNullableType);
   const targetType = arrayElementType ?? nonNullableType;
 
+  globalFileType ??= getGlobalFileType(checker);
+
   for (const typeName of TYPE_NAMES) {
     const returnResult = (type: ts.Type): PropOption | null =>
       checker.isTypeAssignableTo(
@@ -87,7 +107,9 @@ const getPropOption = (
           ? checker.getBooleanType()
           : typeName === 'number'
             ? checker.getNumberType()
-            : checker.getStringType(),
+            : globalFileType && typeName === 'File'
+              ? globalFileType
+              : checker.getStringType(),
       )
         ? {
             name: prop.getName(),

@@ -54,7 +54,7 @@ const toHandler = (controller: Controller): ResHandler => {
         'optionalNumberArr': formDataToNumArr(formData.getAll('optionalNumberArr')).length > 0 ? formDataToNumArr(formData.getAll('optionalNumberArr')) : undefined,
         'optionalBooleanArr': formDataToBoolArr(formData.getAll('optionalBooleanArr')).length > 0 ? formDataToBoolArr(formData.getAll('optionalBooleanArr')) : undefined,
         'optionalFile': formData.get('optionalFile') ?? undefined,
-        'fileOptionalArr': formData.getAll('fileOptionalArr').length > 0 ? formData.getAll('fileOptionalArr') : undefined,
+        'optionalFileArr': formData.getAll('optionalFileArr').length > 0 ? formData.getAll('optionalFileArr') : undefined,
       });
 
       if (body.error) return createReqErr(body.error);

@@ -80,7 +80,20 @@ export const frourioSpec = {
   param: z.string(),
   get: {
     headers: z.object({ cookie: z.string().optional() }),
-    query: z.object({ aa: z.string() }),
+    query: z.object({
+      string: z.string(),
+      number: z.number(),
+      boolean: z.boolean(),
+      optionalString: z.string().optional(),
+      optionalNumber: z.number().optional(),
+      optionalBoolean: z.boolean().optional(),
+      stringArr: z.array(z.string()),
+      numberArr: z.array(z.number()),
+      booleanArr: z.array(z.boolean()),
+      optionalStringArr: z.array(z.string()).optional(),
+      optionalNumberArr: z.array(z.number()).optional(),
+      optionalBooleanArr: z.array(z.boolean()).optional(),
+    }),
     res: {
       200: { body: z.object({ bb: z.array(z.string()) }) },
       404: { body: z.undefined() },
@@ -109,10 +122,90 @@ import { createRoute } from './frourio.server';
 
 export const { GET, POST } = createRoute({
   get: async ({ params, query }) => {
-    return { status: 200, body: { bb: [params.slug, query.aa] } };
+    return { status: 200, body: { bb: [params.slug, query.string] } };
   },
   post: async ({ params, body }) => {
     return { status: 201, body: [body.bb], headers: { 'Set-Cookie': params.slug } };
+  },
+});
+```
+
+## FormData
+
+`app/api/file/frourio.ts`
+
+```ts
+import type { FrourioSpec } from '@frourio/next';
+import { z } from 'zod';
+
+export const frourioSpec = {
+  post: {
+    format: 'formData',
+    body: z.object({
+      string: z.string(),
+      number: z.number(),
+      boolean: z.boolean(),
+      optionalString: z.string().optional(),
+      optionalNumber: z.number().optional(),
+      optionalBoolean: z.boolean().optional(),
+      stringArr: z.array(z.string()),
+      numberArr: z.array(z.number()),
+      booleanArr: z.array(z.boolean()),
+      optionalStringArr: z.array(z.string()).optional(),
+      optionalNumberArr: z.array(z.number()).optional(),
+      optionalBooleanArr: z.array(z.boolean()).optional(),
+      file: z.instanceof(File),
+      optionalFile: z.instanceof(File).optional(),
+      fileArr: z.array(z.instanceof(File)),
+      optionalFileArr: z.array(z.instanceof(File)).optional(),
+    }),
+    res: {
+      200: {
+        body: z.object({
+          string: z.string(),
+          number: z.number(),
+          boolean: z.boolean(),
+          optionalString: z.string().optional(),
+          optionalNumber: z.number().optional(),
+          optionalBoolean: z.boolean().optional(),
+          stringArr: z.array(z.string()),
+          numberArr: z.array(z.number()),
+          booleanArr: z.array(z.boolean()),
+          optionalStringArr: z.array(z.string()).optional(),
+          optionalNumberArr: z.array(z.number()).optional(),
+          optionalBooleanArr: z.array(z.boolean()).optional(),
+          file: z.string(),
+          optionalFile: z.string().optional(),
+          fileArr: z.array(z.string()),
+          optionalFileArr: z.array(z.string()).optional(),
+        }),
+      },
+    },
+  },
+} satisfies FrourioSpec;
+```
+
+```sh
+$ npm run dev # Automatically generate app/api/file/frourio.server.ts
+```
+
+`app/api/file/route.ts`
+
+```ts
+import { createRoute } from './frourio.server';
+
+export const { POST } = createRoute({
+  post: async ({ body }) => {
+    return {
+      status: 200,
+      body: {
+        ...body,
+        file: body.file.name,
+        fileArr: body.fileArr.map((f) => f.name),
+        optionalFile: body.optionalFile?.name,
+        optionalFileArr: body.optionalFileArr?.map((f) => f.name),
+      },
+    };
   },
 });
 ```

@@ -7,8 +7,8 @@ import path from 'path';
 import { expect, test } from 'vitest';
 import type { z } from 'zod';
 import type {
-  frourioSpec,
   MaybeId,
+  frourioSpec as querySpec,
   SymbolId,
   ZodId,
 } from '../projects/nextjs-appdir/app/(group1)/[pid]/frourio';
@@ -17,6 +17,8 @@ import * as numberRoute from '../projects/nextjs-appdir/app/(group1)/blog/[...sl
 import * as stringRoute from '../projects/nextjs-appdir/app/(group1)/blog/hoge/[[...fuga]]/route';
 import * as paramsRoute from '../projects/nextjs-appdir/app/[a]/[b]/[...c]/route';
 import * as baseRoute from '../projects/nextjs-appdir/app/route';
+import type { frourioSpec as formSpec } from '../projects/nextjs-src-appdir/src/app/frourio';
+import * as formRoute from '../projects/nextjs-src-appdir/src/app/route';
 import { SERVER_FILE } from '../src/constants';
 import { generate } from '../src/generate';
 import { getConfig } from '../src/getConfig';
@@ -90,7 +92,7 @@ test('response string or number', async () => {
   await expect(res2.json()).resolves.toEqual(123);
 });
 
-type Query = z.infer<typeof frourioSpec.get.query>;
+type Query = z.infer<typeof querySpec.get.query>;
 
 test('query', async () => {
   await Promise.all(
@@ -188,6 +190,137 @@ test('query', async () => {
       const res = await queryRoute.GET(new NextRequest(`http://example.com/111?${query}`), {
         params: Promise.resolve({ pid: '111' }),
       });
+
+      expect(res.status).toBe(422);
+    }),
+  );
+});
+
+type FormBody = z.infer<typeof formSpec.post.body>;
+
+test('formData', async () => {
+  await Promise.all(
+    [
+      {
+        string: 'aaa',
+        number: 11,
+        boolean: false,
+        optionalString: 'bbb',
+        optionalNumber: 22,
+        optionalBoolean: true,
+        stringArr: ['cc', 'dd'],
+        numberArr: [33, 44],
+        booleanArr: [true, false],
+        optionalStringArr: ['ee', 'ff'],
+        optionalNumberArr: [55, 66],
+        optionalBooleanArr: [false, true],
+        file: new File(['test'], 'sample.txt'),
+        optionalFile: new File(['foo'], 'baz.txt'),
+        fileArr: [new File(['aaa'], 'aaa.txt'), new File(['bbb'], 'bbb.txt')],
+        optionalFileArr: [new File(['ccc'], 'ccc.txt'), new File(['ddd'], 'ddd.txt')],
+      } satisfies FormBody,
+      {
+        string: 'aaa',
+        number: 11,
+        boolean: false,
+        stringArr: [],
+        numberArr: [33, 44],
+        booleanArr: [true, false],
+        file: new File(['test'], 'sample.txt'),
+        fileArr: [],
+      } satisfies FormBody,
+    ].map(async (val) => {
+      const formData = new FormData();
+
+      Object.entries(val).forEach(([key, value]) => {
+        if (Array.isArray(value)) {
+          value.forEach((item) =>
+            item instanceof File
+              ? formData.append(key, item, item.name)
+              : formData.append(key, String(item)),
+          );
+        } else if (value instanceof File) {
+          formData.set(key, value, value.name);
+        } else {
+          formData.set(key, String(value));
+        }
+      });
+
+      const res = await formRoute.POST(
+        new NextRequest('http://example.com/', { method: 'POST', body: formData }),
+      );
+
+      await expect(res.json()).resolves.toEqual({
+        ...val,
+        file: val.file.name,
+        fileArr: val.fileArr.map((f) => f.name),
+        optionalFile: val.optionalFile?.name,
+        optionalFileArr: val.optionalFileArr?.map((f) => f.name),
+      });
+    }),
+  );
+
+  await Promise.all(
+    [
+      {
+        string: 'aaa',
+        number: 11,
+        boolean: false,
+        stringArr: [],
+        numberArr: ['no number'],
+        booleanArr: [true, false],
+        file: new File(['test'], 'sample.txt'),
+        fileArr: [new File(['aaa'], 'aaa.txt')],
+      },
+      {
+        string: 'aaa',
+        number: 11,
+        boolean: false,
+        stringArr: [],
+        numberArr: [33, 44],
+        booleanArr: [true, false],
+        file: 123,
+      },
+      {
+        string: 'aaa',
+        number: 11,
+        boolean: false,
+        stringArr: [],
+        numberArr: [33, 44],
+        booleanArr: ['no boolean'],
+        file: new File(['test'], 'sample.txt'),
+        fileArr: [],
+      },
+      {
+        string: 'aaa',
+        number: 11,
+        boolean: false,
+        stringArr: [],
+        numberArr: [33, 44],
+        booleanArr: [true, false],
+        file: new File(['test'], 'sample.txt'),
+        fileArr: ['no file'],
+      },
+    ].map(async (val) => {
+      const formData = new FormData();
+
+      Object.entries(val).forEach(([key, value]) => {
+        if (Array.isArray(value)) {
+          value.forEach((item) =>
+            item instanceof File
+              ? formData.append(key, item, item.name)
+              : formData.append(key, String(item)),
+          );
+        } else if (value instanceof File) {
+          formData.set(key, value, value.name);
+        } else {
+          formData.set(key, String(value));
+        }
+      });
+
+      const res = await formRoute.POST(
+        new NextRequest('http://example.com/', { method: 'POST', body: formData }),
+      );
 
       expect(res.status).toBe(422);
     }),

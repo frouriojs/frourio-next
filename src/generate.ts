@@ -21,7 +21,7 @@ type ServerMethod = {
     | { isFormData: true; data: PropOption[] | null }
     | { isFormData: false; data?: undefined }
     | null;
-  res: { status: string; hasHeaders: boolean }[] | undefined;
+  res: { status: string; hasHeaders: boolean; isFormData: boolean }[] | undefined;
 };
 
 export const generate = async (appDir: string): Promise<void> => {
@@ -94,6 +94,7 @@ export const generate = async (appDir: string): Promise<void> => {
                     return {
                       status: s.getName(),
                       hasHeaders: statusProps.some((p) => p.getName() === 'headers'),
+                      isFormData: statusProps.some((p) => p.getName() === 'format'),
                     };
                   })
                   .filter((s) => s !== null),
@@ -220,14 +221,7 @@ ${methods
   .map(
     (m) => `  ${m.name.toUpperCase()}: (
     req: NextRequest,${params ? '\n    option: { params: Promise<unknown> },' : ''}
-  ) => Promise<${
-    m.res
-      ? `\n    NextResponse<
-${m.res.map((r) => `      | z.infer<SpecType['${m.name}']['res'][${r.status}]['body']>`).join('\n')}
-      | FrourioError
-    >\n  `
-      : 'Response'
-  }>;`,
+  ) => Promise<Response>;`,
   )
   .join('\n')}
 };
@@ -282,7 +276,7 @@ ${m.res
     const resTypes = [r.hasHeaders && 'headers', 'body'].filter((r) => r !== false);
 
     return `        case ${r.status}: {${resTypes.map((t) => `\n          const ${t} = frourioSpec.${m.name}.res[${r.status}].${t}.safeParse(res.${t});\n\n          if (${t}.error) return createResErr();\n`).join('')}
-          return createResponse(body.data, { status: ${r.status}${r.hasHeaders ? ', headers: headers.data' : ''} });
+          return ${r.isFormData ? 'createFormDataResponse' : 'createResponse'}(body.data, { status: ${r.status}${r.hasHeaders ? ', headers: headers.data' : ''} });
         }`;
   })
   .join('\n')}
@@ -311,7 +305,9 @@ export function createRoute<T extends Record<string, unknown>>(
   return { ...toHandler(cb(controllerOrDeps as T)), inject: (d: T) => toHandler(cb(d)) };
 }
 
-const createResponse = <T>(body: T, init: ResponseInit): NextResponse<T> => {
+${
+  methods.some((m) => m.res?.some((r) => !r.isFormData))
+    ? `const createResponse = (body: unknown, init: ResponseInit): Response => {
   if (
     ArrayBuffer.isView(body) ||
     body === undefined ||
@@ -323,13 +319,47 @@ const createResponse = <T>(body: T, init: ResponseInit): NextResponse<T> => {
     body instanceof URLSearchParams ||
     typeof body === 'string'
   ) {
-    return new NextResponse(body as BodyInit, init);
+    return new NextResponse(body, init);
   }
 
   return NextResponse.json(body, init);
 };
 
-const createReqErr = (err: z.ZodError) =>
+`
+    : ''
+}${
+  methods.some((m) => m.res?.some((r) => r.isFormData))
+    ? `const createFormDataResponse = (
+  body: Record<
+    string,
+    ((string | number | boolean | File)[] | string | number | boolean | File) | undefined
+  >,
+  init: ResponseInit,
+) => {
+  const formData = new FormData();
+
+  Object.entries(body).forEach(([key, value]) => {
+    if (value === undefined) return;
+
+    if (Array.isArray(value)) {
+      value.forEach((item) =>
+        item instanceof File
+          ? formData.append(key, item, item.name)
+          : formData.append(key, String(item)),
+      );
+    } else if (value instanceof File) {
+      formData.set(key, value, value.name);
+    } else {
+      formData.set(key, String(value));
+    }
+  });
+
+  return new NextResponse(formData, init);
+};
+
+`
+    : ''
+}const createReqErr = (err: z.ZodError) =>
   NextResponse.json<FrourioError>(
     {
       status: 422,

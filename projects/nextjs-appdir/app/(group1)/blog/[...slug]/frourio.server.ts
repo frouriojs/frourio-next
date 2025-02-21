@@ -43,12 +43,7 @@ type ResHandler = {
   GET: (
     req: NextRequest,
     option: { params: Promise<unknown> },
-  ) => Promise<
-    NextResponse<
-      | z.infer<SpecType['get']['res'][200]['body']>
-      | FrourioError
-    >
-  >;
+  ) => Promise<Response>;
 };
 
 const toHandler = (controller: Controller): ResHandler => {
@@ -89,7 +84,7 @@ export function createRoute<T extends Record<string, unknown>>(
   return { ...toHandler(cb(controllerOrDeps as T)), inject: (d: T) => toHandler(cb(d)) };
 }
 
-const createResponse = <T>(body: T, init: ResponseInit): NextResponse<T> => {
+const createResponse = (body: unknown, init: ResponseInit): Response => {
   if (
     ArrayBuffer.isView(body) ||
     body === undefined ||
@@ -101,7 +96,7 @@ const createResponse = <T>(body: T, init: ResponseInit): NextResponse<T> => {
     body instanceof URLSearchParams ||
     typeof body === 'string'
   ) {
-    return new NextResponse(body as BodyInit, init);
+    return new NextResponse(body, init);
   }
 
   return NextResponse.json(body, init);

@@ -62,7 +62,7 @@ const toHandler = (controller: Controller): ResHandler => {
 
           if (body.error) return createResErr();
 
-          return createResponse(body.data, { status: 200 });
+          return createFormDataResponse(body.data, { status: 200 });
         }
         default:
           throw new Error(res.status satisfies never);
@@ -85,22 +85,32 @@ export function createRoute<T extends Record<string, unknown>>(
   return { ...toHandler(cb(controllerOrDeps as T)), inject: (d: T) => toHandler(cb(d)) };
 }
 
-const createResponse = (body: unknown, init: ResponseInit): Response => {
-  if (
-    ArrayBuffer.isView(body) ||
-    body === undefined ||
-    body === null ||
-    body instanceof Blob ||
-    body instanceof ArrayBuffer ||
-    body instanceof FormData ||
-    body instanceof ReadableStream ||
-    body instanceof URLSearchParams ||
-    typeof body === 'string'
-  ) {
-    return new NextResponse(body, init);
-  }
+const createFormDataResponse = (
+  body: Record<
+    string,
+    ((string | number | boolean | File)[] | string | number | boolean | File) | undefined
+  >,
+  init: ResponseInit,
+) => {
+  const formData = new FormData();
 
-  return NextResponse.json(body, init);
+  Object.entries(body).forEach(([key, value]) => {
+    if (value === undefined) return;
+
+    if (Array.isArray(value)) {
+      value.forEach((item) =>
+        item instanceof File
+          ? formData.append(key, item, item.name)
+          : formData.append(key, String(item)),
+      );
+    } else if (value instanceof File) {
+      formData.set(key, value, value.name);
+    } else {
+      formData.set(key, String(value));
+    }
+  });
+
+  return new NextResponse(formData, init);
 };
 
 const createReqErr = (err: z.ZodError) =>

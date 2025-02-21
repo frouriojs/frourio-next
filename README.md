@@ -161,6 +161,7 @@ export const frourioSpec = {
     }),
     res: {
       200: {
+        format: 'formData',
         body: z.object({
           string: z.string(),
           number: z.number(),
@@ -174,10 +175,10 @@ export const frourioSpec = {
           optionalStringArr: z.array(z.string()).optional(),
           optionalNumberArr: z.array(z.number()).optional(),
           optionalBooleanArr: z.array(z.boolean()).optional(),
-          file: z.string(),
-          optionalFile: z.string().optional(),
-          fileArr: z.array(z.string()),
-          optionalFileArr: z.array(z.string()).optional(),
+          file: z.instanceof(File),
+          optionalFile: z.instanceof(File).optional(),
+          fileArr: z.array(z.instanceof(File)),
+          optionalFileArr: z.array(z.instanceof(File)).optional(),
         }),
       },
     },
@@ -196,17 +197,7 @@ import { createRoute } from './frourio.server';
 
 export const { POST } = createRoute({
   post: async ({ body }) => {
-    return {
-      status: 200,
-      body: {
-        ...body,
-        file: body.file.name,
-        fileArr: body.fileArr.map((f) => f.name),
-        optionalFile: body.optionalFile?.name,
-        optionalFileArr: body.optionalFileArr?.map((f) => f.name),
-      },
-    };
-  },
+    return { status: 200, body },
 });
 ```
 

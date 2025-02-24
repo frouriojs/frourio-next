@@ -22,11 +22,13 @@ const paramToNumArr = <T extends z.ZodTypeAny>(validator: T) =>
 
 export const paramsValidator = z.object({ 'slug': paramToNumArr(frourioSpec.param) });
 
+type ParamsType = z.infer<typeof paramsValidator>;
+
 type SpecType = typeof frourioSpec;
 
 type Controller = {
   get: (req: {
-    params: z.infer<typeof paramsValidator>;
+    params: ParamsType;
   }) => Promise<
     | {
         status: 200;

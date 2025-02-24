@@ -1,0 +1,631 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "openapi api",
+    "version": "v0.0"
+  },
+  "paths": {
+    "/%E6%97%A5%E6%9C%AC%E8%AA%9E": {
+      "post": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "string": {
+                      "type": "string"
+                    },
+                    "number": {
+                      "type": "number"
+                    },
+                    "boolean": {
+                      "type": "boolean"
+                    },
+                    "stringArr": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "numberArr": {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      }
+                    },
+                    "booleanArr": {
+                      "type": "array",
+                      "items": {
+                        "type": "boolean"
+                      }
+                    },
+                    "file": {
+                      "$ref": "#/components/schemas/File"
+                    },
+                    "fileArr": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/File"
+                      }
+                    },
+                    "optionalString": {
+                      "type": "string"
+                    },
+                    "optionalNumber": {
+                      "type": "number"
+                    },
+                    "optionalBoolean": {
+                      "type": "boolean"
+                    },
+                    "optionalStringArr": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "optionalNumberArr": {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      }
+                    },
+                    "optionalBooleanArr": {
+                      "type": "array",
+                      "items": {
+                        "type": "boolean"
+                      }
+                    },
+                    "optionalFile": {
+                      "$ref": "#/components/schemas/File"
+                    },
+                    "optionalFileArr": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/File"
+                      }
+                    }
+                  },
+                  "required": [
+                    "boolean",
+                    "booleanArr",
+                    "file",
+                    "fileArr",
+                    "number",
+                    "numberArr",
+                    "string",
+                    "stringArr"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "post": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "string": {
+                      "type": "string"
+                    },
+                    "number": {
+                      "type": "number"
+                    },
+                    "boolean": {
+                      "type": "boolean"
+                    },
+                    "stringArr": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "numberArr": {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      }
+                    },
+                    "booleanArr": {
+                      "type": "array",
+                      "items": {
+                        "type": "boolean"
+                      }
+                    },
+                    "file": {
+                      "type": "string"
+                    },
+                    "fileArr": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "optionalString": {
+                      "type": "string"
+                    },
+                    "optionalNumber": {
+                      "type": "number"
+                    },
+                    "optionalBoolean": {
+                      "type": "boolean"
+                    },
+                    "optionalStringArr": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "optionalNumberArr": {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      }
+                    },
+                    "optionalBooleanArr": {
+                      "type": "array",
+                      "items": {
+                        "type": "boolean"
+                      }
+                    },
+                    "optionalFile": {
+                      "type": "string"
+                    },
+                    "optionalFileArr": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "boolean",
+                    "booleanArr",
+                    "file",
+                    "fileArr",
+                    "number",
+                    "numberArr",
+                    "string",
+                    "stringArr"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "{string:string;number:number;boolean:boolean;stringArr:string[];numberArr:number[];booleanArr:boolean[];file:File;fileArr:File[];optionalString?:string|undefined;optionalNumber?:number|undefined;optionalBoolean?:boolean|undefined;optionalStringArr?:string[]|undefined;optionalNumberArr?:number[]|undefined;optionalBooleanArr?:boolean[]|undefined;optionalFile?:File|undefined;optionalFileArr?:File[]|undefined;}": {
+        "type": "object",
+        "properties": {
+          "string": {
+            "type": "string"
+          },
+          "number": {
+            "type": "number"
+          },
+          "boolean": {
+            "type": "boolean"
+          },
+          "stringArr": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "numberArr": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "booleanArr": {
+            "type": "array",
+            "items": {
+              "type": "boolean"
+            }
+          },
+          "file": {
+            "$ref": "#/components/schemas/File"
+          },
+          "fileArr": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/File"
+            }
+          },
+          "optionalString": {
+            "type": "string"
+          },
+          "optionalNumber": {
+            "type": "number"
+          },
+          "optionalBoolean": {
+            "type": "boolean"
+          },
+          "optionalStringArr": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "optionalNumberArr": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "optionalBooleanArr": {
+            "type": "array",
+            "items": {
+              "type": "boolean"
+            }
+          },
+          "optionalFile": {
+            "$ref": "#/components/schemas/File"
+          },
+          "optionalFileArr": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/File"
+            }
+          }
+        },
+        "required": [
+          "boolean",
+          "booleanArr",
+          "file",
+          "fileArr",
+          "number",
+          "numberArr",
+          "string",
+          "stringArr"
+        ]
+      },
+      "File": {
+        "description": "A [`File`](https://developer.mozilla.org/en-US/docs/Web/API/File) provides information about files.",
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "The name of the `File`.",
+            "type": "string"
+          },
+          "lastModified": {
+            "description": "The last modified date of the `File`.",
+            "type": "number"
+          },
+          "size": {
+            "description": "The total size of the `Blob` in bytes.",
+            "type": "number"
+          },
+          "type": {
+            "description": "The content-type of the `Blob`.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "lastModified",
+          "name",
+          "size",
+          "type"
+        ]
+      },
+      "ToRes<{200:{format:\"formData\";body:Zod.ZodObject<{string:Zod.ZodString;number:Zod.ZodNumber;boolean:Zod.ZodBoolean;optionalString:Zod.ZodOptional<Zod.ZodString>;optionalNumber:Zod.ZodOptional<Zod.ZodNumber>;optionalBoolean:Zod.ZodOptional<Zod.ZodBoolean>;stringArr:Zod.ZodArray<Zod.ZodString,\"many\">;numberArr:Zod.ZodArray<Zod.ZodNumber,\"many\">;booleanArr:Zod.ZodArray<Zod.ZodBoolean,\"many\">;optionalStringArr:Zod.ZodOptional<Zod.ZodArray<Zod.ZodString,\"many\">>;optionalNumberArr:Zod.ZodOptional<Zod.ZodArray<Zod.ZodNumber,\"many\">>;optionalBooleanArr:Zod.ZodOptional<Zod.ZodArray<Zod.ZodBoolean,\"many\">>;file:Zod.ZodType<File,Zod.ZodTypeDef,File>;optionalFile:Zod.ZodOptional<Zod.ZodType<File,Zod.ZodTypeDef,File>>;fileArr:Zod.ZodArray<Zod.ZodType<File,Zod.ZodTypeDef,File>,\"many\">;optionalFileArr:Zod.ZodOptional<Zod.ZodArray<Zod.ZodType<File,Zod.ZodTypeDef,File>,\"many\">>;},\"strip\",Zod.ZodTypeAny,{string:string;number:number;boolean:boolean;stringArr:string[];numberArr:number[];booleanArr:boolean[];file:File;fileArr:File[];optionalString?:string|undefined;optionalNumber?:number|undefined;optionalBoolean?:boolean|undefined;optionalStringArr?:string[]|undefined;optionalNumberArr?:number[]|undefined;optionalBooleanArr?:boolean[]|undefined;optionalFile?:File|undefined;optionalFileArr?:File[]|undefined;},{string:string;number:number;boolean:boolean;stringArr:string[];numberArr:number[];booleanArr:boolean[];file:File;fileArr:File[];optionalString?:string|undefined;optionalNumber?:number|undefined;optionalBoolean?:boolean|undefined;optionalStringArr?:string[]|undefined;optionalNumberArr?:number[]|undefined;optionalBooleanArr?:boolean[]|undefined;optionalFile?:File|undefined;optionalFileArr?:File[]|undefined;}>;};}>": {
+        "type": "object",
+        "properties": {
+          "200": {
+            "$ref": "#/components/schemas/{format:undefined;body:{string:string;number:number;boolean:boolean;stringArr:string[];numberArr:number[];booleanArr:boolean[];file:File;fileArr:File[];optionalString?:string|undefined;optionalNumber?:number|undefined;optionalBoolean?:boolean|undefined;optionalStringArr?:string[]|undefined;optionalNumberArr?:number[]|undefined;optionalBooleanArr?:boolean[]|undefined;optionalFile?:File|undefined;optionalFileArr?:File[]|undefined;};}"
+          }
+        },
+        "required": [
+          "200"
+        ]
+      },
+      "{format:undefined;body:{string:string;number:number;boolean:boolean;stringArr:string[];numberArr:number[];booleanArr:boolean[];file:File;fileArr:File[];optionalString?:string|undefined;optionalNumber?:number|undefined;optionalBoolean?:boolean|undefined;optionalStringArr?:string[]|undefined;optionalNumberArr?:number[]|undefined;optionalBooleanArr?:boolean[]|undefined;optionalFile?:File|undefined;optionalFileArr?:File[]|undefined;};}": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "$ref": "#/components/schemas/{string:string;number:number;boolean:boolean;stringArr:string[];numberArr:number[];booleanArr:boolean[];file:File;fileArr:File[];optionalString?:string|undefined;optionalNumber?:number|undefined;optionalBoolean?:boolean|undefined;optionalStringArr?:string[]|undefined;optionalNumberArr?:number[]|undefined;optionalBooleanArr?:boolean[]|undefined;optionalFile?:File|undefined;optionalFileArr?:File[]|undefined;}_1"
+          }
+        },
+        "required": [
+          "body"
+        ]
+      },
+      "{string:string;number:number;boolean:boolean;stringArr:string[];numberArr:number[];booleanArr:boolean[];file:File;fileArr:File[];optionalString?:string|undefined;optionalNumber?:number|undefined;optionalBoolean?:boolean|undefined;optionalStringArr?:string[]|undefined;optionalNumberArr?:number[]|undefined;optionalBooleanArr?:boolean[]|undefined;optionalFile?:File|undefined;optionalFileArr?:File[]|undefined;}_1": {
+        "type": "object",
+        "properties": {
+          "string": {
+            "type": "string"
+          },
+          "number": {
+            "type": "number"
+          },
+          "boolean": {
+            "type": "boolean"
+          },
+          "stringArr": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "numberArr": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "booleanArr": {
+            "type": "array",
+            "items": {
+              "type": "boolean"
+            }
+          },
+          "file": {
+            "$ref": "#/components/schemas/File"
+          },
+          "fileArr": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/File"
+            }
+          },
+          "optionalString": {
+            "type": "string"
+          },
+          "optionalNumber": {
+            "type": "number"
+          },
+          "optionalBoolean": {
+            "type": "boolean"
+          },
+          "optionalStringArr": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "optionalNumberArr": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "optionalBooleanArr": {
+            "type": "array",
+            "items": {
+              "type": "boolean"
+            }
+          },
+          "optionalFile": {
+            "$ref": "#/components/schemas/File"
+          },
+          "optionalFileArr": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/File"
+            }
+          }
+        },
+        "required": [
+          "boolean",
+          "booleanArr",
+          "file",
+          "fileArr",
+          "number",
+          "numberArr",
+          "string",
+          "stringArr"
+        ]
+      },
+      "{string:string;number:number;boolean:boolean;stringArr:string[];numberArr:number[];booleanArr:boolean[];file:File;fileArr:File[];optionalString?:string|undefined;optionalNumber?:number|undefined;optionalBoolean?:boolean|undefined;optionalStringArr?:string[]|undefined;optionalNumberArr?:number[]|undefined;optionalBooleanArr?:boolean[]|undefined;optionalFile?:File|undefined;optionalFileArr?:File[]|undefined;}_2": {
+        "type": "object",
+        "properties": {
+          "string": {
+            "type": "string"
+          },
+          "number": {
+            "type": "number"
+          },
+          "boolean": {
+            "type": "boolean"
+          },
+          "stringArr": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "numberArr": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "booleanArr": {
+            "type": "array",
+            "items": {
+              "type": "boolean"
+            }
+          },
+          "file": {
+            "$ref": "#/components/schemas/File"
+          },
+          "fileArr": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/File"
+            }
+          },
+          "optionalString": {
+            "type": "string"
+          },
+          "optionalNumber": {
+            "type": "number"
+          },
+          "optionalBoolean": {
+            "type": "boolean"
+          },
+          "optionalStringArr": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "optionalNumberArr": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "optionalBooleanArr": {
+            "type": "array",
+            "items": {
+              "type": "boolean"
+            }
+          },
+          "optionalFile": {
+            "$ref": "#/components/schemas/File"
+          },
+          "optionalFileArr": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/File"
+            }
+          }
+        },
+        "required": [
+          "boolean",
+          "booleanArr",
+          "file",
+          "fileArr",
+          "number",
+          "numberArr",
+          "string",
+          "stringArr"
+        ]
+      },
+      "ToRes<{200:{body:Zod.ZodObject<{string:Zod.ZodString;number:Zod.ZodNumber;boolean:Zod.ZodBoolean;optionalString:Zod.ZodOptional<Zod.ZodString>;optionalNumber:Zod.ZodOptional<Zod.ZodNumber>;optionalBoolean:Zod.ZodOptional<Zod.ZodBoolean>;stringArr:Zod.ZodArray<Zod.ZodString,\"many\">;numberArr:Zod.ZodArray<Zod.ZodNumber,\"many\">;booleanArr:Zod.ZodArray<Zod.ZodBoolean,\"many\">;optionalStringArr:Zod.ZodOptional<Zod.ZodArray<Zod.ZodString,\"many\">>;optionalNumberArr:Zod.ZodOptional<Zod.ZodArray<Zod.ZodNumber,\"many\">>;optionalBooleanArr:Zod.ZodOptional<Zod.ZodArray<Zod.ZodBoolean,\"many\">>;file:Zod.ZodString;optionalFile:Zod.ZodOptional<Zod.ZodString>;fileArr:Zod.ZodArray<Zod.ZodString,\"many\">;optionalFileArr:Zod.ZodOptional<Zod.ZodArray<Zod.ZodString,\"many\">>;},\"strip\",Zod.ZodTypeAny,{string:string;number:number;boolean:boolean;stringArr:string[];numberArr:number[];booleanArr:boolean[];file:string;fileArr:string[];optionalString?:string|undefined;optionalNumber?:number|undefined;optionalBoolean?:boolean|undefined;optionalStringArr?:string[]|undefined;optionalNumberArr?:number[]|undefined;optionalBooleanArr?:boolean[]|undefined;optionalFile?:string|undefined;optionalFileArr?:string[]|undefined;},{string:string;number:number;boolean:boolean;stringArr:string[];numberArr:number[];booleanArr:boolean[];file:string;fileArr:string[];optionalString?:string|undefined;optionalNumber?:number|undefined;optionalBoolean?:boolean|undefined;optionalStringArr?:string[]|undefined;optionalNumberArr?:number[]|undefined;optionalBooleanArr?:boolean[]|undefined;optionalFile?:string|undefined;optionalFileArr?:string[]|undefined;}>;};}>": {
+        "type": "object",
+        "properties": {
+          "200": {
+            "$ref": "#/components/schemas/{body:{string:string;number:number;boolean:boolean;stringArr:string[];numberArr:number[];booleanArr:boolean[];file:string;fileArr:string[];optionalString?:string|undefined;optionalNumber?:number|undefined;optionalBoolean?:boolean|undefined;optionalStringArr?:string[]|undefined;optionalNumberArr?:number[]|undefined;optionalBooleanArr?:boolean[]|undefined;optionalFile?:string|undefined;optionalFileArr?:string[]|undefined;};}"
+          }
+        },
+        "required": [
+          "200"
+        ]
+      },
+      "{body:{string:string;number:number;boolean:boolean;stringArr:string[];numberArr:number[];booleanArr:boolean[];file:string;fileArr:string[];optionalString?:string|undefined;optionalNumber?:number|undefined;optionalBoolean?:boolean|undefined;optionalStringArr?:string[]|undefined;optionalNumberArr?:number[]|undefined;optionalBooleanArr?:boolean[]|undefined;optionalFile?:string|undefined;optionalFileArr?:string[]|undefined;};}": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "$ref": "#/components/schemas/{string:string;number:number;boolean:boolean;stringArr:string[];numberArr:number[];booleanArr:boolean[];file:string;fileArr:string[];optionalString?:string|undefined;optionalNumber?:number|undefined;optionalBoolean?:boolean|undefined;optionalStringArr?:string[]|undefined;optionalNumberArr?:number[]|undefined;optionalBooleanArr?:boolean[]|undefined;optionalFile?:string|undefined;optionalFileArr?:string[]|undefined;}"
+          }
+        },
+        "required": [
+          "body"
+        ]
+      },
+      "{string:string;number:number;boolean:boolean;stringArr:string[];numberArr:number[];booleanArr:boolean[];file:string;fileArr:string[];optionalString?:string|undefined;optionalNumber?:number|undefined;optionalBoolean?:boolean|undefined;optionalStringArr?:string[]|undefined;optionalNumberArr?:number[]|undefined;optionalBooleanArr?:boolean[]|undefined;optionalFile?:string|undefined;optionalFileArr?:string[]|undefined;}": {
+        "type": "object",
+        "properties": {
+          "string": {
+            "type": "string"
+          },
+          "number": {
+            "type": "number"
+          },
+          "boolean": {
+            "type": "boolean"
+          },
+          "stringArr": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "numberArr": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "booleanArr": {
+            "type": "array",
+            "items": {
+              "type": "boolean"
+            }
+          },
+          "file": {
+            "type": "string"
+          },
+          "fileArr": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "optionalString": {
+            "type": "string"
+          },
+          "optionalNumber": {
+            "type": "number"
+          },
+          "optionalBoolean": {
+            "type": "boolean"
+          },
+          "optionalStringArr": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "optionalNumberArr": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "optionalBooleanArr": {
+            "type": "array",
+            "items": {
+              "type": "boolean"
+            }
+          },
+          "optionalFile": {
+            "type": "string"
+          },
+          "optionalFileArr": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "boolean",
+          "booleanArr",
+          "file",
+          "fileArr",
+          "number",
+          "numberArr",
+          "string",
+          "stringArr"
+        ]
+      }
+    }
+  }
+}

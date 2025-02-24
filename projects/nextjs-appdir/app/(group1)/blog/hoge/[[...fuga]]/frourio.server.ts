@@ -8,11 +8,13 @@ type RouteChecker = [typeof GET];
 
 export const paramsValidator = z.object({ 'fuga': frourioSpec.param });
 
+type ParamsType = z.infer<typeof paramsValidator>;
+
 type SpecType = typeof frourioSpec;
 
 type Controller = {
   get: (req: {
-    params: z.infer<typeof paramsValidator>;
+    params: ParamsType;
   }) => Promise<
     | {
         status: 200;

@@ -190,14 +190,14 @@ import { frourioSpec } from './frourio';
 import type { ${methods.map((m) => m.name.toUpperCase()).join(', ')} } from './route';
 
 type RouteChecker = [${methods.map((m) => `typeof ${m.name.toUpperCase()}`).join(', ')}];
-${params ? `\n${params.current ? `${params.current.param?.typeName !== 'number' ? '' : params.current.param.isArray ? paramToNumArrText : paramToNumText}export ` : ''}const paramsValidator = ${paramsToText(params)};\n` : ''}
+${params ? `\n${params.current ? `${params.current.param?.typeName !== 'number' ? '' : params.current.param.isArray ? paramToNumArrText : paramToNumText}` : ''}export const paramsValidator = ${paramsToText(params)};\n\ntype ParamsType = z.infer<typeof paramsValidator>;\n` : ''}
 type SpecType = typeof frourioSpec;
 
 type Controller = {
 ${methods
   .map(
     (m) =>
-      `  ${m.name}: (req: {${params ? '\n    params: z.infer<typeof paramsValidator>;' : ''}${m.hasHeaders ? `\n    headers: z.infer<SpecType['${m.name}']['headers']>;` : ''}${m.query ? `\n    query: z.infer<SpecType['${m.name}']['query']>;` : ''}${m.body ? `\n    body: z.infer<SpecType['${m.name}']['body']>;` : ''}
+      `  ${m.name}: (req: {${params ? '\n    params: ParamsType;' : ''}${m.hasHeaders ? `\n    headers: z.infer<SpecType['${m.name}']['headers']>;` : ''}${m.query ? `\n    query: z.infer<SpecType['${m.name}']['query']>;` : ''}${m.body ? `\n    body: z.infer<SpecType['${m.name}']['body']>;` : ''}
   }) => Promise<${
     m.res
       ? `\n${m.res

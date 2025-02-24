@@ -9,11 +9,13 @@ type RouteChecker = [typeof GET];
 
 export const paramsValidator = z.object({ 'c': z.array(z.string()) }).and(ancestorParamsValidator).and(z.object({ 'b': z.string() }));
 
+type ParamsType = z.infer<typeof paramsValidator>;
+
 type SpecType = typeof frourioSpec;
 
 type Controller = {
   get: (req: {
-    params: z.infer<typeof paramsValidator>;
+    params: ParamsType;
   }) => Promise<
     | {
         status: 200;

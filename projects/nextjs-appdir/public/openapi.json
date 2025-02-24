@@ -1,0 +1,952 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "openapi api",
+    "version": "v0.0"
+  },
+  "paths": {
+    "/(group1)/{pid}/foo": {
+      "get": {
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "value"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/(group1)/{pid}": {
+      "get": {
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": "object"
+          },
+          {
+            "name": "properties",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "requiredNum": {
+                "type": "number"
+              },
+              "requiredNumArr": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              },
+              "id": {
+                "type": "string"
+              },
+              "strArray": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "disable": {
+                "enum": [
+                  "false",
+                  "true"
+                ],
+                "type": "string"
+              },
+              "bool": {
+                "type": "boolean"
+              },
+              "boolArray": {
+                "type": "array",
+                "items": {
+                  "type": "boolean"
+                }
+              },
+              "symbolIds": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/SymbolId"
+                }
+              },
+              "maybeIds": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/MaybeId"
+                }
+              },
+              "optionalNum": {
+                "type": "number"
+              },
+              "optionalNumArr": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              },
+              "emptyNum": {
+                "type": "number"
+              },
+              "optionalStrArray": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "optionalBool": {
+                "type": "boolean"
+              },
+              "optionalBoolArray": {
+                "type": "array",
+                "items": {
+                  "type": "boolean"
+                }
+              },
+              "optionalZodIds": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ZodId"
+                }
+              }
+            }
+          },
+          {
+            "name": "required",
+            "in": "query",
+            "required": false,
+            "schema": [
+              "bool",
+              "boolArray",
+              "disable",
+              "id",
+              "maybeIds",
+              "requiredNum",
+              "requiredNumArr",
+              "strArray",
+              "symbolIds"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pid": {
+                      "type": "string"
+                    },
+                    "query": {
+                      "$ref": "#/components/schemas/{requiredNum:number;requiredNumArr:number[];id:string;strArray:string[];disable:\"true\"|\"false\";bool:boolean;boolArray:boolean[];symbolIds:SymbolId[];maybeIds:MaybeId[];optionalNum?:number|undefined;optionalNumArr?:number[]|undefined;emptyNum?:number|undefined;optionalStrArray?:string[]|undefined;optionalBool?:boolean|undefined;optionalBoolArray?:boolean[]|undefined;optionalZodIds?:ZodId[]|undefined;}"
+                    }
+                  },
+                  "required": [
+                    "pid",
+                    "query"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/(group1)/blog/{slug}": {
+      "get": {
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/(group1)/blog/hoge/{fuga}": {
+      "get": {
+        "parameters": [
+          {
+            "name": "fuga",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/(group2)/x/{y}": {
+      "get": {
+        "parameters": [
+          {
+            "name": "y",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": "object"
+          },
+          {
+            "name": "properties",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "message": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "required",
+            "in": "query",
+            "required": false,
+            "schema": [
+              "message"
+            ]
+          }
+        ]
+      }
+    },
+    "/{a}/{b}/{c}": {
+      "get": {
+        "parameters": [
+          {
+            "name": "a",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "array",
+                      "items": {
+                        "type": [
+                          "string",
+                          "number"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "value"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{a}/{b}/d": {
+      "get": {
+        "parameters": [
+          {
+            "name": "a",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "array",
+                      "items": {
+                        "type": [
+                          "string",
+                          "number"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "value"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{a}": {
+      "get": {
+        "parameters": [
+          {
+            "name": "a",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": "object"
+          },
+          {
+            "name": "properties",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "aa": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "required",
+            "in": "query",
+            "required": false,
+            "schema": [
+              "aa"
+            ]
+          },
+          {
+            "name": "type",
+            "in": "header",
+            "required": false,
+            "schema": "object"
+          },
+          {
+            "name": "properties",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "cookie": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "bb": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "bb"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                }
+              }
+            },
+            "headers": {
+              "$ref": "#/components/schemas/{'Set-Cookie':string;}"
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ToRes<{200:{body:Zod.ZodObject<{value:Zod.ZodString;},\"strip\",Zod.ZodTypeAny,{value:string;},{value:string;}>;};}>": {
+        "type": "object",
+        "properties": {
+          "200": {
+            "$ref": "#/components/schemas/{body:{value:string;};}"
+          }
+        },
+        "required": [
+          "200"
+        ]
+      },
+      "{body:{value:string;};}": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "$ref": "#/components/schemas/{value:string;}"
+          }
+        },
+        "required": [
+          "body"
+        ]
+      },
+      "{value:string;}": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "value"
+        ]
+      },
+      "{requiredNum:number;requiredNumArr:number[];id:string;strArray:string[];disable:\"true\"|\"false\";bool:boolean;boolArray:boolean[];symbolIds:SymbolId[];maybeIds:MaybeId[];optionalNum?:number|undefined;optionalNumArr?:number[]|undefined;emptyNum?:number|undefined;optionalStrArray?:string[]|undefined;optionalBool?:boolean|undefined;optionalBoolArray?:boolean[]|undefined;optionalZodIds?:ZodId[]|undefined;}": {
+        "type": "object",
+        "properties": {
+          "requiredNum": {
+            "type": "number"
+          },
+          "requiredNumArr": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "id": {
+            "type": "string"
+          },
+          "strArray": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "disable": {
+            "enum": [
+              "false",
+              "true"
+            ],
+            "type": "string"
+          },
+          "bool": {
+            "type": "boolean"
+          },
+          "boolArray": {
+            "type": "array",
+            "items": {
+              "type": "boolean"
+            }
+          },
+          "symbolIds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SymbolId"
+            }
+          },
+          "maybeIds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MaybeId"
+            }
+          },
+          "optionalNum": {
+            "type": "number"
+          },
+          "optionalNumArr": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "emptyNum": {
+            "type": "number"
+          },
+          "optionalStrArray": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "optionalBool": {
+            "type": "boolean"
+          },
+          "optionalBoolArray": {
+            "type": "array",
+            "items": {
+              "type": "boolean"
+            }
+          },
+          "optionalZodIds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ZodId"
+            }
+          }
+        },
+        "required": [
+          "bool",
+          "boolArray",
+          "disable",
+          "id",
+          "maybeIds",
+          "requiredNum",
+          "requiredNumArr",
+          "strArray",
+          "symbolIds"
+        ]
+      },
+      "SymbolId": {
+        "allOf": [
+          {
+            "type": "object",
+            "properties": {}
+          },
+          {
+            "type": "string"
+          }
+        ]
+      },
+      "MaybeId": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/ZodId"
+          },
+          {
+            "allOf": [
+              {
+                "type": "object",
+                "properties": {}
+              },
+              {
+                "type": "number"
+              }
+            ]
+          }
+        ]
+      },
+      "ZodId": {
+        "allOf": [
+          {
+            "type": "object",
+            "properties": {}
+          },
+          {
+            "type": "number"
+          }
+        ]
+      },
+      "ToRes<{200:{body:Zod.ZodObject<{pid:Zod.ZodString;query:Zod.ZodObject<{requiredNum:Zod.ZodNumber;optionalNum:Zod.ZodOptional<Zod.ZodNumber>;optionalNumArr:Zod.ZodOptional<Zod.ZodArray<Zod.ZodNumber,\"many\">>;emptyNum:Zod.ZodOptional<Zod.ZodNumber>;requiredNumArr:Zod.ZodArray<Zod.ZodNumber,\"many\">;id:Zod.ZodString;strArray:Zod.ZodArray<Zod.ZodString,\"many\">;optionalStrArray:Zod.ZodOptional<Zod.ZodArray<Zod.ZodString,\"many\">>;disable:Zod.ZodEnum<[\"true\",\"false\"]>;bool:Zod.ZodBoolean;optionalBool:Zod.ZodOptional<Zod.ZodBoolean>;boolArray:Zod.ZodArray<Zod.ZodBoolean,\"many\">;optionalBoolArray:Zod.ZodOptional<Zod.ZodArray<Zod.ZodBoolean,\"many\">>;symbolIds:Zod.ZodType<SymbolId[],Zod.ZodTypeDef,SymbolId[]>;optionalZodIds:Zod.ZodOptional<Zod.ZodType<ZodId[],Zod.ZodTypeDef,ZodId[]>>;maybeIds:Zod.ZodType<MaybeId[],Zod.ZodTypeDef,MaybeId[]>;},\"strip\",Zod.ZodTypeAny,{requiredNum:number;requiredNumArr:number[];id:string;strArray:string[];disable:\"true\"|\"false\";bool:boolean;boolArray:boolean[];symbolIds:SymbolId[];maybeIds:MaybeId[];optionalNum?:number|undefined;optionalNumArr?:number[]|undefined;emptyNum?:number|undefined;optionalStrArray?:string[]|undefined;optionalBool?:boolean|undefined;optionalBoolArray?:boolean[]|undefined;optionalZodIds?:ZodId[]|undefined;},{requiredNum:number;requiredNumArr:number[];id:string;strArray:string[];disable:\"true\"|\"false\";bool:boolean;boolArray:boolean[];symbolIds:SymbolId[];maybeIds:MaybeId[];optionalNum?:number|undefined;optionalNumArr?:number[]|undefined;emptyNum?:number|undefined;optionalStrArray?:string[]|undefined;optionalBool?:boolean|undefined;optionalBoolArray?:boolean[]|undefined;optionalZodIds?:ZodId[]|undefined;}>;},\"strip\",Zod.ZodTypeAny,{pid:string;query:{requiredNum:number;requiredNumArr:number[];id:string;strArray:string[];disable:\"true\"|\"false\";bool:boolean;boolArray:boolean[];symbolIds:SymbolId[];maybeIds:MaybeId[];optionalNum?:number|undefined;optionalNumArr?:number[]|undefined;emptyNum?:number|undefined;optionalStrArray?:string[]|undefined;optionalBool?:boolean|undefined;optionalBoolArray?:boolean[]|undefined;optionalZodIds?:ZodId[]|undefined;};},{pid:string;query:{requiredNum:number;requiredNumArr:number[];id:string;strArray:string[];disable:\"true\"|\"false\";bool:boolean;boolArray:boolean[];symbolIds:SymbolId[];maybeIds:MaybeId[];optionalNum?:number|undefined;optionalNumArr?:number[]|undefined;emptyNum?:number|undefined;optionalStrArray?:string[]|undefined;optionalBool?:boolean|undefined;optionalBoolArray?:boolean[]|undefined;optionalZodIds?:ZodId[]|undefined;};}>;};}>": {
+        "type": "object",
+        "properties": {
+          "200": {
+            "$ref": "#/components/schemas/{body:{pid:string;query:{requiredNum:number;requiredNumArr:number[];id:string;strArray:string[];disable:\"true\"|\"false\";bool:boolean;boolArray:boolean[];symbolIds:SymbolId[];maybeIds:MaybeId[];optionalNum?:number|undefined;optionalNumArr?:number[]|undefined;emptyNum?:number|undefined;optionalStrArray?:string[]|undefined;optionalBool?:boolean|undefined;optionalBoolArray?:boolean[]|undefined;optionalZodIds?:ZodId[]|undefined;};};}"
+          }
+        },
+        "required": [
+          "200"
+        ]
+      },
+      "{body:{pid:string;query:{requiredNum:number;requiredNumArr:number[];id:string;strArray:string[];disable:\"true\"|\"false\";bool:boolean;boolArray:boolean[];symbolIds:SymbolId[];maybeIds:MaybeId[];optionalNum?:number|undefined;optionalNumArr?:number[]|undefined;emptyNum?:number|undefined;optionalStrArray?:string[]|undefined;optionalBool?:boolean|undefined;optionalBoolArray?:boolean[]|undefined;optionalZodIds?:ZodId[]|undefined;};};}": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "$ref": "#/components/schemas/{pid:string;query:{requiredNum:number;requiredNumArr:number[];id:string;strArray:string[];disable:\"true\"|\"false\";bool:boolean;boolArray:boolean[];symbolIds:SymbolId[];maybeIds:MaybeId[];optionalNum?:number|undefined;optionalNumArr?:number[]|undefined;emptyNum?:number|undefined;optionalStrArray?:string[]|undefined;optionalBool?:boolean|undefined;optionalBoolArray?:boolean[]|undefined;optionalZodIds?:ZodId[]|undefined;};}"
+          }
+        },
+        "required": [
+          "body"
+        ]
+      },
+      "{pid:string;query:{requiredNum:number;requiredNumArr:number[];id:string;strArray:string[];disable:\"true\"|\"false\";bool:boolean;boolArray:boolean[];symbolIds:SymbolId[];maybeIds:MaybeId[];optionalNum?:number|undefined;optionalNumArr?:number[]|undefined;emptyNum?:number|undefined;optionalStrArray?:string[]|undefined;optionalBool?:boolean|undefined;optionalBoolArray?:boolean[]|undefined;optionalZodIds?:ZodId[]|undefined;};}": {
+        "type": "object",
+        "properties": {
+          "pid": {
+            "type": "string"
+          },
+          "query": {
+            "$ref": "#/components/schemas/{requiredNum:number;requiredNumArr:number[];id:string;strArray:string[];disable:\"true\"|\"false\";bool:boolean;boolArray:boolean[];symbolIds:SymbolId[];maybeIds:MaybeId[];optionalNum?:number|undefined;optionalNumArr?:number[]|undefined;emptyNum?:number|undefined;optionalStrArray?:string[]|undefined;optionalBool?:boolean|undefined;optionalBoolArray?:boolean[]|undefined;optionalZodIds?:ZodId[]|undefined;}"
+          }
+        },
+        "required": [
+          "pid",
+          "query"
+        ]
+      },
+      "ToRes<{200:{body:Zod.ZodNumber;};}>": {
+        "type": "object",
+        "properties": {
+          "200": {
+            "$ref": "#/components/schemas/{body:number;}"
+          }
+        },
+        "required": [
+          "200"
+        ]
+      },
+      "{body:number;}": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "body"
+        ]
+      },
+      "ToRes<{200:{body:Zod.ZodString;};}>": {
+        "type": "object",
+        "properties": {
+          "200": {
+            "$ref": "#/components/schemas/{body:string;}"
+          }
+        },
+        "required": [
+          "200"
+        ]
+      },
+      "{body:string;}": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "body"
+        ]
+      },
+      "{message:string;}": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "ToRes<unknown>": {
+        "type": "object"
+      },
+      "ToRes<{200:{body:Zod.ZodObject<{value:Zod.ZodArray<Zod.ZodUnion<[Zod.ZodString,Zod.ZodNumber]>,\"many\">;},\"strip\",Zod.ZodTypeAny,{value:(string|number)[];},{value:(string|number)[];}>;};}>": {
+        "type": "object",
+        "properties": {
+          "200": {
+            "$ref": "#/components/schemas/{body:{value:(string|number)[];};}"
+          }
+        },
+        "required": [
+          "200"
+        ]
+      },
+      "{body:{value:(string|number)[];};}": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "$ref": "#/components/schemas/{value:(string|number)[];}"
+          }
+        },
+        "required": [
+          "body"
+        ]
+      },
+      "{value:(string|number)[];}": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "array",
+            "items": {
+              "type": [
+                "string",
+                "number"
+              ]
+            }
+          }
+        },
+        "required": [
+          "value"
+        ]
+      },
+      "ToRes<{200:{body:Zod.ZodObject<{value:Zod.ZodArray<Zod.ZodUnion<[Zod.ZodString,Zod.ZodNumber]>,\"many\">;},\"strip\",Zod.ZodTypeAny,{value:(string|number)[];},{value:(string|number)[];}>;};}>_1": {
+        "type": "object",
+        "properties": {
+          "200": {
+            "$ref": "#/components/schemas/{body:{value:(string|number)[];};}_1"
+          }
+        },
+        "required": [
+          "200"
+        ]
+      },
+      "{body:{value:(string|number)[];};}_1": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "$ref": "#/components/schemas/{value:(string|number)[];}_1"
+          }
+        },
+        "required": [
+          "body"
+        ]
+      },
+      "{value:(string|number)[];}_1": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "array",
+            "items": {
+              "type": [
+                "string",
+                "number"
+              ]
+            }
+          }
+        },
+        "required": [
+          "value"
+        ]
+      },
+      "ToRes<{200:{body:Zod.ZodNumber;};}>_1": {
+        "type": "object",
+        "properties": {
+          "200": {
+            "$ref": "#/components/schemas/{body:number;}_1"
+          }
+        },
+        "required": [
+          "200"
+        ]
+      },
+      "{body:number;}_1": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "body"
+        ]
+      },
+      "{cookie?:string|undefined;}": {
+        "type": "object",
+        "properties": {
+          "cookie": {
+            "type": "string"
+          }
+        }
+      },
+      "{aa:string;}": {
+        "type": "object",
+        "properties": {
+          "aa": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "aa"
+        ]
+      },
+      "ToRes<{200:{body:Zod.ZodObject<{bb:Zod.ZodString;},\"strip\",Zod.ZodTypeAny,{bb:string;},{bb:string;}>;};404:{};}>": {
+        "type": "object",
+        "properties": {
+          "200": {
+            "$ref": "#/components/schemas/{body:{bb:string;};}"
+          },
+          "404": {
+            "$ref": "#/components/schemas/{}"
+          }
+        },
+        "required": [
+          "200",
+          "404"
+        ]
+      },
+      "{body:{bb:string;};}": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "$ref": "#/components/schemas/{bb:string;}"
+          }
+        },
+        "required": [
+          "body"
+        ]
+      },
+      "{bb:string;}": {
+        "type": "object",
+        "properties": {
+          "bb": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "bb"
+        ]
+      },
+      "{}": {
+        "type": "object"
+      },
+      "{bb:number;}": {
+        "type": "object",
+        "properties": {
+          "bb": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "bb"
+        ]
+      },
+      "ToRes<{201:{body:Zod.ZodArray<Zod.ZodNumber,\"many\">;headers:Zod.ZodObject<{'Set-Cookie':Zod.ZodString;},\"strip\",Zod.ZodTypeAny,{'Set-Cookie':string;},{'Set-Cookie':string;}>;};}>": {
+        "type": "object",
+        "properties": {
+          "201": {
+            "$ref": "#/components/schemas/{body:number[];headers:{'Set-Cookie':string;};}"
+          }
+        },
+        "required": [
+          "201"
+        ]
+      },
+      "{body:number[];headers:{'Set-Cookie':string;};}": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "headers": {
+            "$ref": "#/components/schemas/{'Set-Cookie':string;}"
+          }
+        },
+        "required": [
+          "body",
+          "headers"
+        ]
+      },
+      "{'Set-Cookie':string;}": {
+        "type": "object",
+        "properties": {
+          "Set-Cookie": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "Set-Cookie"
+        ]
+      }
+    }
+  }
+}

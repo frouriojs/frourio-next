@@ -7,13 +7,15 @@ import type { GET } from './route';
 
 type RouteChecker = [typeof GET];
 
-const paramsValidator = ancestorParamsValidator;
+export const paramsValidator = ancestorParamsValidator;
+
+type ParamsType = z.infer<typeof paramsValidator>;
 
 type SpecType = typeof frourioSpec;
 
 type Controller = {
   get: (req: {
-    params: z.infer<typeof paramsValidator>;
+    params: ParamsType;
   }) => Promise<
     | {
         status: 200;

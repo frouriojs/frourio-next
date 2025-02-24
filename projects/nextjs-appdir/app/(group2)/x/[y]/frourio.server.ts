@@ -8,11 +8,13 @@ type RouteChecker = [typeof GET];
 
 export const paramsValidator = z.object({ 'y': z.string() });
 
+type ParamsType = z.infer<typeof paramsValidator>;
+
 type SpecType = typeof frourioSpec;
 
 type Controller = {
   get: (req: {
-    params: z.infer<typeof paramsValidator>;
+    params: ParamsType;
     query: z.infer<SpecType['get']['query']>;
   }) => Promise<Response>;
 };

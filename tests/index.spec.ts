@@ -22,8 +22,9 @@ import type { frourioSpec as formSpec } from '../projects/nextjs-src-appdir/src/
 import * as formReqRoute from '../projects/nextjs-src-appdir/src/app/route';
 import { SERVER_FILE } from '../src/constants';
 import { generate } from '../src/generate';
-import { getConfig } from '../src/getConfig';
 import { listFrourioFiles } from '../src/listFrourioFiles';
+import { generateOpenapi } from '../src/openapi/generateOpenapi';
+import { getOpenapiConfig } from '../src/openapi/getOpenapiConfig';
 
 test('generate', async () => {
   const projectDirs = fs
@@ -32,7 +33,7 @@ test('generate', async () => {
     .map((d) => path.join('./projects', d.name));
 
   for (const dir of projectDirs) {
-    const { appDir } = getConfig(dir);
+    const { appDir, output } = getOpenapiConfig(dir);
 
     assert(appDir);
 
@@ -40,6 +41,7 @@ test('generate', async () => {
 
     await Promise.all(frourioFiles.map((file) => unlink(path.join(file, '../', SERVER_FILE))));
     await generate(appDir);
+    await generateOpenapi(appDir, output);
   }
 
   const out = execSync('git status', { encoding: 'utf8' });

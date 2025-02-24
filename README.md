@@ -275,6 +275,46 @@ test('Route Handlers', async () => {
 });
 ```
 
+## Setup with exporting OpenAPI JSON
+
+`package.json`
+
+```json
+{
+  "scripts": {
+    "dev": "run-p dev:*",
+    "dev:next": "next dev",
+    "dev:frourio": "frourio-next --watch",
+    "dev:openapi": "frourio-next-openapi --output=./public/openapi.json --watch",
+    "build": "frourio-next && frourio-next-openapi --output=./public/openapi.json && next build"
+  }
+}
+```
+
+<table>
+  <thead>
+    <tr>
+      <th>Option</th>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td nowrap><code>--output</code><br /><code>-o</code></td>
+      <td><code>string</code></td>
+      <td>Specify the output path for OpenAPI JSON.</td>
+    </tr>
+    <tr>
+      <td nowrap><code>--watch</code><br /><code>-w</code></td>
+      <td></td>
+      <td>
+        Enable watch mode.
+      </td>
+    </tr>
+  </tbody>
+</table>
+
 ## License
 
 FrourioNext is licensed under a [MIT License](https://github.com/frouriojs/frourio-next/blob/main/LICENSE).

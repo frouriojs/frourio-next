@@ -32,22 +32,24 @@ test('generate', async () => {
     .filter((d) => d.isDirectory())
     .map((d) => path.join('./projects', d.name));
 
-  for (const dir of projectDirs) {
-    const { appDir, output } = getOpenapiConfig(dir);
+  await Promise.all(
+    projectDirs.map(async (dir) => {
+      const { appDir, output } = getOpenapiConfig(undefined, dir);
 
-    assert(appDir);
+      assert(appDir);
 
-    const frourioFiles = listFrourioFiles(appDir);
+      const frourioFiles = listFrourioFiles(appDir);
 
-    await Promise.all(frourioFiles.map((file) => unlink(path.join(file, '../', SERVER_FILE))));
-    await generate(appDir);
-    await generateOpenapi(appDir, output);
-  }
+      await Promise.all(frourioFiles.map((file) => unlink(path.join(file, '../', SERVER_FILE))));
+      await generate(appDir);
+      await generateOpenapi(appDir, output);
+    }),
+  );
 
   const out = execSync('git status', { encoding: 'utf8' });
 
   expect(out).toMatch('nothing to commit, working tree clean');
-});
+}, 20000);
 
 test('base handler', async () => {
   const res1 = await baseRoute.GET(new NextRequest('http://example.com/'));

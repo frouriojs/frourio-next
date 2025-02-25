@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
 import { existsSync, readFileSync, unlinkSync, writeFileSync } from 'fs';
 import type { OpenAPIV3_1 } from 'openapi-types';
-import { join } from 'path';
+import path from 'path';
 import ts from 'typescript';
 import * as TJS from 'typescript-json-schema';
 import { FROURIO_FILE, SERVER_FILE } from '../constants';
@@ -24,7 +24,7 @@ export const generateOpenapi = (appDir: string, output: string) => {
 };
 
 const toOpenAPI = (params: { appDir: string; template: OpenAPIV3_1.Document }): string => {
-  const frourioFiles = listFrourioFiles(params.appDir);
+  const frourioFiles = listFrourioFiles(path.resolve(params.appDir));
   const typeFile = `import type { FrourioSpec } from '@frourio/next'
 import type { z } from 'zod'
 ${frourioFiles
@@ -110,7 +110,7 @@ type ToSpecType<T extends FrourioSpec> = {
 
 type AllMethods = [${frourioFiles.map((_, i) => `ToSpecType<typeof frourioSpec${i}>`).join(', ')}]`;
 
-  const typeFilePath = join(params.appDir, `@openapi-${Date.now()}.ts`);
+  const typeFilePath = path.posix.join(params.appDir, `@openapi-${Date.now()}.ts`);
 
   writeFileSync(typeFilePath, typeFile, 'utf8');
 
@@ -168,7 +168,7 @@ type AllMethods = [${frourioFiles.map((_, i) => `ToSpecType<typeof frourioSpec${
     const apiPath =
       file
         .replace(/\[+\.*(.+?)]+/g, '{$1}')
-        .replace(params.appDir, '')
+        .replace(path.resolve(params.appDir).replaceAll('\\', '/'), '')
         .replace(`/${FROURIO_FILE}`, '') || '/';
 
     doc.paths![apiPath] = Object.entries(def.properties!).reduce((dict, [method, val]) => {

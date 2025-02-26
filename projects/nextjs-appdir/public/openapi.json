@@ -5,7 +5,7 @@
     "version": "v0.0"
   },
   "paths": {
-    "/(group1)/{pid}/foo": {
+    "/{pid}/foo": {
       "get": {
         "parameters": [
           {
@@ -23,7 +23,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/{value:string;}"
+                  "$ref": "#/components/schemas/mirbd2"
                 }
               }
             }
@@ -31,7 +31,7 @@
         }
       }
     },
-    "/(group1)/{pid}": {
+    "/{pid}": {
       "get": {
         "parameters": [
           {
@@ -208,7 +208,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/{pid:string;query:{requiredNum:number;requiredNumArr:number[];id:string;strArray:string[];disable:\"true\"|\"false\";bool:boolean;boolArray:boolean[];symbolIds:SymbolId[];maybeIds:MaybeId[];optionalNum?:number|undefined;optionalNumArr?:number[]|undefined;emptyNum?:number|undefined;optionalStrArray?:string[]|undefined;optionalBool?:boolean|undefined;optionalBoolArray?:boolean[]|undefined;optionalZodIds?:ZodId[]|undefined;};}"
+                  "$ref": "#/components/schemas/gdwgbm"
                 }
               }
             }
@@ -216,7 +216,7 @@
         }
       }
     },
-    "/(group1)/blog/{slug}": {
+    "/blog/{slug}": {
       "get": {
         "parameters": [
           {
@@ -245,7 +245,7 @@
         }
       }
     },
-    "/(group1)/blog/hoge/{fuga}": {
+    "/blog/hoge/{fuga}": {
       "get": {
         "parameters": [
           {
@@ -274,7 +274,7 @@
         }
       }
     },
-    "/(group2)/x/{y}": {
+    "/x/{y}": {
       "get": {
         "parameters": [
           {
@@ -333,7 +333,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/{value:(string|number)[];}"
+                  "$ref": "#/components/schemas/1xa51v4"
                 }
               }
             }
@@ -367,7 +367,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/{value:(string|number)[];}_1"
+                  "$ref": "#/components/schemas/1h88gdg"
                 }
               }
             }
@@ -427,7 +427,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/{bb:string;}"
+                  "$ref": "#/components/schemas/ufawrx"
                 }
               }
             }
@@ -441,6 +441,15 @@
         }
       },
       "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/g6hjy5"
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": "",
@@ -469,29 +478,18 @@
   },
   "components": {
     "schemas": {
-      "ToRes<{200:{body:Zod.ZodObject<{value:Zod.ZodString;},\"strip\",Zod.ZodTypeAny,{value:string;},{value:string;}>;};}>": {
-        "type": "object",
-        "properties": {
-          "200": {
-            "$ref": "#/components/schemas/{body:{value:string;};}"
-          }
-        },
-        "required": [
-          "200"
-        ]
-      },
-      "{body:{value:string;};}": {
+      "6s5r15": {
         "type": "object",
         "properties": {
           "body": {
-            "$ref": "#/components/schemas/{value:string;}"
+            "$ref": "#/components/schemas/mirbd2"
           }
         },
         "required": [
           "body"
         ]
       },
-      "{value:string;}": {
+      "mirbd2": {
         "type": "object",
         "properties": {
           "value": {
@@ -502,7 +500,7 @@
           "value"
         ]
       },
-      "{requiredNum:number;requiredNumArr:number[];id:string;strArray:string[];disable:\"true\"|\"false\";bool:boolean;boolArray:boolean[];symbolIds:SymbolId[];maybeIds:MaybeId[];optionalNum?:number|undefined;optionalNumArr?:number[]|undefined;emptyNum?:number|undefined;optionalStrArray?:string[]|undefined;optionalBool?:boolean|undefined;optionalBoolArray?:boolean[]|undefined;optionalZodIds?:ZodId[]|undefined;}": {
+      "wkkvyy": {
         "type": "object",
         "properties": {
           "requiredNum": {
@@ -637,36 +635,25 @@
           }
         ]
       },
-      "ToRes<{200:{body:Zod.ZodObject<{pid:Zod.ZodString;query:Zod.ZodObject<{requiredNum:Zod.ZodNumber;optionalNum:Zod.ZodOptional<Zod.ZodNumber>;optionalNumArr:Zod.ZodOptional<Zod.ZodArray<Zod.ZodNumber,\"many\">>;emptyNum:Zod.ZodOptional<Zod.ZodNumber>;requiredNumArr:Zod.ZodArray<Zod.ZodNumber,\"many\">;id:Zod.ZodString;strArray:Zod.ZodArray<Zod.ZodString,\"many\">;optionalStrArray:Zod.ZodOptional<Zod.ZodArray<Zod.ZodString,\"many\">>;disable:Zod.ZodEnum<[\"true\",\"false\"]>;bool:Zod.ZodBoolean;optionalBool:Zod.ZodOptional<Zod.ZodBoolean>;boolArray:Zod.ZodArray<Zod.ZodBoolean,\"many\">;optionalBoolArray:Zod.ZodOptional<Zod.ZodArray<Zod.ZodBoolean,\"many\">>;symbolIds:Zod.ZodType<SymbolId[],Zod.ZodTypeDef,SymbolId[]>;optionalZodIds:Zod.ZodOptional<Zod.ZodType<ZodId[],Zod.ZodTypeDef,ZodId[]>>;maybeIds:Zod.ZodType<MaybeId[],Zod.ZodTypeDef,MaybeId[]>;},\"strip\",Zod.ZodTypeAny,{requiredNum:number;requiredNumArr:number[];id:string;strArray:string[];disable:\"true\"|\"false\";bool:boolean;boolArray:boolean[];symbolIds:SymbolId[];maybeIds:MaybeId[];optionalNum?:number|undefined;optionalNumArr?:number[]|undefined;emptyNum?:number|undefined;optionalStrArray?:string[]|undefined;optionalBool?:boolean|undefined;optionalBoolArray?:boolean[]|undefined;optionalZodIds?:ZodId[]|undefined;},{requiredNum:number;requiredNumArr:number[];id:string;strArray:string[];disable:\"true\"|\"false\";bool:boolean;boolArray:boolean[];symbolIds:SymbolId[];maybeIds:MaybeId[];optionalNum?:number|undefined;optionalNumArr?:number[]|undefined;emptyNum?:number|undefined;optionalStrArray?:string[]|undefined;optionalBool?:boolean|undefined;optionalBoolArray?:boolean[]|undefined;optionalZodIds?:ZodId[]|undefined;}>;},\"strip\",Zod.ZodTypeAny,{pid:string;query:{requiredNum:number;requiredNumArr:number[];id:string;strArray:string[];disable:\"true\"|\"false\";bool:boolean;boolArray:boolean[];symbolIds:SymbolId[];maybeIds:MaybeId[];optionalNum?:number|undefined;optionalNumArr?:number[]|undefined;emptyNum?:number|undefined;optionalStrArray?:string[]|undefined;optionalBool?:boolean|undefined;optionalBoolArray?:boolean[]|undefined;optionalZodIds?:ZodId[]|undefined;};},{pid:string;query:{requiredNum:number;requiredNumArr:number[];id:string;strArray:string[];disable:\"true\"|\"false\";bool:boolean;boolArray:boolean[];symbolIds:SymbolId[];maybeIds:MaybeId[];optionalNum?:number|undefined;optionalNumArr?:number[]|undefined;emptyNum?:number|undefined;optionalStrArray?:string[]|undefined;optionalBool?:boolean|undefined;optionalBoolArray?:boolean[]|undefined;optionalZodIds?:ZodId[]|undefined;};}>;};}>": {
-        "type": "object",
-        "properties": {
-          "200": {
-            "$ref": "#/components/schemas/{body:{pid:string;query:{requiredNum:number;requiredNumArr:number[];id:string;strArray:string[];disable:\"true\"|\"false\";bool:boolean;boolArray:boolean[];symbolIds:SymbolId[];maybeIds:MaybeId[];optionalNum?:number|undefined;optionalNumArr?:number[]|undefined;emptyNum?:number|undefined;optionalStrArray?:string[]|undefined;optionalBool?:boolean|undefined;optionalBoolArray?:boolean[]|undefined;optionalZodIds?:ZodId[]|undefined;};};}"
-          }
-        },
-        "required": [
-          "200"
-        ]
-      },
-      "{body:{pid:string;query:{requiredNum:number;requiredNumArr:number[];id:string;strArray:string[];disable:\"true\"|\"false\";bool:boolean;boolArray:boolean[];symbolIds:SymbolId[];maybeIds:MaybeId[];optionalNum?:number|undefined;optionalNumArr?:number[]|undefined;emptyNum?:number|undefined;optionalStrArray?:string[]|undefined;optionalBool?:boolean|undefined;optionalBoolArray?:boolean[]|undefined;optionalZodIds?:ZodId[]|undefined;};};}": {
+      "1fbv4al": {
         "type": "object",
         "properties": {
           "body": {
-            "$ref": "#/components/schemas/{pid:string;query:{requiredNum:number;requiredNumArr:number[];id:string;strArray:string[];disable:\"true\"|\"false\";bool:boolean;boolArray:boolean[];symbolIds:SymbolId[];maybeIds:MaybeId[];optionalNum?:number|undefined;optionalNumArr?:number[]|undefined;emptyNum?:number|undefined;optionalStrArray?:string[]|undefined;optionalBool?:boolean|undefined;optionalBoolArray?:boolean[]|undefined;optionalZodIds?:ZodId[]|undefined;};}"
+            "$ref": "#/components/schemas/gdwgbm"
           }
         },
         "required": [
           "body"
         ]
       },
-      "{pid:string;query:{requiredNum:number;requiredNumArr:number[];id:string;strArray:string[];disable:\"true\"|\"false\";bool:boolean;boolArray:boolean[];symbolIds:SymbolId[];maybeIds:MaybeId[];optionalNum?:number|undefined;optionalNumArr?:number[]|undefined;emptyNum?:number|undefined;optionalStrArray?:string[]|undefined;optionalBool?:boolean|undefined;optionalBoolArray?:boolean[]|undefined;optionalZodIds?:ZodId[]|undefined;};}": {
+      "gdwgbm": {
         "type": "object",
         "properties": {
           "pid": {
             "type": "string"
           },
           "query": {
-            "$ref": "#/components/schemas/{requiredNum:number;requiredNumArr:number[];id:string;strArray:string[];disable:\"true\"|\"false\";bool:boolean;boolArray:boolean[];symbolIds:SymbolId[];maybeIds:MaybeId[];optionalNum?:number|undefined;optionalNumArr?:number[]|undefined;emptyNum?:number|undefined;optionalStrArray?:string[]|undefined;optionalBool?:boolean|undefined;optionalBoolArray?:boolean[]|undefined;optionalZodIds?:ZodId[]|undefined;}"
+            "$ref": "#/components/schemas/wkkvyy"
           }
         },
         "required": [
@@ -674,18 +661,7 @@
           "query"
         ]
       },
-      "ToRes<{200:{body:Zod.ZodNumber;};}>": {
-        "type": "object",
-        "properties": {
-          "200": {
-            "$ref": "#/components/schemas/{body:number;}"
-          }
-        },
-        "required": [
-          "200"
-        ]
-      },
-      "{body:number;}": {
+      "1k3jnnh": {
         "type": "object",
         "properties": {
           "body": {
@@ -696,18 +672,7 @@
           "body"
         ]
       },
-      "ToRes<{200:{body:Zod.ZodString;};}>": {
-        "type": "object",
-        "properties": {
-          "200": {
-            "$ref": "#/components/schemas/{body:string;}"
-          }
-        },
-        "required": [
-          "200"
-        ]
-      },
-      "{body:string;}": {
+      "1ycd0h9": {
         "type": "object",
         "properties": {
           "body": {
@@ -718,43 +683,18 @@
           "body"
         ]
       },
-      "{message:string;}": {
-        "type": "object",
-        "properties": {
-          "message": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "message"
-        ]
-      },
-      "ToRes<unknown>": {
-        "type": "object"
-      },
-      "ToRes<{200:{body:Zod.ZodObject<{value:Zod.ZodArray<Zod.ZodUnion<[Zod.ZodString,Zod.ZodNumber]>,\"many\">;},\"strip\",Zod.ZodTypeAny,{value:(string|number)[];},{value:(string|number)[];}>;};}>": {
-        "type": "object",
-        "properties": {
-          "200": {
-            "$ref": "#/components/schemas/{body:{value:(string|number)[];};}"
-          }
-        },
-        "required": [
-          "200"
-        ]
-      },
-      "{body:{value:(string|number)[];};}": {
+      "rnl9wd": {
         "type": "object",
         "properties": {
           "body": {
-            "$ref": "#/components/schemas/{value:(string|number)[];}"
+            "$ref": "#/components/schemas/1xa51v4"
           }
         },
         "required": [
           "body"
         ]
       },
-      "{value:(string|number)[];}": {
+      "1xa51v4": {
         "type": "object",
         "properties": {
           "value": {
@@ -771,29 +711,18 @@
           "value"
         ]
       },
-      "ToRes<{200:{body:Zod.ZodObject<{value:Zod.ZodArray<Zod.ZodUnion<[Zod.ZodString,Zod.ZodNumber]>,\"many\">;},\"strip\",Zod.ZodTypeAny,{value:(string|number)[];},{value:(string|number)[];}>;};}>_1": {
-        "type": "object",
-        "properties": {
-          "200": {
-            "$ref": "#/components/schemas/{body:{value:(string|number)[];};}_1"
-          }
-        },
-        "required": [
-          "200"
-        ]
-      },
-      "{body:{value:(string|number)[];};}_1": {
+      "1osfewl": {
         "type": "object",
         "properties": {
           "body": {
-            "$ref": "#/components/schemas/{value:(string|number)[];}_1"
+            "$ref": "#/components/schemas/1h88gdg"
           }
         },
         "required": [
           "body"
         ]
       },
-      "{value:(string|number)[];}_1": {
+      "1h88gdg": {
         "type": "object",
         "properties": {
           "value": {
@@ -810,18 +739,7 @@
           "value"
         ]
       },
-      "ToRes<{200:{body:Zod.ZodNumber;};}>_1": {
-        "type": "object",
-        "properties": {
-          "200": {
-            "$ref": "#/components/schemas/{body:number;}_1"
-          }
-        },
-        "required": [
-          "200"
-        ]
-      },
-      "{body:number;}_1": {
+      "1vu2plh": {
         "type": "object",
         "properties": {
           "body": {
@@ -832,52 +750,18 @@
           "body"
         ]
       },
-      "{cookie?:string|undefined;}": {
-        "type": "object",
-        "properties": {
-          "cookie": {
-            "type": "string"
-          }
-        }
-      },
-      "{aa:string;}": {
-        "type": "object",
-        "properties": {
-          "aa": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "aa"
-        ]
-      },
-      "ToRes<{200:{body:Zod.ZodObject<{bb:Zod.ZodString;},\"strip\",Zod.ZodTypeAny,{bb:string;},{bb:string;}>;};404:{};}>": {
-        "type": "object",
-        "properties": {
-          "200": {
-            "$ref": "#/components/schemas/{body:{bb:string;};}"
-          },
-          "404": {
-            "$ref": "#/components/schemas/{}"
-          }
-        },
-        "required": [
-          "200",
-          "404"
-        ]
-      },
-      "{body:{bb:string;};}": {
+      "10s4xjk": {
         "type": "object",
         "properties": {
           "body": {
-            "$ref": "#/components/schemas/{bb:string;}"
+            "$ref": "#/components/schemas/ufawrx"
           }
         },
         "required": [
           "body"
         ]
       },
-      "{bb:string;}": {
+      "ufawrx": {
         "type": "object",
         "properties": {
           "bb": {
@@ -888,10 +772,10 @@
           "bb"
         ]
       },
-      "{}": {
+      "nf0rvp": {
         "type": "object"
       },
-      "{bb:number;}": {
+      "g6hjy5": {
         "type": "object",
         "properties": {
           "bb": {
@@ -902,18 +786,7 @@
           "bb"
         ]
       },
-      "ToRes<{201:{body:Zod.ZodArray<Zod.ZodNumber,\"many\">;headers:Zod.ZodObject<{'Set-Cookie':Zod.ZodString;},\"strip\",Zod.ZodTypeAny,{'Set-Cookie':string;},{'Set-Cookie':string;}>;};}>": {
-        "type": "object",
-        "properties": {
-          "201": {
-            "$ref": "#/components/schemas/{body:number[];headers:{'Set-Cookie':string;};}"
-          }
-        },
-        "required": [
-          "201"
-        ]
-      },
-      "{body:number[];headers:{'Set-Cookie':string;};}": {
+      "1kerpqh": {
         "type": "object",
         "properties": {
           "body": {
@@ -923,7 +796,7 @@
             }
           },
           "headers": {
-            "$ref": "#/components/schemas/{'Set-Cookie':string;}"
+            "$ref": "#/components/schemas/mr29t2"
           }
         },
         "required": [
@@ -931,7 +804,7 @@
           "headers"
         ]
       },
-      "{'Set-Cookie':string;}": {
+      "mr29t2": {
         "type": "object",
         "properties": {
           "Set-Cookie": {

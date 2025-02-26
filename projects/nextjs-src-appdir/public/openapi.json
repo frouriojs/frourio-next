@@ -7,13 +7,22 @@
   "paths": {
     "/%E6%97%A5%E6%9C%AC%E8%AA%9E": {
       "post": {
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/1q0vv0x"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "",
             "content": {
-              "application/json": {
+              "multipart/form-data": {
                 "schema": {
-                  "$ref": "#/components/schemas/{string:string;number:number;boolean:boolean;stringArr:string[];numberArr:number[];booleanArr:boolean[];file:File;fileArr:File[];optionalString?:string|undefined;optionalNumber?:number|undefined;optionalBoolean?:boolean|undefined;optionalStringArr?:string[]|undefined;optionalNumberArr?:number[]|undefined;optionalBooleanArr?:boolean[]|undefined;optionalFile?:File|undefined;optionalFileArr?:File[]|undefined;}_1"
+                  "$ref": "#/components/schemas/1epfujl"
                 }
               }
             }
@@ -23,13 +32,22 @@
     },
     "/": {
       "post": {
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/1dvh1go"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/{string:string;number:number;boolean:boolean;stringArr:string[];numberArr:number[];booleanArr:boolean[];file:string;fileArr:string[];optionalString?:string|undefined;optionalNumber?:number|undefined;optionalBoolean?:boolean|undefined;optionalStringArr?:string[]|undefined;optionalNumberArr?:number[]|undefined;optionalBooleanArr?:boolean[]|undefined;optionalFile?:string|undefined;optionalFileArr?:string[]|undefined;}"
+                  "$ref": "#/components/schemas/14mufbr"
                 }
               }
             }
@@ -40,7 +58,7 @@
   },
   "components": {
     "schemas": {
-      "{string:string;number:number;boolean:boolean;stringArr:string[];numberArr:number[];booleanArr:boolean[];file:File;fileArr:File[];optionalString?:string|undefined;optionalNumber?:number|undefined;optionalBoolean?:boolean|undefined;optionalStringArr?:string[]|undefined;optionalNumberArr?:number[]|undefined;optionalBooleanArr?:boolean[]|undefined;optionalFile?:File|undefined;optionalFileArr?:File[]|undefined;}": {
+      "1q0vv0x": {
         "type": "object",
         "properties": {
           "string": {
@@ -128,56 +146,26 @@
         ]
       },
       "File": {
-        "description": "A [`File`](https://developer.mozilla.org/en-US/docs/Web/API/File) provides information about files.",
-        "type": "object",
-        "properties": {
-          "name": {
-            "description": "The name of the `File`.",
-            "type": "string"
-          },
-          "lastModified": {
-            "description": "The last modified date of the `File`.",
-            "type": "number"
-          },
-          "size": {
-            "description": "The total size of the `Blob` in bytes.",
-            "type": "number"
-          },
-          "type": {
-            "description": "The content-type of the `Blob`.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "lastModified",
-          "name",
-          "size",
-          "type"
-        ]
+        "type": "string",
+        "format": "binary"
       },
-      "ToRes<{200:{format:\"formData\";body:Zod.ZodObject<{string:Zod.ZodString;number:Zod.ZodNumber;boolean:Zod.ZodBoolean;optionalString:Zod.ZodOptional<Zod.ZodString>;optionalNumber:Zod.ZodOptional<Zod.ZodNumber>;optionalBoolean:Zod.ZodOptional<Zod.ZodBoolean>;stringArr:Zod.ZodArray<Zod.ZodString,\"many\">;numberArr:Zod.ZodArray<Zod.ZodNumber,\"many\">;booleanArr:Zod.ZodArray<Zod.ZodBoolean,\"many\">;optionalStringArr:Zod.ZodOptional<Zod.ZodArray<Zod.ZodString,\"many\">>;optionalNumberArr:Zod.ZodOptional<Zod.ZodArray<Zod.ZodNumber,\"many\">>;optionalBooleanArr:Zod.ZodOptional<Zod.ZodArray<Zod.ZodBoolean,\"many\">>;file:Zod.ZodType<File,Zod.ZodTypeDef,File>;optionalFile:Zod.ZodOptional<Zod.ZodType<File,Zod.ZodTypeDef,File>>;fileArr:Zod.ZodArray<Zod.ZodType<File,Zod.ZodTypeDef,File>,\"many\">;optionalFileArr:Zod.ZodOptional<Zod.ZodArray<Zod.ZodType<File,Zod.ZodTypeDef,File>,\"many\">>;},\"strip\",Zod.ZodTypeAny,{string:string;number:number;boolean:boolean;stringArr:string[];numberArr:number[];booleanArr:boolean[];file:File;fileArr:File[];optionalString?:string|undefined;optionalNumber?:number|undefined;optionalBoolean?:boolean|undefined;optionalStringArr?:string[]|undefined;optionalNumberArr?:number[]|undefined;optionalBooleanArr?:boolean[]|undefined;optionalFile?:File|undefined;optionalFileArr?:File[]|undefined;},{string:string;number:number;boolean:boolean;stringArr:string[];numberArr:number[];booleanArr:boolean[];file:File;fileArr:File[];optionalString?:string|undefined;optionalNumber?:number|undefined;optionalBoolean?:boolean|undefined;optionalStringArr?:string[]|undefined;optionalNumberArr?:number[]|undefined;optionalBooleanArr?:boolean[]|undefined;optionalFile?:File|undefined;optionalFileArr?:File[]|undefined;}>;};}>": {
+      "d3x1z2": {
         "type": "object",
         "properties": {
-          "200": {
-            "$ref": "#/components/schemas/{format:undefined;body:{string:string;number:number;boolean:boolean;stringArr:string[];numberArr:number[];booleanArr:boolean[];file:File;fileArr:File[];optionalString?:string|undefined;optionalNumber?:number|undefined;optionalBoolean?:boolean|undefined;optionalStringArr?:string[]|undefined;optionalNumberArr?:number[]|undefined;optionalBooleanArr?:boolean[]|undefined;optionalFile?:File|undefined;optionalFileArr?:File[]|undefined;};}"
-          }
-        },
-        "required": [
-          "200"
-        ]
-      },
-      "{format:undefined;body:{string:string;number:number;boolean:boolean;stringArr:string[];numberArr:number[];booleanArr:boolean[];file:File;fileArr:File[];optionalString?:string|undefined;optionalNumber?:number|undefined;optionalBoolean?:boolean|undefined;optionalStringArr?:string[]|undefined;optionalNumberArr?:number[]|undefined;optionalBooleanArr?:boolean[]|undefined;optionalFile?:File|undefined;optionalFileArr?:File[]|undefined;};}": {
-        "type": "object",
-        "properties": {
+          "format": {
+            "type": "string",
+            "const": "formData"
+          },
           "body": {
-            "$ref": "#/components/schemas/{string:string;number:number;boolean:boolean;stringArr:string[];numberArr:number[];booleanArr:boolean[];file:File;fileArr:File[];optionalString?:string|undefined;optionalNumber?:number|undefined;optionalBoolean?:boolean|undefined;optionalStringArr?:string[]|undefined;optionalNumberArr?:number[]|undefined;optionalBooleanArr?:boolean[]|undefined;optionalFile?:File|undefined;optionalFileArr?:File[]|undefined;}_1"
+            "$ref": "#/components/schemas/1epfujl"
           }
         },
         "required": [
-          "body"
+          "body",
+          "format"
         ]
       },
-      "{string:string;number:number;boolean:boolean;stringArr:string[];numberArr:number[];booleanArr:boolean[];file:File;fileArr:File[];optionalString?:string|undefined;optionalNumber?:number|undefined;optionalBoolean?:boolean|undefined;optionalStringArr?:string[]|undefined;optionalNumberArr?:number[]|undefined;optionalBooleanArr?:boolean[]|undefined;optionalFile?:File|undefined;optionalFileArr?:File[]|undefined;}_1": {
+      "1epfujl": {
         "type": "object",
         "properties": {
           "string": {
@@ -264,7 +252,7 @@
           "stringArr"
         ]
       },
-      "{string:string;number:number;boolean:boolean;stringArr:string[];numberArr:number[];booleanArr:boolean[];file:File;fileArr:File[];optionalString?:string|undefined;optionalNumber?:number|undefined;optionalBoolean?:boolean|undefined;optionalStringArr?:string[]|undefined;optionalNumberArr?:number[]|undefined;optionalBooleanArr?:boolean[]|undefined;optionalFile?:File|undefined;optionalFileArr?:File[]|undefined;}_2": {
+      "1dvh1go": {
         "type": "object",
         "properties": {
           "string": {
@@ -351,29 +339,18 @@
           "stringArr"
         ]
       },
-      "ToRes<{200:{body:Zod.ZodObject<{string:Zod.ZodString;number:Zod.ZodNumber;boolean:Zod.ZodBoolean;optionalString:Zod.ZodOptional<Zod.ZodString>;optionalNumber:Zod.ZodOptional<Zod.ZodNumber>;optionalBoolean:Zod.ZodOptional<Zod.ZodBoolean>;stringArr:Zod.ZodArray<Zod.ZodString,\"many\">;numberArr:Zod.ZodArray<Zod.ZodNumber,\"many\">;booleanArr:Zod.ZodArray<Zod.ZodBoolean,\"many\">;optionalStringArr:Zod.ZodOptional<Zod.ZodArray<Zod.ZodString,\"many\">>;optionalNumberArr:Zod.ZodOptional<Zod.ZodArray<Zod.ZodNumber,\"many\">>;optionalBooleanArr:Zod.ZodOptional<Zod.ZodArray<Zod.ZodBoolean,\"many\">>;file:Zod.ZodString;optionalFile:Zod.ZodOptional<Zod.ZodString>;fileArr:Zod.ZodArray<Zod.ZodString,\"many\">;optionalFileArr:Zod.ZodOptional<Zod.ZodArray<Zod.ZodString,\"many\">>;},\"strip\",Zod.ZodTypeAny,{string:string;number:number;boolean:boolean;stringArr:string[];numberArr:number[];booleanArr:boolean[];file:string;fileArr:string[];optionalString?:string|undefined;optionalNumber?:number|undefined;optionalBoolean?:boolean|undefined;optionalStringArr?:string[]|undefined;optionalNumberArr?:number[]|undefined;optionalBooleanArr?:boolean[]|undefined;optionalFile?:string|undefined;optionalFileArr?:string[]|undefined;},{string:string;number:number;boolean:boolean;stringArr:string[];numberArr:number[];booleanArr:boolean[];file:string;fileArr:string[];optionalString?:string|undefined;optionalNumber?:number|undefined;optionalBoolean?:boolean|undefined;optionalStringArr?:string[]|undefined;optionalNumberArr?:number[]|undefined;optionalBooleanArr?:boolean[]|undefined;optionalFile?:string|undefined;optionalFileArr?:string[]|undefined;}>;};}>": {
-        "type": "object",
-        "properties": {
-          "200": {
-            "$ref": "#/components/schemas/{body:{string:string;number:number;boolean:boolean;stringArr:string[];numberArr:number[];booleanArr:boolean[];file:string;fileArr:string[];optionalString?:string|undefined;optionalNumber?:number|undefined;optionalBoolean?:boolean|undefined;optionalStringArr?:string[]|undefined;optionalNumberArr?:number[]|undefined;optionalBooleanArr?:boolean[]|undefined;optionalFile?:string|undefined;optionalFileArr?:string[]|undefined;};}"
-          }
-        },
-        "required": [
-          "200"
-        ]
-      },
-      "{body:{string:string;number:number;boolean:boolean;stringArr:string[];numberArr:number[];booleanArr:boolean[];file:string;fileArr:string[];optionalString?:string|undefined;optionalNumber?:number|undefined;optionalBoolean?:boolean|undefined;optionalStringArr?:string[]|undefined;optionalNumberArr?:number[]|undefined;optionalBooleanArr?:boolean[]|undefined;optionalFile?:string|undefined;optionalFileArr?:string[]|undefined;};}": {
+      "rgvzvu": {
         "type": "object",
         "properties": {
           "body": {
-            "$ref": "#/components/schemas/{string:string;number:number;boolean:boolean;stringArr:string[];numberArr:number[];booleanArr:boolean[];file:string;fileArr:string[];optionalString?:string|undefined;optionalNumber?:number|undefined;optionalBoolean?:boolean|undefined;optionalStringArr?:string[]|undefined;optionalNumberArr?:number[]|undefined;optionalBooleanArr?:boolean[]|undefined;optionalFile?:string|undefined;optionalFileArr?:string[]|undefined;}"
+            "$ref": "#/components/schemas/14mufbr"
           }
         },
         "required": [
           "body"
         ]
       },
-      "{string:string;number:number;boolean:boolean;stringArr:string[];numberArr:number[];booleanArr:boolean[];file:string;fileArr:string[];optionalString?:string|undefined;optionalNumber?:number|undefined;optionalBoolean?:boolean|undefined;optionalStringArr?:string[]|undefined;optionalNumberArr?:number[]|undefined;optionalBooleanArr?:boolean[]|undefined;optionalFile?:string|undefined;optionalFileArr?:string[]|undefined;}": {
+      "14mufbr": {
         "type": "object",
         "properties": {
           "string": {

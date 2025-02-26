@@ -6,6 +6,7 @@ import ts from 'typescript';
 import * as TJS from 'typescript-json-schema';
 import { FROURIO_FILE, SERVER_FILE } from '../constants';
 import { listFrourioFiles } from '../listFrourioFiles';
+import { createHash } from './createHash';
 
 export const generateOpenapi = (appDir: string, output: string) => {
   const existingDoc: OpenAPIV3_1.Document | undefined = existsSync(output)
@@ -51,7 +52,7 @@ type FrourioResponse = {
 };
 
 type ToRes<T extends FrourioResponse | undefined> = {[S in keyof T]: T[S] extends {} ? {
-  [Key in keyof T[S]]: T[S][Key] extends z.ZodTypeAny ? InferType<T[S][Key]> : undefined
+  [Key in keyof T[S]]: T[S][Key] extends z.ZodTypeAny ? InferType<T[S][Key]> : T[S][Key]
 }: undefined }
 
 type ToSpecType<T extends FrourioSpec> = {
@@ -179,6 +180,7 @@ type AllParams = [${hasParamsFiles.map((_, i) => `z.infer<typeof paramsValidator
 
     const apiPath =
       file
+        .replace(/\/\(.+\)/g, '')
         .replace(/\[+\.*(.+?)]+/g, '{$1}')
         .replace(path.resolve(params.appDir).replaceAll('\\', '/'), '')
         .replace(`/${FROURIO_FILE}`, '') || '/';
@@ -235,9 +237,9 @@ type AllParams = [${hasParamsFiles.map((_, i) => `z.infer<typeof paramsValidator
         [method]: {
           parameters: methodParameters.length === 0 ? undefined : methodParameters,
           requestBody:
-            props.reqBody === undefined
+            props.body === undefined
               ? undefined
-              : { content: { [reqContentType]: { schema: props.reqBody } } },
+              : { content: { [reqContentType]: { schema: props.body } } },
           responses: resDef?.properties
             ? Object.entries(resDef.properties).reduce((dict, [status, statusObj]) => {
                 const statusDef = methodsSchema?.definitions?.[
@@ -293,5 +295,38 @@ type AllParams = [${hasParamsFiles.map((_, i) => `z.infer<typeof paramsValidator
     }, {});
   });
 
-  return JSON.stringify(doc, null, 2).replaceAll('#/definitions', '#/components/schemas');
+  const noRefKeys: string[] = [];
+  let docText = JSON.stringify(doc).replaceAll('#/definitions', '#/components/schemas');
+
+  if (doc.components?.schemas)
+    Object.keys(doc.components.schemas).forEach((key) => {
+      if (/^[a-zA-Z0-9.\-_]+$/.test(key)) {
+        if (!docText.includes(`"#/components/schemas/${key}"`)) noRefKeys.push(key);
+
+        return;
+      }
+
+      const hash = createHash(key);
+
+      docText = docText
+        .replaceAll(`"${key.replaceAll('"', '\\"')}"`, `"${hash}"`)
+        .replaceAll(
+          `"#/components/schemas/${key.replaceAll('"', '\\"')}"`,
+          `"#/components/schemas/${hash}"`,
+        );
+
+      if (!docText.includes(`"#/components/schemas/${hash}"`)) noRefKeys.push(hash);
+    });
+
+  const newDoc = JSON.parse(docText);
+
+  noRefKeys.forEach((key) => {
+    delete newDoc.components.schemas[key];
+  });
+
+  if (newDoc.components.schemas?.File) {
+    newDoc.components.schemas.File = { type: 'string', format: 'binary' };
+  }
+
+  return JSON.stringify(newDoc, null, 2);
 };

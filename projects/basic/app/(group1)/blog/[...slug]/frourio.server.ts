@@ -7,7 +7,7 @@ import type { GET } from './route';
 type RouteChecker = [typeof GET];
 
 const paramToNumArr = <T extends z.ZodTypeAny>(validator: T) =>
-  z.array(z.string()).optional().transform<z.infer<T>>((val, ctx) => {
+  z.array(z.string().or(z.number())).optional().transform<z.infer<T>>((val, ctx) => {
     const numArr = val?.map((v) => {
       const numVal = Number(v);
 
@@ -44,14 +44,14 @@ type FrourioError =
 type ResHandler = {
   GET: (
     req: NextRequest,
-    option: { params: Promise<unknown> },
+    ctx: { params: Promise<ParamsType> },
   ) => Promise<Response>;
 };
 
 const toHandler = (controller: Controller): ResHandler => {
   return {
-    GET: async (req, option) => {
-      const params = paramsValidator.safeParse(await option.params);
+    GET: async (req, ctx) => {
+      const params = paramsValidator.safeParse(await ctx.params);
 
       if (params.error) return createReqErr(params.error);
 

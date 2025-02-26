@@ -77,7 +77,7 @@ test('base handler', async () => {
 
 test('params handler', async () => {
   const res = await paramsRoute.POST(new NextRequest('http://example.com/aaa/bbb/ccc'), {
-    params: Promise.resolve({ a: '111', b: 'bbb', c: ['ccc'] }),
+    params: Promise.resolve({ a: 111, b: 'bbb', c: ['ccc'] }),
   });
 
   await expect(res.json()).resolves.toEqual({ value: [111, 'bbb', 'ccc'] });
@@ -91,7 +91,7 @@ test('response string or number', async () => {
   await expect(res1.text()).resolves.toEqual('aaa');
 
   const res2 = await numberRoute.GET(new NextRequest('http://example.com/blog/123/456'), {
-    params: Promise.resolve({ slug: ['123', '456'] }),
+    params: Promise.resolve({ slug: [123, 456] }),
   });
 
   await expect(res2.json()).resolves.toEqual(123);

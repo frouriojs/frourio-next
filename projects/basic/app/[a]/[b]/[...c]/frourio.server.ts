@@ -31,14 +31,14 @@ type FrourioError =
 type ResHandler = {
   POST: (
     req: NextRequest,
-    option: { params: Promise<unknown> },
+    ctx: { params: Promise<ParamsType> },
   ) => Promise<Response>;
 };
 
 const toHandler = (controller: Controller): ResHandler => {
   return {
-    POST: async (req, option) => {
-      const params = paramsValidator.safeParse(await option.params);
+    POST: async (req, ctx) => {
+      const params = paramsValidator.safeParse(await ctx.params);
 
       if (params.error) return createReqErr(params.error);
 

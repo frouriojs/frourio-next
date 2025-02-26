@@ -147,6 +147,8 @@ type AllParams = [${hasParamsDirs.map((_, i) => `z.infer<typeof paramsValidator$
   unlinkSync(typeFilePath);
 
   (methodsSchema?.items as TJS.Definition[])?.forEach((def, i) => {
+    if (!def.properties) return;
+
     const parameters: {
       name: string;
       in: 'path' | 'query' | 'header';
@@ -187,7 +189,7 @@ type AllParams = [${hasParamsDirs.map((_, i) => `z.infer<typeof paramsValidator$
         .replace(/\[+\.*(.+?)]+/g, '{$1}')
         .replace(path.resolve(params.appDir).replaceAll('\\', '/'), '') || '/';
 
-    doc.paths![apiPath] = Object.entries(def.properties!).reduce((dict, [method, val]) => {
+    doc.paths![apiPath] = Object.entries(def.properties).reduce((dict, [method, val]) => {
       if (method === 'param') return dict;
 
       const props = (val as TJS.Definition).properties as Record<string, TJS.Definition>;

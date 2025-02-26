@@ -185,8 +185,7 @@ import { NextResponse } from 'next/server';
 import ${params ? '' : 'type '}{ z } from 'zod';${params?.ancestorFrourio ? `\nimport { paramsValidator as ancestorParamsValidator } from '${params.ancestorFrourio}';` : ''}
 import { frourioSpec } from './frourio';
 import type { ${methods.map((m) => m.name.toUpperCase()).join(', ')} } from './route';
-
-type RouteChecker = [${methods.map((m) => `typeof ${m.name.toUpperCase()}`).join(', ')}];
+${methods.length > 0 ? `\ntype RouteChecker = [${methods.map((m) => `typeof ${m.name.toUpperCase()}`).join(', ')}];` : ''}
 ${params ? `\n${params.current ? `${params.current.param?.typeName !== 'number' ? '' : params.current.param.isArray ? paramToNumArrText : paramToNumText}` : ''}export const paramsValidator = ${paramsToText(params)};\n\ntype ParamsType = z.infer<typeof paramsValidator>;\n` : ''}
 type SpecType = typeof frourioSpec;
 
@@ -219,7 +218,7 @@ type ResHandler = {
 ${methods
   .map(
     (m) => `  ${m.name.toUpperCase()}: (
-    req: NextRequest,${params ? '\n    option: { params: Promise<unknown> },' : ''}
+    req: NextRequest,${params ? '\n    ctx: { params: Promise<ParamsType> },' : ''}
   ) => Promise<Response>;`,
   )
   .join('\n')}
@@ -269,7 +268,7 @@ ${m.body.data
       ],
     ].filter((r) => !!r);
 
-    return `    ${m.name.toUpperCase()}: async (req${params ? ', option' : ''}) => {${m.body?.isFormData ? '\n      const formData = await req.formData();' : ''}${requests.map((r) => `\n      const ${r[0]} = ${r[1]};\n\n      if (${r[0]}.error) return createReqErr(${r[0]}.error);\n`).join('')}${params ? '\n      const params = paramsValidator.safeParse(await option.params);\n\n      if (params.error) return createReqErr(params.error);\n' : ''}
+    return `    ${m.name.toUpperCase()}: async (req${params ? ', ctx' : ''}) => {${m.body?.isFormData ? '\n      const formData = await req.formData();' : ''}${requests.map((r) => `\n      const ${r[0]} = ${r[1]};\n\n      if (${r[0]}.error) return createReqErr(${r[0]}.error);\n`).join('')}${params ? '\n      const params = paramsValidator.safeParse(await ctx.params);\n\n      if (params.error) return createReqErr(params.error);\n' : ''}
       const res = await controller.${m.name}({ ${[...(params ? ['params: params.data'] : []), ...requests.map((r) => `${r[0]}: ${r[0]}.data`)].join(', ')} });
 
       ${
@@ -381,7 +380,7 @@ const createResErr = () =>
 ${methods.some((m) => m.query?.some((q) => q.typeName === 'number' && !q.isArray)) ? queryToNumText : ''}${methods.some((m) => m.query?.some((q) => q.typeName === 'number' && q.isArray)) ? queryToNumArrText : ''}${methods.some((m) => m.query?.some((q) => q.typeName === 'boolean' && !q.isArray)) ? queryToBoolText : ''}${methods.some((m) => m.query?.some((q) => q.typeName === 'boolean' && q.isArray)) ? queryToBoolArrText : ''}${methods.some((m) => m.body?.data?.some((b) => b.typeName === 'number' && !b.isArray)) ? formDataToNumText : ''}${methods.some((m) => m.body?.data?.some((b) => b.typeName === 'number' && b.isArray)) ? formDataToNumArrText : ''}${methods.some((m) => m.body?.data?.some((b) => b.typeName === 'boolean' && !b.isArray)) ? formDataToBoolText : ''}${methods.some((m) => m.body?.data?.some((b) => b.typeName === 'boolean' && b.isArray)) ? formDataToBoolArrText : ''}`;
 
 const paramToNumText = `const paramToNum = <T extends z.ZodTypeAny>(validator: T) =>
-  z.string().transform<z.infer<T>>((val, ctx) => {
+  z.string().or(z.number()).transform<z.infer<T>>((val, ctx) => {
     const numVal = Number(val);
     const parsed = validator.safeParse(isNaN(numVal) ? val : numVal);
 
@@ -393,7 +392,7 @@ const paramToNumText = `const paramToNum = <T extends z.ZodTypeAny>(validator: T
 `;
 
 const paramToNumArrText = `const paramToNumArr = <T extends z.ZodTypeAny>(validator: T) =>
-  z.array(z.string()).optional().transform<z.infer<T>>((val, ctx) => {
+  z.array(z.string().or(z.number())).optional().transform<z.infer<T>>((val, ctx) => {
     const numArr = val?.map((v) => {
       const numVal = Number(v);
 

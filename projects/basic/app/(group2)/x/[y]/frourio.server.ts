@@ -26,20 +26,20 @@ type FrourioError =
 type ResHandler = {
   GET: (
     req: NextRequest,
-    option: { params: Promise<unknown> },
+    ctx: { params: Promise<ParamsType> },
   ) => Promise<Response>;
 };
 
 const toHandler = (controller: Controller): ResHandler => {
   return {
-    GET: async (req, option) => {
+    GET: async (req, ctx) => {
       const query = frourioSpec.get.query.safeParse({
         'message': req.nextUrl.searchParams.get('message') ?? undefined,
       });
 
       if (query.error) return createReqErr(query.error);
 
-      const params = paramsValidator.safeParse(await option.params);
+      const params = paramsValidator.safeParse(await ctx.params);
 
       if (params.error) return createReqErr(params.error);
 

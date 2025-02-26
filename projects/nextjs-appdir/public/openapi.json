@@ -19,18 +19,11 @@
         ],
         "responses": {
           "200": {
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "value": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "value"
-                  ]
+                  "$ref": "#/components/schemas/{value:string;}"
                 }
               }
             }
@@ -50,132 +43,172 @@
             }
           },
           {
-            "name": "type",
+            "name": "requiredNum",
             "in": "query",
-            "required": false,
-            "schema": "object"
+            "required": true,
+            "schema": {
+              "type": "number"
+            }
           },
           {
-            "name": "properties",
+            "name": "requiredNumArr",
             "in": "query",
-            "required": false,
+            "required": true,
             "schema": {
-              "requiredNum": {
+              "type": "array",
+              "items": {
                 "type": "number"
-              },
-              "requiredNumArr": {
-                "type": "array",
-                "items": {
-                  "type": "number"
-                }
-              },
-              "id": {
-                "type": "string"
-              },
-              "strArray": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "disable": {
-                "enum": [
-                  "false",
-                  "true"
-                ],
-                "type": "string"
-              },
-              "bool": {
-                "type": "boolean"
-              },
-              "boolArray": {
-                "type": "array",
-                "items": {
-                  "type": "boolean"
-                }
-              },
-              "symbolIds": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/SymbolId"
-                }
-              },
-              "maybeIds": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/MaybeId"
-                }
-              },
-              "optionalNum": {
-                "type": "number"
-              },
-              "optionalNumArr": {
-                "type": "array",
-                "items": {
-                  "type": "number"
-                }
-              },
-              "emptyNum": {
-                "type": "number"
-              },
-              "optionalStrArray": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "optionalBool": {
-                "type": "boolean"
-              },
-              "optionalBoolArray": {
-                "type": "array",
-                "items": {
-                  "type": "boolean"
-                }
-              },
-              "optionalZodIds": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/ZodId"
-                }
               }
             }
           },
           {
-            "name": "required",
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "strArray",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "disable",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "false",
+                "true"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "bool",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "boolArray",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "boolean"
+              }
+            }
+          },
+          {
+            "name": "symbolIds",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/SymbolId"
+              }
+            }
+          },
+          {
+            "name": "maybeIds",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/MaybeId"
+              }
+            }
+          },
+          {
+            "name": "optionalNum",
             "in": "query",
             "required": false,
-            "schema": [
-              "bool",
-              "boolArray",
-              "disable",
-              "id",
-              "maybeIds",
-              "requiredNum",
-              "requiredNumArr",
-              "strArray",
-              "symbolIds"
-            ]
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "optionalNumArr",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          {
+            "name": "emptyNum",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "optionalStrArray",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "optionalBool",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "optionalBoolArray",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "boolean"
+              }
+            }
+          },
+          {
+            "name": "optionalZodIds",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/ZodId"
+              }
+            }
           }
         ],
         "responses": {
           "200": {
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "pid": {
-                      "type": "string"
-                    },
-                    "query": {
-                      "$ref": "#/components/schemas/{requiredNum:number;requiredNumArr:number[];id:string;strArray:string[];disable:\"true\"|\"false\";bool:boolean;boolArray:boolean[];symbolIds:SymbolId[];maybeIds:MaybeId[];optionalNum?:number|undefined;optionalNumArr?:number[]|undefined;emptyNum?:number|undefined;optionalStrArray?:string[]|undefined;optionalBool?:boolean|undefined;optionalBoolArray?:boolean[]|undefined;optionalZodIds?:ZodId[]|undefined;}"
-                    }
-                  },
-                  "required": [
-                    "pid",
-                    "query"
-                  ]
+                  "$ref": "#/components/schemas/{pid:string;query:{requiredNum:number;requiredNumArr:number[];id:string;strArray:string[];disable:\"true\"|\"false\";bool:boolean;boolArray:boolean[];symbolIds:SymbolId[];maybeIds:MaybeId[];optionalNum?:number|undefined;optionalNumArr?:number[]|undefined;emptyNum?:number|undefined;optionalStrArray?:string[]|undefined;optionalBool?:boolean|undefined;optionalBoolArray?:boolean[]|undefined;optionalZodIds?:ZodId[]|undefined;};}"
                 }
               }
             }
@@ -200,6 +233,7 @@
         ],
         "responses": {
           "200": {
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -228,6 +262,7 @@
         ],
         "responses": {
           "200": {
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -251,28 +286,12 @@
             }
           },
           {
-            "name": "type",
+            "name": "message",
             "in": "query",
-            "required": false,
-            "schema": "object"
-          },
-          {
-            "name": "properties",
-            "in": "query",
-            "required": false,
+            "required": true,
             "schema": {
-              "message": {
-                "type": "string"
-              }
+              "type": "string"
             }
-          },
-          {
-            "name": "required",
-            "in": "query",
-            "required": false,
-            "schema": [
-              "message"
-            ]
           }
         ]
       }
@@ -291,24 +310,11 @@
         ],
         "responses": {
           "200": {
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "value": {
-                      "type": "array",
-                      "items": {
-                        "type": [
-                          "string",
-                          "number"
-                        ]
-                      }
-                    }
-                  },
-                  "required": [
-                    "value"
-                  ]
+                  "$ref": "#/components/schemas/{value:(string|number)[];}"
                 }
               }
             }
@@ -330,24 +336,11 @@
         ],
         "responses": {
           "200": {
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "value": {
-                      "type": "array",
-                      "items": {
-                        "type": [
-                          "string",
-                          "number"
-                        ]
-                      }
-                    }
-                  },
-                  "required": [
-                    "value"
-                  ]
+                  "$ref": "#/components/schemas/{value:(string|number)[];}_1"
                 }
               }
             }
@@ -369,6 +362,7 @@
         ],
         "responses": {
           "200": {
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -384,69 +378,37 @@
       "get": {
         "parameters": [
           {
-            "name": "type",
+            "name": "aa",
             "in": "query",
-            "required": false,
-            "schema": "object"
-          },
-          {
-            "name": "properties",
-            "in": "query",
-            "required": false,
+            "required": true,
             "schema": {
-              "aa": {
-                "type": "string"
-              }
+              "type": "string"
             }
           },
           {
-            "name": "required",
-            "in": "query",
-            "required": false,
-            "schema": [
-              "aa"
-            ]
-          },
-          {
-            "name": "type",
-            "in": "header",
-            "required": false,
-            "schema": "object"
-          },
-          {
-            "name": "properties",
+            "name": "cookie",
             "in": "header",
             "required": false,
             "schema": {
-              "cookie": {
-                "type": "string"
-              }
+              "type": "string"
             }
           }
         ],
         "responses": {
           "200": {
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "bb": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "bb"
-                  ]
+                  "$ref": "#/components/schemas/{bb:string;}"
                 }
               }
             }
           },
           "404": {
+            "description": "",
             "content": {
-              "application/json": {
-                "schema": {}
-              }
+              "application/json": {}
             }
           }
         }
@@ -454,6 +416,7 @@
       "post": {
         "responses": {
           "201": {
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -465,7 +428,12 @@
               }
             },
             "headers": {
-              "$ref": "#/components/schemas/{'Set-Cookie':string;}"
+              "Set-Cookie": {
+                "schema": {
+                  "type": "string"
+                },
+                "required": true
+              }
             }
           }
         }

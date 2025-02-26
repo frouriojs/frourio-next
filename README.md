@@ -275,7 +275,7 @@ test('Route Handlers', async () => {
 });
 ```
 
-## Setup with exporting OpenAPI JSON
+## Setup with exporting OpenAPI 3.1 JSON
 
 `package.json`
 

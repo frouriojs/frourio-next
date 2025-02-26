@@ -182,14 +182,16 @@ type AllMethods = [${frourioFiles.map((_, i) => `ToSpecType<typeof frourioSpec${
           props.query.$ref!.split('/').at(-1)!
         ] as TJS.Definition;
 
-        methodParameters.push(
-          ...Object.entries(def).map(([name, value]) => ({
-            name,
-            in: 'query' as const,
-            required: props.query?.required?.includes(name) ?? false,
-            schema: value,
-          })),
-        );
+        if (def.properties) {
+          methodParameters.push(
+            ...Object.entries(def.properties).map(([name, value]) => ({
+              name,
+              in: 'query' as const,
+              required: def.required?.includes(name) ?? false,
+              schema: value,
+            })),
+          );
+        }
       }
 
       const reqFormat = props.format?.const as string;
@@ -197,12 +199,12 @@ type AllMethods = [${frourioFiles.map((_, i) => `ToSpecType<typeof frourioSpec${
         props.headers &&
         (methodsSchema?.definitions?.[props.headers.$ref!.split('/').at(-1)!] as TJS.Definition);
 
-      if (headersDef) {
+      if (headersDef?.properties) {
         methodParameters.push(
-          ...Object.entries(headersDef).map(([name, value]) => ({
+          ...Object.entries(headersDef.properties).map(([name, value]) => ({
             name,
             in: 'header' as const,
-            required: props.reqHeaders?.required?.includes(name) ?? false,
+            required: headersDef.required?.includes(name) ?? false,
             schema: value,
           })),
         );
@@ -241,19 +243,35 @@ type AllMethods = [${frourioFiles.map((_, i) => `ToSpecType<typeof frourioSpec${
                     ? 'multipart/form-data'
                     : 'application/json';
 
-                const bodyDef = (statusDef.properties as Record<string, TJS.Definition>)?.body.$ref
+                const headersDef = (statusDef.properties as Record<string, TJS.Definition>)?.headers
+                  ?.$ref
                   ? (methodsSchema?.definitions?.[
-                      (statusDef.properties as Record<string, TJS.Definition>).body
+                      (statusDef.properties as Record<string, TJS.Definition>).headers
                         .$ref!.split('/')
                         .at(-1)!
                     ] as TJS.Definition)
-                  : (statusDef.properties as Record<string, TJS.Definition>)?.body;
+                  : (statusDef.properties as Record<string, TJS.Definition>)?.headers;
 
                 return {
                   ...dict,
                   [status]: {
-                    content: { [resContentType]: { schema: bodyDef ?? {} } },
-                    headers: (statusDef.properties as Record<string, TJS.Definition>)?.headers,
+                    description: '',
+                    content: {
+                      [resContentType]: {
+                        schema: (statusDef.properties as Record<string, TJS.Definition>)?.body,
+                      },
+                    },
+                    headers:
+                      headersDef?.properties &&
+                      Object.entries(headersDef.properties).reduce((dict, [key, val]) => {
+                        return {
+                          ...dict,
+                          [key]: {
+                            schema: val,
+                            required: headersDef.required?.includes(key) ?? false,
+                          },
+                        };
+                      }, {}),
                   },
                 };
               }, {})

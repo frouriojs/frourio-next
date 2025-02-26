@@ -9,94 +9,11 @@
       "post": {
         "responses": {
           "200": {
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "string": {
-                      "type": "string"
-                    },
-                    "number": {
-                      "type": "number"
-                    },
-                    "boolean": {
-                      "type": "boolean"
-                    },
-                    "stringArr": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "numberArr": {
-                      "type": "array",
-                      "items": {
-                        "type": "number"
-                      }
-                    },
-                    "booleanArr": {
-                      "type": "array",
-                      "items": {
-                        "type": "boolean"
-                      }
-                    },
-                    "file": {
-                      "$ref": "#/components/schemas/File"
-                    },
-                    "fileArr": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/File"
-                      }
-                    },
-                    "optionalString": {
-                      "type": "string"
-                    },
-                    "optionalNumber": {
-                      "type": "number"
-                    },
-                    "optionalBoolean": {
-                      "type": "boolean"
-                    },
-                    "optionalStringArr": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "optionalNumberArr": {
-                      "type": "array",
-                      "items": {
-                        "type": "number"
-                      }
-                    },
-                    "optionalBooleanArr": {
-                      "type": "array",
-                      "items": {
-                        "type": "boolean"
-                      }
-                    },
-                    "optionalFile": {
-                      "$ref": "#/components/schemas/File"
-                    },
-                    "optionalFileArr": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/File"
-                      }
-                    }
-                  },
-                  "required": [
-                    "boolean",
-                    "booleanArr",
-                    "file",
-                    "fileArr",
-                    "number",
-                    "numberArr",
-                    "string",
-                    "stringArr"
-                  ]
+                  "$ref": "#/components/schemas/{string:string;number:number;boolean:boolean;stringArr:string[];numberArr:number[];booleanArr:boolean[];file:File;fileArr:File[];optionalString?:string|undefined;optionalNumber?:number|undefined;optionalBoolean?:boolean|undefined;optionalStringArr?:string[]|undefined;optionalNumberArr?:number[]|undefined;optionalBooleanArr?:boolean[]|undefined;optionalFile?:File|undefined;optionalFileArr?:File[]|undefined;}_1"
                 }
               }
             }
@@ -108,94 +25,11 @@
       "post": {
         "responses": {
           "200": {
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "string": {
-                      "type": "string"
-                    },
-                    "number": {
-                      "type": "number"
-                    },
-                    "boolean": {
-                      "type": "boolean"
-                    },
-                    "stringArr": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "numberArr": {
-                      "type": "array",
-                      "items": {
-                        "type": "number"
-                      }
-                    },
-                    "booleanArr": {
-                      "type": "array",
-                      "items": {
-                        "type": "boolean"
-                      }
-                    },
-                    "file": {
-                      "type": "string"
-                    },
-                    "fileArr": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "optionalString": {
-                      "type": "string"
-                    },
-                    "optionalNumber": {
-                      "type": "number"
-                    },
-                    "optionalBoolean": {
-                      "type": "boolean"
-                    },
-                    "optionalStringArr": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "optionalNumberArr": {
-                      "type": "array",
-                      "items": {
-                        "type": "number"
-                      }
-                    },
-                    "optionalBooleanArr": {
-                      "type": "array",
-                      "items": {
-                        "type": "boolean"
-                      }
-                    },
-                    "optionalFile": {
-                      "type": "string"
-                    },
-                    "optionalFileArr": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    }
-                  },
-                  "required": [
-                    "boolean",
-                    "booleanArr",
-                    "file",
-                    "fileArr",
-                    "number",
-                    "numberArr",
-                    "string",
-                    "stringArr"
-                  ]
+                  "$ref": "#/components/schemas/{string:string;number:number;boolean:boolean;stringArr:string[];numberArr:number[];booleanArr:boolean[];file:string;fileArr:string[];optionalString?:string|undefined;optionalNumber?:number|undefined;optionalBoolean?:boolean|undefined;optionalStringArr?:string[]|undefined;optionalNumberArr?:number[]|undefined;optionalBooleanArr?:boolean[]|undefined;optionalFile?:string|undefined;optionalFileArr?:string[]|undefined;}"
                 }
               }
             }

@@ -190,7 +190,7 @@ type AllParams = [${hasParamsDirs.map((_, i) => `z.infer<typeof paramsValidator$
         .replace(path.resolve(params.appDir).replaceAll('\\', '/'), '') || '/';
 
     doc.paths![apiPath] = Object.entries(def.properties).reduce((dict, [method, val]) => {
-      if (method === 'param') return dict;
+      if (method === 'param' || method === 'additionalContext') return dict;
 
       const props = (val as TJS.Definition).properties as Record<string, TJS.Definition>;
       const methodParameters = [...parameters];

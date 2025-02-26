@@ -1,4 +1,3 @@
-import assert from 'assert';
 import { writeFile } from 'fs/promises';
 import path from 'path';
 import ts from 'typescript';
@@ -11,6 +10,8 @@ import {
 } from './getPropOptions';
 import { initTSC } from './initTSC';
 import { listFrourioDirs } from './listFrourioDirs';
+import type { ParamsInfo } from './paramsUtil';
+import { paramsToText, pathToParams } from './paramsUtil';
 import { writeDefaults } from './writeDefaults';
 
 type ServerMethod = {
@@ -30,14 +31,11 @@ export const generate = async (appDir: string): Promise<void> => {
   await writeDefaults(frourioDirs);
 
   const { program, checker } = initTSC(frourioDirs);
-
-  await Promise.all(
-    frourioDirs.map(async (dirPath) => {
+  const havingCtxDirDict: Record<string, boolean | undefined> = {};
+  const data = frourioDirs
+    .map((dirPath) => {
       const source = program.getSourceFile(path.posix.join(dirPath, FROURIO_FILE));
-
-      assert(source);
-
-      const spec = ts.forEachChild(source, (node) => {
+      const spec = source?.forEachChild((node) => {
         if (!ts.isVariableStatement(node)) return;
 
         const decl = node.declarationList.declarations.find(
@@ -49,12 +47,16 @@ export const generate = async (appDir: string): Promise<void> => {
         const specProps = checker.getTypeAtLocation(decl.initializer).getProperties();
         const paramSymbol = specProps.find((t) => t.getName() === 'param');
         const paramZodType = paramSymbol ? inferZodType(checker, paramSymbol) : null;
+        const hasCtx = specProps.some((t) => t.getName() === 'additionalContext');
+
+        havingCtxDirDict[dirPath] = hasCtx;
 
         return {
           param: paramZodType ? getValidatorOption(checker, paramZodType) : null,
+          hasCtx,
           methods: specProps
             .map((t): ServerMethod | null => {
-              if (t.getName() === 'param') return null;
+              if (t.getName() === 'param' || t.getName() === 'additionalContext') return null;
 
               const type =
                 t.valueDeclaration && checker.getTypeOfSymbolAtLocation(t, t.valueDeclaration);
@@ -107,93 +109,52 @@ export const generate = async (appDir: string): Promise<void> => {
         };
       });
 
-      if (!spec) return;
-
-      await writeFile(
-        path.posix.join(dirPath, SERVER_FILE),
-        serverData(pathToParams(frourioDirs, dirPath, spec.param), spec.methods),
-        'utf8',
+      const ancestorCtx = frourioDirs.findLast(
+        (dir) => dir !== dirPath && dirPath.includes(dir) && havingCtxDirDict[dir],
       );
-    }),
-  );
-};
 
-type ParamsInfo = {
-  ancestorFrourio: string | undefined;
-  middles: string[];
-  current:
-    | { name: string; param: PropOption | null; array: { isOptional: boolean } | undefined }
-    | undefined;
-};
-
-const chunkToSlugName = (chunk: string) =>
-  chunk.replaceAll('[', '').replace('...', '').replaceAll(']', '');
-
-const pathToParams = (
-  frourioDirs: string[],
-  dirPath: string,
-  param: PropOption | null,
-): ParamsInfo | undefined => {
-  if (!dirPath.includes('[')) return undefined;
-
-  const [tail, ...heads] = dirPath.split('/').reverse();
-  const ancestorIndex = heads.findIndex((head, i) => {
-    return head.startsWith('[') && frourioDirs.includes(heads.slice(i).reverse().join('/'));
-  });
-
-  return {
-    ancestorFrourio:
-      ancestorIndex !== -1
-        ? `${[...Array(ancestorIndex + 2)].join('../')}${SERVER_FILE.replace('.ts', '')}`
-        : undefined,
-    middles: heads
-      .slice(0, ancestorIndex)
-      .filter((h) => h.startsWith('['))
-      .map(chunkToSlugName),
-    current: tail.startsWith('[')
-      ? {
-          name: chunkToSlugName(tail),
-          param,
-          array: tail.includes('...') ? { isOptional: tail.startsWith('[[') } : undefined,
+      return (
+        spec && {
+          filePath: path.posix.join(dirPath, SERVER_FILE),
+          text: serverData(
+            pathToParams(frourioDirs, dirPath, spec.param),
+            {
+              ancestorFrourio:
+                ancestorCtx &&
+                path.posix.join(
+                  path.posix.relative(dirPath, ancestorCtx),
+                  SERVER_FILE.replace('.ts', ''),
+                ),
+              hasCurrentCtx: !!havingCtxDirDict[dirPath],
+            },
+            spec.methods,
+          ),
         }
-      : undefined,
-  };
-};
+      );
+    })
+    .filter((d) => d !== undefined);
 
-const paramsToText = (params: ParamsInfo) => {
-  const paramText = 'frourioSpec.param';
-  const current = params.current
-    ? `z.object({ '${params.current.name}': ${params.current.param ? (params.current.param.typeName === 'number' ? (params.current.param.isArray ? `paramToNumArr(${paramText})` : `paramToNum(${paramText})`) : paramText) : params.current.array ? `z.array(z.string())${params.current.array.isOptional ? '.optional()' : ''}` : 'z.string()'} })`
-    : '';
-  const ancestor = 'ancestorParamsValidator';
-  const middles = `z.object({ ${params.middles.map((middle) => `'${middle}': z.string()`).join(', ')} })`;
-
-  return `${current}${
-    params.current && params.ancestorFrourio
-      ? `.and(${ancestor})`
-      : params.ancestorFrourio
-        ? ancestor
-        : ''
-  }${params.middles.length === 0 ? '' : params.current || params.ancestorFrourio ? `.and(${middles})` : middles}`;
+  await Promise.all(data.map((d) => writeFile(d.filePath, d.text, 'utf8')));
 };
 
 const serverData = (
   params: ParamsInfo | undefined,
+  ctxInfo: { ancestorFrourio: string | undefined; hasCurrentCtx: boolean },
   methods: ServerMethod[],
 ) => `import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import ${params ? '' : 'type '}{ z } from 'zod';${params?.ancestorFrourio ? `\nimport { paramsValidator as ancestorParamsValidator } from '${params.ancestorFrourio}';` : ''}
+import ${params ? '' : 'type '}{ z } from 'zod';${params?.ancestorFrourio ? `\nimport { paramsValidator as ancestorParamsValidator } from '${params.ancestorFrourio}';` : ''}${ctxInfo.ancestorFrourio ? `\nimport { additionsValidator as ancestorAdditionsValidator } from '${ctxInfo.ancestorFrourio}';` : ''}
 import { frourioSpec } from './frourio';
 import type { ${methods.map((m) => m.name.toUpperCase()).join(', ')} } from './route';
 ${methods.length > 0 ? `\ntype RouteChecker = [${methods.map((m) => `typeof ${m.name.toUpperCase()}`).join(', ')}];` : ''}
-${params ? `\n${params.current ? `${params.current.param?.typeName !== 'number' ? '' : params.current.param.isArray ? paramToNumArrText : paramToNumText}` : ''}export const paramsValidator = ${paramsToText(params)};\n\ntype ParamsType = z.infer<typeof paramsValidator>;\n` : ''}
+${params ? `\n${params.current ? `${params.current.param?.typeName !== 'number' ? '' : params.current.param.isArray ? paramToNumArrText : paramToNumText}` : ''}export const paramsValidator = ${paramsToText(params)};\n\ntype ParamsType = z.infer<typeof paramsValidator>;\n` : ''}${ctxInfo.ancestorFrourio || ctxInfo.hasCurrentCtx ? `\nexport const additionsValidator = ${ctxInfo.hasCurrentCtx ? 'frourioSpec.additionalContext' : ''}${ctxInfo.ancestorFrourio ? `${ctxInfo.hasCurrentCtx ? '.and(' : ''}ancestorAdditionsValidator${ctxInfo.hasCurrentCtx ? ')' : ''}` : ''};\n\ntype AdditionsType = z.infer<typeof additionsValidator>;\n` : ''}
 type SpecType = typeof frourioSpec;
 
 type Controller = {
 ${methods
   .map(
     (m) =>
-      `  ${m.name}: (req: {${params ? '\n    params: ParamsType;' : ''}${m.hasHeaders ? `\n    headers: z.infer<SpecType['${m.name}']['headers']>;` : ''}${m.query ? `\n    query: z.infer<SpecType['${m.name}']['query']>;` : ''}${m.body ? `\n    body: z.infer<SpecType['${m.name}']['body']>;` : ''}
+      `  ${m.name}: (req: ${ctxInfo.ancestorFrourio || ctxInfo.hasCurrentCtx ? 'AdditionsType & ' : ''}{${params ? '\n    params: ParamsType;' : ''}${m.hasHeaders ? `\n    headers: z.infer<SpecType['${m.name}']['headers']>;` : ''}${m.query ? `\n    query: z.infer<SpecType['${m.name}']['query']>;` : ''}${m.body ? `\n    body: z.infer<SpecType['${m.name}']['body']>;` : ''}
   }) => Promise<${
     m.res
       ? `\n${m.res
@@ -268,8 +229,8 @@ ${m.body.data
       ],
     ].filter((r) => !!r);
 
-    return `    ${m.name.toUpperCase()}: async (req${params ? ', ctx' : ''}) => {${m.body?.isFormData ? '\n      const formData = await req.formData();' : ''}${requests.map((r) => `\n      const ${r[0]} = ${r[1]};\n\n      if (${r[0]}.error) return createReqErr(${r[0]}.error);\n`).join('')}${params ? '\n      const params = paramsValidator.safeParse(await ctx.params);\n\n      if (params.error) return createReqErr(params.error);\n' : ''}
-      const res = await controller.${m.name}({ ${[...(params ? ['params: params.data'] : []), ...requests.map((r) => `${r[0]}: ${r[0]}.data`)].join(', ')} });
+    return `    ${m.name.toUpperCase()}: async (req${params ? ', ctx' : ''}) => {${m.body?.isFormData ? '\n      const formData = await req.formData();' : ''}${requests.map((r) => `\n      const ${r[0]} = ${r[1]};\n\n      if (${r[0]}.error) return createReqErr(${r[0]}.error);\n`).join('')}${params ? '\n      const params = paramsValidator.safeParse(await ctx.params);\n\n      if (params.error) return createReqErr(params.error);\n' : ''}${ctxInfo.ancestorFrourio || ctxInfo.hasCurrentCtx ? '\n      const additionals = additionsValidator.safeParse(ctx);\n\n      if (additionals.error) return createReqErr(additionals.error);\n' : ''}
+      const res = await controller.${m.name}({ ${[...(ctxInfo.ancestorFrourio || ctxInfo.hasCurrentCtx ? ['...additionals.data'] : []), ...(params ? ['params: params.data'] : []), ...requests.map((r) => `${r[0]}: ${r[0]}.data`)].join(', ')} });
 
       ${
         m.res

@@ -20,10 +20,14 @@ export const paramsValidator = z.object({ 'a': paramToNum(frourioSpec.param) });
 
 type ParamsType = z.infer<typeof paramsValidator>;
 
+export const additionsValidator = frourioSpec.additionalContext;
+
+type AdditionsType = z.infer<typeof additionsValidator>;
+
 type SpecType = typeof frourioSpec;
 
 type Controller = {
-  get: (req: {
+  get: (req: AdditionsType & {
     params: ParamsType;
   }) => Promise<
     | {
@@ -51,7 +55,11 @@ const toHandler = (controller: Controller): ResHandler => {
 
       if (params.error) return createReqErr(params.error);
 
-      const res = await controller.get({ params: params.data });
+      const additionals = additionsValidator.safeParse(ctx);
+
+      if (additionals.error) return createReqErr(additionals.error);
+
+      const res = await controller.get({ ...additionals.data, params: params.data });
 
       switch (res.status) {
         case 200: {

@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { paramsValidator as ancestorParamsValidator } from '../../frourio.server';
+import { additionsValidator as ancestorAdditionsValidator } from '../../frourio.server';
 import { frourioSpec } from './frourio';
 import type { POST } from './route';
 
@@ -11,10 +12,14 @@ export const paramsValidator = z.object({ 'c': z.array(z.string()) }).and(ancest
 
 type ParamsType = z.infer<typeof paramsValidator>;
 
+export const additionsValidator = frourioSpec.additionalContext.and(ancestorAdditionsValidator);
+
+type AdditionsType = z.infer<typeof additionsValidator>;
+
 type SpecType = typeof frourioSpec;
 
 type Controller = {
-  post: (req: {
+  post: (req: AdditionsType & {
     params: ParamsType;
   }) => Promise<
     | {
@@ -42,7 +47,11 @@ const toHandler = (controller: Controller): ResHandler => {
 
       if (params.error) return createReqErr(params.error);
 
-      const res = await controller.post({ params: params.data });
+      const additionals = additionsValidator.safeParse(ctx);
+
+      if (additionals.error) return createReqErr(additionals.error);
+
+      const res = await controller.post({ ...additionals.data, params: params.data });
 
       switch (res.status) {
         case 200: {

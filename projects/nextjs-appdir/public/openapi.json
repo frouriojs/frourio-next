@@ -297,14 +297,33 @@
       }
     },
     "/{a}/{b}/{c}": {
-      "get": {
+      "post": {
         "parameters": [
+          {
+            "name": "c",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
           {
             "name": "a",
             "in": "path",
             "required": true,
             "schema": {
               "type": "number"
+            }
+          },
+          {
+            "name": "b",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -331,6 +350,14 @@
             "required": true,
             "schema": {
               "type": "number"
+            }
+          },
+          {
+            "name": "b",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
             }
           }
         ],

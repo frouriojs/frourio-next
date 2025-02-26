@@ -25,10 +25,17 @@ export const generateOpenapi = (appDir: string, output: string) => {
 
 const toOpenAPI = (params: { appDir: string; template: OpenAPIV3_1.Document }): string => {
   const frourioFiles = listFrourioFiles(path.resolve(params.appDir));
+  const hasParamsFiles = frourioFiles.filter((f) => f.includes('['));
   const typeFile = `import type { FrourioSpec } from '@frourio/next'
 import type { z } from 'zod'
 ${frourioFiles
   .map((f, i) => `import type { frourioSpec as frourioSpec${i} } from '${f}'`)
+  .join('\n')}
+${hasParamsFiles
+  .map(
+    (f, i) =>
+      `import type { paramsValidator as paramsValidator${i} } from '${f.replace(FROURIO_FILE, SERVER_FILE)}'`,
+  )
   .join('\n')}
 
 type InferType<T extends z.ZodTypeAny | undefined> = T extends z.ZodTypeAny ? z.infer<T> : undefined;
@@ -108,7 +115,8 @@ type ToSpecType<T extends FrourioSpec> = {
     : undefined;
 };
 
-type AllMethods = [${frourioFiles.map((_, i) => `ToSpecType<typeof frourioSpec${i}>`).join(', ')}]`;
+type AllMethods = [${frourioFiles.map((_, i) => `ToSpecType<typeof frourioSpec${i}>`).join(', ')}]
+type AllParams = [${hasParamsFiles.map((_, i) => `z.infer<typeof paramsValidator${i}>`).join(', ')}]`;
 
   const typeFilePath = path.posix.join(params.appDir, `@openapi-${Date.now()}.ts`);
 
@@ -125,6 +133,7 @@ type AllMethods = [${frourioFiles.map((_, i) => `ToSpecType<typeof frourioSpec${
 
   const program = TJS.getProgramFromFiles([typeFilePath], compilerOptions?.options);
   const methodsSchema = TJS.generateSchema(program, 'AllMethods', { required: true });
+  const paramsSchema = TJS.generateSchema(program, 'AllParams', { required: true });
   const doc: OpenAPIV3_1.Document = {
     ...params.template,
     paths: {},
@@ -144,25 +153,28 @@ type AllMethods = [${frourioFiles.map((_, i) => `ToSpecType<typeof frourioSpec${
     const hasParams = file.includes('[');
 
     if (hasParams) {
-      const paramsSchema = TJS.generateSchema(
-        TJS.getProgramFromFiles(
-          [file.replace(FROURIO_FILE, SERVER_FILE)],
-          compilerOptions?.options,
-        ),
-        'ParamsType',
-        { required: true },
-      );
+      const schema = (paramsSchema?.items as TJS.Definition[])[hasParamsFiles.indexOf(file)];
+      const paramsDefs = schema.allOf
+        ? schema.allOf.map(
+            (one) =>
+              paramsSchema?.definitions?.[
+                (one as TJS.Definition).$ref!.split('/').at(-1)!
+              ] as TJS.Definition,
+          )
+        : [paramsSchema?.definitions?.[schema.$ref!.split('/').at(-1)!] as TJS.Definition];
 
-      parameters.push(
-        ...Object.entries(paramsSchema!.properties!).map(([param, val]) => {
-          return {
-            name: param.replace('[', '').replace(']', '').replace('...', ''),
-            in: 'path' as const,
-            required: true,
-            schema: param.includes('...') ? { type: 'string', pattern: '.+' } : val,
-          };
-        }),
-      );
+      paramsDefs.forEach((def) => {
+        parameters.push(
+          ...Object.entries(def.properties!).map(([param, val]) => {
+            return {
+              name: param.replace('[', '').replace(']', '').replace('...', ''),
+              in: 'path' as const,
+              required: true,
+              schema: param.includes('...') ? { type: 'string', pattern: '.+' } : val,
+            };
+          }),
+        );
+      });
     }
 
     const apiPath =

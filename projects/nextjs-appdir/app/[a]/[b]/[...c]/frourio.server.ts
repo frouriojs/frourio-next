@@ -3,9 +3,9 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { paramsValidator as ancestorParamsValidator } from '../../frourio.server';
 import { frourioSpec } from './frourio';
-import type { GET } from './route';
+import type { POST } from './route';
 
-type RouteChecker = [typeof GET];
+type RouteChecker = [typeof POST];
 
 export const paramsValidator = z.object({ 'c': z.array(z.string()) }).and(ancestorParamsValidator).and(z.object({ 'b': z.string() }));
 
@@ -14,12 +14,12 @@ type ParamsType = z.infer<typeof paramsValidator>;
 type SpecType = typeof frourioSpec;
 
 type Controller = {
-  get: (req: {
+  post: (req: {
     params: ParamsType;
   }) => Promise<
     | {
         status: 200;
-        body: z.infer<SpecType['get']['res'][200]['body']>;
+        body: z.infer<SpecType['post']['res'][200]['body']>;
       }
   >;
 };
@@ -29,7 +29,7 @@ type FrourioError =
   | { status: 500; error: string; issues?: undefined };
 
 type ResHandler = {
-  GET: (
+  POST: (
     req: NextRequest,
     option: { params: Promise<unknown> },
   ) => Promise<Response>;
@@ -37,16 +37,16 @@ type ResHandler = {
 
 const toHandler = (controller: Controller): ResHandler => {
   return {
-    GET: async (req, option) => {
+    POST: async (req, option) => {
       const params = paramsValidator.safeParse(await option.params);
 
       if (params.error) return createReqErr(params.error);
 
-      const res = await controller.get({ params: params.data });
+      const res = await controller.post({ params: params.data });
 
       switch (res.status) {
         case 200: {
-          const body = frourioSpec.get.res[200].body.safeParse(res.body);
+          const body = frourioSpec.post.res[200].body.safeParse(res.body);
 
           if (body.error) return createResErr();
 

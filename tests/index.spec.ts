@@ -76,7 +76,7 @@ test('base handler', async () => {
 });
 
 test('params handler', async () => {
-  const res = await paramsRoute.GET(new NextRequest('http://example.com/aaa/bbb/ccc'), {
+  const res = await paramsRoute.POST(new NextRequest('http://example.com/aaa/bbb/ccc'), {
     params: Promise.resolve({ a: '111', b: 'bbb', c: ['ccc'] }),
   });
 

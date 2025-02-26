@@ -5,7 +5,7 @@ import path from 'path';
 import ts from 'typescript';
 import * as TJS from 'typescript-json-schema';
 import { FROURIO_FILE, SERVER_FILE } from '../constants';
-import { listFrourioFiles } from '../listFrourioFiles';
+import { listFrourioDirs } from '../listFrourioDirs';
 import { createHash } from './createHash';
 
 export const generateOpenapi = (appDir: string, output: string) => {
@@ -25,17 +25,20 @@ export const generateOpenapi = (appDir: string, output: string) => {
 };
 
 const toOpenAPI = (params: { appDir: string; template: OpenAPIV3_1.Document }): string => {
-  const frourioFiles = listFrourioFiles(path.resolve(params.appDir));
-  const hasParamsFiles = frourioFiles.filter((f) => f.includes('['));
+  const frourioDirs = listFrourioDirs(path.resolve(params.appDir));
+  const hasParamsDirs = frourioDirs.filter((f) => f.includes('['));
   const typeFile = `import type { FrourioSpec } from '@frourio/next'
 import type { z } from 'zod'
-${frourioFiles
-  .map((f, i) => `import type { frourioSpec as frourioSpec${i} } from '${f}'`)
-  .join('\n')}
-${hasParamsFiles
+${frourioDirs
   .map(
-    (f, i) =>
-      `import type { paramsValidator as paramsValidator${i} } from '${f.replace(FROURIO_FILE, SERVER_FILE)}'`,
+    (d, i) =>
+      `import type { frourioSpec as frourioSpec${i} } from '${path.posix.join(d, FROURIO_FILE)}'`,
+  )
+  .join('\n')}
+${hasParamsDirs
+  .map(
+    (d, i) =>
+      `import type { paramsValidator as paramsValidator${i} } from '${path.posix.join(d, SERVER_FILE)}'`,
   )
   .join('\n')}
 
@@ -116,8 +119,8 @@ type ToSpecType<T extends FrourioSpec> = {
     : undefined;
 };
 
-type AllMethods = [${frourioFiles.map((_, i) => `ToSpecType<typeof frourioSpec${i}>`).join(', ')}]
-type AllParams = [${hasParamsFiles.map((_, i) => `z.infer<typeof paramsValidator${i}>`).join(', ')}]`;
+type AllMethods = [${frourioDirs.map((_, i) => `ToSpecType<typeof frourioSpec${i}>`).join(', ')}]
+type AllParams = [${hasParamsDirs.map((_, i) => `z.infer<typeof paramsValidator${i}>`).join(', ')}]`;
 
   const typeFilePath = path.posix.join(params.appDir, `@openapi-${Date.now()}.ts`);
 
@@ -150,11 +153,11 @@ type AllParams = [${hasParamsFiles.map((_, i) => `z.infer<typeof paramsValidator
       required: boolean;
       schema: any;
     }[] = [];
-    const file = frourioFiles[i];
-    const hasParams = file.includes('[');
+    const dir = frourioDirs[i];
+    const hasParams = dir.includes('[');
 
     if (hasParams) {
-      const schema = (paramsSchema?.items as TJS.Definition[])[hasParamsFiles.indexOf(file)];
+      const schema = (paramsSchema?.items as TJS.Definition[])[hasParamsDirs.indexOf(dir)];
       const paramsDefs = schema.allOf
         ? schema.allOf.map(
             (one) =>
@@ -179,11 +182,10 @@ type AllParams = [${hasParamsFiles.map((_, i) => `z.infer<typeof paramsValidator
     }
 
     const apiPath =
-      file
+      dir
         .replace(/\/\(.+\)/g, '')
         .replace(/\[+\.*(.+?)]+/g, '{$1}')
-        .replace(path.resolve(params.appDir).replaceAll('\\', '/'), '')
-        .replace(`/${FROURIO_FILE}`, '') || '/';
+        .replace(path.resolve(params.appDir).replaceAll('\\', '/'), '') || '/';
 
     doc.paths![apiPath] = Object.entries(def.properties!).reduce((dict, [method, val]) => {
       if (method === 'param') return dict;

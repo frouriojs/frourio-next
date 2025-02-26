@@ -15,7 +15,4 @@ const listDirNames = (dir: string): string[] =>
     [],
   );
 
-export const listFrourioFiles = (dir: string): string[] =>
-  listDirNames(dir)
-    .sort()
-    .map((f) => path.posix.join(f, FROURIO_FILE));
+export const listFrourioDirs = (dir: string): string[] => listDirNames(dir).sort();

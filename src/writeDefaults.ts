@@ -1,13 +1,14 @@
 import { existsSync } from 'fs';
 import { readFile, writeFile } from 'fs/promises';
 import path from 'path';
-import { SERVER_FILE } from './constants';
+import { FROURIO_FILE, SERVER_FILE } from './constants';
 
-export const writeDefaults = async (frourioFiles: string[]) => {
+export const writeDefaults = async (frourioDirs: string[]) => {
   await Promise.all(
-    frourioFiles.map(async (filePath) => {
+    frourioDirs.map(async (dirPath) => {
+      const filePath = path.posix.join(dirPath, FROURIO_FILE);
       const fileText = await readFile(filePath, 'utf8');
-      const routePath = path.posix.join(filePath, '../route.ts');
+      const routePath = path.posix.join(dirPath, 'route.ts');
 
       if (fileText !== '' || existsSync(routePath)) return;
 

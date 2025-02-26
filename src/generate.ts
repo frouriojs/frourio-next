@@ -10,7 +10,7 @@ import {
   type PropOption,
 } from './getPropOptions';
 import { initTSC } from './initTSC';
-import { listFrourioFiles } from './listFrourioFiles';
+import { listFrourioDirs } from './listFrourioDirs';
 import { writeDefaults } from './writeDefaults';
 
 type ServerMethod = {
@@ -25,15 +25,15 @@ type ServerMethod = {
 };
 
 export const generate = async (appDir: string): Promise<void> => {
-  const frourioFiles = listFrourioFiles(appDir);
+  const frourioDirs = listFrourioDirs(appDir);
 
-  await writeDefaults(frourioFiles);
+  await writeDefaults(frourioDirs);
 
-  const { program, checker } = initTSC(frourioFiles);
+  const { program, checker } = initTSC(frourioDirs);
 
   await Promise.all(
-    frourioFiles.map(async (filePath) => {
-      const source = program.getSourceFile(filePath);
+    frourioDirs.map(async (dirPath) => {
+      const source = program.getSourceFile(path.posix.join(dirPath, FROURIO_FILE));
 
       assert(source);
 
@@ -110,8 +110,8 @@ export const generate = async (appDir: string): Promise<void> => {
       if (!spec) return;
 
       await writeFile(
-        path.posix.join(filePath, '../', SERVER_FILE),
-        serverData(pathToParams(frourioFiles, filePath, spec.param), spec.methods),
+        path.posix.join(dirPath, SERVER_FILE),
+        serverData(pathToParams(frourioDirs, dirPath, spec.param), spec.methods),
         'utf8',
       );
     }),
@@ -130,18 +130,15 @@ const chunkToSlugName = (chunk: string) =>
   chunk.replaceAll('[', '').replace('...', '').replaceAll(']', '');
 
 const pathToParams = (
-  frourioFiles: string[],
-  filePath: string,
+  frourioDirs: string[],
+  dirPath: string,
   param: PropOption | null,
 ): ParamsInfo | undefined => {
-  if (!filePath.includes('[')) return undefined;
+  if (!dirPath.includes('[')) return undefined;
 
-  const [, tail, ...heads] = filePath.split('/').reverse();
+  const [tail, ...heads] = dirPath.split('/').reverse();
   const ancestorIndex = heads.findIndex((head, i) => {
-    return (
-      head.startsWith('[') &&
-      frourioFiles.includes(path.posix.join(heads.slice(i).reverse().join('/'), FROURIO_FILE))
-    );
+    return head.startsWith('[') && frourioDirs.includes(heads.slice(i).reverse().join('/'));
   });
 
   return {

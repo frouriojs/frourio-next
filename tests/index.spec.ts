@@ -11,15 +11,15 @@ import type {
   frourioSpec as querySpec,
   SymbolId,
   ZodId,
-} from '../projects/nextjs-appdir/app/(group1)/[pid]/frourio';
-import * as queryRoute from '../projects/nextjs-appdir/app/(group1)/[pid]/route';
-import * as numberRoute from '../projects/nextjs-appdir/app/(group1)/blog/[...slug]/route';
-import * as stringRoute from '../projects/nextjs-appdir/app/(group1)/blog/hoge/[[...fuga]]/route';
-import * as paramsRoute from '../projects/nextjs-appdir/app/[a]/[b]/[...c]/route';
-import * as baseRoute from '../projects/nextjs-appdir/app/route';
-import * as formResRoute from '../projects/nextjs-src-appdir/src/app/%E6%97%A5%E6%9C%AC%E8%AA%9E/route';
-import type { frourioSpec as formSpec } from '../projects/nextjs-src-appdir/src/app/frourio';
-import * as formReqRoute from '../projects/nextjs-src-appdir/src/app/route';
+} from '../projects/basic/app/(group1)/[pid]/frourio';
+import * as queryRoute from '../projects/basic/app/(group1)/[pid]/route';
+import * as numberRoute from '../projects/basic/app/(group1)/blog/[...slug]/route';
+import * as stringRoute from '../projects/basic/app/(group1)/blog/hoge/[[...fuga]]/route';
+import * as paramsRoute from '../projects/basic/app/[a]/[b]/[...c]/route';
+import * as baseRoute from '../projects/basic/app/route';
+import * as formResRoute from '../projects/src-dir/src/app/%E6%97%A5%E6%9C%AC%E8%AA%9E/route';
+import type { frourioSpec as formSpec } from '../projects/src-dir/src/app/frourio';
+import * as formReqRoute from '../projects/src-dir/src/app/route';
 import { SERVER_FILE } from '../src/constants';
 import { generate } from '../src/generate';
 import { listFrourioFiles } from '../src/listFrourioFiles';

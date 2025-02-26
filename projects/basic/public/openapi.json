@@ -5,13 +5,21 @@
     "version": "v0.0"
   },
   "paths": {
-    "/{pid}/foo": {
+    "/": {
       "get": {
         "parameters": [
           {
-            "name": "pid",
-            "in": "path",
+            "name": "aa",
+            "in": "query",
             "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cookie",
+            "in": "header",
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -23,8 +31,48 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/mirbd2"
+                  "$ref": "#/components/schemas/ufawrx"
                 }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      },
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/g6hjy5"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Set-Cookie": {
+                "schema": {
+                  "type": "string"
+                },
+                "required": true
               }
             }
           }
@@ -216,6 +264,32 @@
         }
       }
     },
+    "/{pid}/foo": {
+      "get": {
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/mirbd2"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/blog/{slug}": {
       "get": {
         "parameters": [
@@ -296,6 +370,32 @@
         ]
       }
     },
+    "/{a}": {
+      "get": {
+        "parameters": [
+          {
+            "name": "a",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/{a}/{b}/{c}": {
       "post": {
         "parameters": [
@@ -374,130 +474,73 @@
           }
         }
       }
-    },
-    "/{a}": {
-      "get": {
-        "parameters": [
-          {
-            "name": "a",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "number"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "number"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/": {
-      "get": {
-        "parameters": [
-          {
-            "name": "aa",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "cookie",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ufawrx"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {}
-            }
-          }
-        }
-      },
-      "post": {
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/g6hjy5"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "number"
-                  }
-                }
-              }
-            },
-            "headers": {
-              "Set-Cookie": {
-                "schema": {
-                  "type": "string"
-                },
-                "required": true
-              }
-            }
-          }
-        }
-      }
     }
   },
   "components": {
     "schemas": {
-      "6s5r15": {
+      "10s4xjk": {
         "type": "object",
         "properties": {
           "body": {
-            "$ref": "#/components/schemas/mirbd2"
+            "$ref": "#/components/schemas/ufawrx"
           }
         },
         "required": [
           "body"
         ]
       },
-      "mirbd2": {
+      "ufawrx": {
         "type": "object",
         "properties": {
-          "value": {
+          "bb": {
             "type": "string"
           }
         },
         "required": [
-          "value"
+          "bb"
+        ]
+      },
+      "nf0rvp": {
+        "type": "object"
+      },
+      "g6hjy5": {
+        "type": "object",
+        "properties": {
+          "bb": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "bb"
+        ]
+      },
+      "1kerpqh": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "headers": {
+            "$ref": "#/components/schemas/mr29t2"
+          }
+        },
+        "required": [
+          "body",
+          "headers"
+        ]
+      },
+      "mr29t2": {
+        "type": "object",
+        "properties": {
+          "Set-Cookie": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "Set-Cookie"
         ]
       },
       "wkkvyy": {
@@ -661,6 +704,28 @@
           "query"
         ]
       },
+      "6s5r15": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "$ref": "#/components/schemas/mirbd2"
+          }
+        },
+        "required": [
+          "body"
+        ]
+      },
+      "mirbd2": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "value"
+        ]
+      },
       "1k3jnnh": {
         "type": "object",
         "properties": {
@@ -677,6 +742,17 @@
         "properties": {
           "body": {
             "type": "string"
+          }
+        },
+        "required": [
+          "body"
+        ]
+      },
+      "1vu2plh": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "number"
           }
         },
         "required": [
@@ -737,82 +813,6 @@
         },
         "required": [
           "value"
-        ]
-      },
-      "1vu2plh": {
-        "type": "object",
-        "properties": {
-          "body": {
-            "type": "number"
-          }
-        },
-        "required": [
-          "body"
-        ]
-      },
-      "10s4xjk": {
-        "type": "object",
-        "properties": {
-          "body": {
-            "$ref": "#/components/schemas/ufawrx"
-          }
-        },
-        "required": [
-          "body"
-        ]
-      },
-      "ufawrx": {
-        "type": "object",
-        "properties": {
-          "bb": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "bb"
-        ]
-      },
-      "nf0rvp": {
-        "type": "object"
-      },
-      "g6hjy5": {
-        "type": "object",
-        "properties": {
-          "bb": {
-            "type": "number"
-          }
-        },
-        "required": [
-          "bb"
-        ]
-      },
-      "1kerpqh": {
-        "type": "object",
-        "properties": {
-          "body": {
-            "type": "array",
-            "items": {
-              "type": "number"
-            }
-          },
-          "headers": {
-            "$ref": "#/components/schemas/mr29t2"
-          }
-        },
-        "required": [
-          "body",
-          "headers"
-        ]
-      },
-      "mr29t2": {
-        "type": "object",
-        "properties": {
-          "Set-Cookie": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "Set-Cookie"
         ]
       }
     }

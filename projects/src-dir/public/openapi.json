@@ -5,7 +5,7 @@
     "version": "v0.0"
   },
   "paths": {
-    "/%E6%97%A5%E6%9C%AC%E8%AA%9E": {
+    "/": {
       "post": {
         "requestBody": {
           "content": {
@@ -20,9 +20,9 @@
           "200": {
             "description": "",
             "content": {
-              "multipart/form-data": {
+              "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/1epfujl"
+                  "$ref": "#/components/schemas/14mufbr"
                 }
               }
             }
@@ -30,13 +30,13 @@
         }
       }
     },
-    "/": {
+    "/%E6%97%A5%E6%9C%AC%E8%AA%9E": {
       "post": {
         "requestBody": {
           "content": {
             "multipart/form-data": {
               "schema": {
-                "$ref": "#/components/schemas/1dvh1go"
+                "$ref": "#/components/schemas/1epfujl"
               }
             }
           }
@@ -45,9 +45,9 @@
           "200": {
             "description": "",
             "content": {
-              "application/json": {
+              "multipart/form-data": {
                 "schema": {
-                  "$ref": "#/components/schemas/14mufbr"
+                  "$ref": "#/components/schemas/1dvh1go"
                 }
               }
             }
@@ -149,20 +149,102 @@
         "type": "string",
         "format": "binary"
       },
-      "d3x1z2": {
+      "rgvzvu": {
         "type": "object",
         "properties": {
-          "format": {
-            "type": "string",
-            "const": "formData"
-          },
           "body": {
-            "$ref": "#/components/schemas/1epfujl"
+            "$ref": "#/components/schemas/14mufbr"
           }
         },
         "required": [
-          "body",
-          "format"
+          "body"
+        ]
+      },
+      "14mufbr": {
+        "type": "object",
+        "properties": {
+          "string": {
+            "type": "string"
+          },
+          "number": {
+            "type": "number"
+          },
+          "boolean": {
+            "type": "boolean"
+          },
+          "stringArr": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "numberArr": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "booleanArr": {
+            "type": "array",
+            "items": {
+              "type": "boolean"
+            }
+          },
+          "file": {
+            "type": "string"
+          },
+          "fileArr": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "optionalString": {
+            "type": "string"
+          },
+          "optionalNumber": {
+            "type": "number"
+          },
+          "optionalBoolean": {
+            "type": "boolean"
+          },
+          "optionalStringArr": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "optionalNumberArr": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "optionalBooleanArr": {
+            "type": "array",
+            "items": {
+              "type": "boolean"
+            }
+          },
+          "optionalFile": {
+            "type": "string"
+          },
+          "optionalFileArr": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "boolean",
+          "booleanArr",
+          "file",
+          "fileArr",
+          "number",
+          "numberArr",
+          "string",
+          "stringArr"
         ]
       },
       "1epfujl": {
@@ -252,6 +334,22 @@
           "stringArr"
         ]
       },
+      "d3x1z2": {
+        "type": "object",
+        "properties": {
+          "format": {
+            "type": "string",
+            "const": "formData"
+          },
+          "body": {
+            "$ref": "#/components/schemas/1dvh1go"
+          }
+        },
+        "required": [
+          "body",
+          "format"
+        ]
+      },
       "1dvh1go": {
         "type": "object",
         "properties": {
@@ -325,104 +423,6 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/File"
-            }
-          }
-        },
-        "required": [
-          "boolean",
-          "booleanArr",
-          "file",
-          "fileArr",
-          "number",
-          "numberArr",
-          "string",
-          "stringArr"
-        ]
-      },
-      "rgvzvu": {
-        "type": "object",
-        "properties": {
-          "body": {
-            "$ref": "#/components/schemas/14mufbr"
-          }
-        },
-        "required": [
-          "body"
-        ]
-      },
-      "14mufbr": {
-        "type": "object",
-        "properties": {
-          "string": {
-            "type": "string"
-          },
-          "number": {
-            "type": "number"
-          },
-          "boolean": {
-            "type": "boolean"
-          },
-          "stringArr": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "numberArr": {
-            "type": "array",
-            "items": {
-              "type": "number"
-            }
-          },
-          "booleanArr": {
-            "type": "array",
-            "items": {
-              "type": "boolean"
-            }
-          },
-          "file": {
-            "type": "string"
-          },
-          "fileArr": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "optionalString": {
-            "type": "string"
-          },
-          "optionalNumber": {
-            "type": "number"
-          },
-          "optionalBoolean": {
-            "type": "boolean"
-          },
-          "optionalStringArr": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "optionalNumberArr": {
-            "type": "array",
-            "items": {
-              "type": "number"
-            }
-          },
-          "optionalBooleanArr": {
-            "type": "array",
-            "items": {
-              "type": "boolean"
-            }
-          },
-          "optionalFile": {
-            "type": "string"
-          },
-          "optionalFileArr": {
-            "type": "array",
-            "items": {
-              "type": "string"
             }
           }
         },

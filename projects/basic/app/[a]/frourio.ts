@@ -7,6 +7,6 @@ export const frourioSpec = {
     context: z.object({ user: z.object({ name: z.string() })}),
   },
   get: {
-    res: { 200: { body: z.number() } },
+    res: { 200: { body: z.object({ param: z.number(), name: z.string() }) } },
   },
 } satisfies FrourioSpec;

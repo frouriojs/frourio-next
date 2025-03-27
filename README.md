@@ -243,6 +243,54 @@ export const { GET } = createRoute({
 });
 ```
 
+## Middleware
+
+`app/api/frourio.ts`
+
+```ts
+import type { FrourioSpec } from '@frourio/next';
+import { z } from 'zod';
+
+export const frourioSpec = {
+  middleware: {
+    context: z.object({ user: z.object({ name: z.string() }) }),
+  },
+  get: {
+    res: { 200: { body: z.object({ userName: z.number() }) } },
+  },
+} satisfies FrourioSpec;
+```
+
+`app/api/route.ts`
+
+```ts
+import { createRoute } from './frourio.server';
+
+export const { GET, middleware } = createRoute({
+  middleware: async (req, _ctx, next) => {
+    return next(req, { user: { name: 'mario' } });
+  },
+  get: async ({ user }) => {
+    return { status: 200, body: { userName: user.name } };
+  },
+});
+```
+
+`app/api/articles/[articleId]/route.ts`
+
+```ts
+import { createRoute } from './frourio.server';
+
+export const { GET, middleware } = createRoute({
+  middleware: async (req, ctx, next) => {
+    return next(req, ctx);
+  },
+  get: async ({ params, user }) => {
+    return { status: 200, body: { id: params.articleId, userName: user.name } };
+  },
+});
+```
+
 ## Test
 
 `tests/index.spec.ts`

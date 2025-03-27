@@ -38,7 +38,7 @@ type ResHandler = {
   POST: (req: NextRequest, ctx: {}) => Promise<Response>;
 };
 
-const toHandler = (controller: Controller): ResHandler => {
+export const createRoute = (controller: Controller): ResHandler => {
   const middleware = (next: (
     req: NextRequest,
   ) => Promise<Response>) => async (originalReq: NextRequest, originalCtx: {}): Promise<Response> => {
@@ -105,20 +105,6 @@ const toHandler = (controller: Controller): ResHandler => {
     }),
   };
 };
-
-export function createRoute(controller: Controller): ResHandler;
-export function createRoute<T extends Record<string, unknown>>(
-  deps: T,
-  cb: (d: T) => Controller,
-): ResHandler & { inject: (d: T) => ResHandler };
-export function createRoute<T extends Record<string, unknown>>(
-  controllerOrDeps: Controller | T,
-  cb?: (d: T) => Controller,
-) {
-  if (cb === undefined) return toHandler(controllerOrDeps as Controller);
-
-  return { ...toHandler(cb(controllerOrDeps as T)), inject: (d: T) => toHandler(cb(d)) };
-}
 
 const createResponse = (body: unknown, init: ResponseInit): Response => {
   if (

@@ -25,7 +25,7 @@ type ResHandler = {
   GET: (req: NextRequest, ctx: { params: Promise<ParamsType> }) => Promise<Response>;
 };
 
-const toHandler = (controller: Controller): ResHandler => {
+export const createRoute = (controller: Controller): ResHandler => {
   const middleware = (next: (
     req: NextRequest,
     ctx: { params: ParamsType },
@@ -57,20 +57,6 @@ const toHandler = (controller: Controller): ResHandler => {
     }),
   };
 };
-
-export function createRoute(controller: Controller): ResHandler;
-export function createRoute<T extends Record<string, unknown>>(
-  deps: T,
-  cb: (d: T) => Controller,
-): ResHandler & { inject: (d: T) => ResHandler };
-export function createRoute<T extends Record<string, unknown>>(
-  controllerOrDeps: Controller | T,
-  cb?: (d: T) => Controller,
-) {
-  if (cb === undefined) return toHandler(controllerOrDeps as Controller);
-
-  return { ...toHandler(cb(controllerOrDeps as T)), inject: (d: T) => toHandler(cb(d)) };
-}
 
 type FrourioError =
   | { status: 422; error: string; issues: { path: (string | number)[]; message: string }[] }

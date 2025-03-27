@@ -1,7 +1,9 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { additionsValidator as ancestorAdditionsValidator } from '../../frourio.server';
+import { middleware as ancestorMiddleweare } from '../../route';
+import { contextSchema as ancestorContextSchema } from '../../frourio.server';
+import type { ContextType as AncestorContextType } from '../../frourio.server';
 import { frourioSpec } from './frourio';
 import type { GET } from './route';
 
@@ -25,14 +27,14 @@ export const paramsValidator = z.object({ 'slug': paramToNumArr(frourioSpec.para
 
 type ParamsType = z.infer<typeof paramsValidator>;
 
-export const additionsValidator = ancestorAdditionsValidator;
-
-type AdditionsType = z.infer<typeof additionsValidator>;
-
 type SpecType = typeof frourioSpec;
 
+const contextSchema = ancestorContextSchema;
+
+type ContextType = z.infer<typeof contextSchema>;
+
 type Controller = {
-  get: (req: AdditionsType & {
+  get: (req: ContextType & {
     params: ParamsType;
   }) => Promise<
     | {
@@ -42,29 +44,33 @@ type Controller = {
   >;
 };
 
-type FrourioError =
-  | { status: 422; error: string; issues: { path: (string | number)[]; message: string }[] }
-  | { status: 500; error: string; issues?: undefined };
-
 type ResHandler = {
-  GET: (
-    req: NextRequest,
-    ctx: { params: Promise<ParamsType> },
-  ) => Promise<Response>;
+  GET: (req: NextRequest, ctx: { params: Promise<ParamsType> }) => Promise<Response>;
 };
 
 const toHandler = (controller: Controller): ResHandler => {
+  const middleware = (next: (
+    req: NextRequest,
+    ctx: ContextType & { params: ParamsType },
+  ) => Promise<Response>) => async (originalReq: NextRequest, originalCtx: { params: Promise<ParamsType> }): Promise<Response> => {
+    const params = paramsValidator.safeParse(await originalCtx.params);
+
+    if (params.error) return createReqErr(params.error);
+
+    return ancestorMiddleweare(async (req, context) => {
+      const ctx = ancestorContextSchema.safeParse(context);
+
+      if (ctx.error) return createReqErr(ctx.error);
+    
+
+      return await next(req, { ...ctx.data,params: params.data })
+       
+    })(originalReq, originalCtx)
+  };
+
   return {
-    GET: async (req, ctx) => {
-      const params = paramsValidator.safeParse(await ctx.params);
-
-      if (params.error) return createReqErr(params.error);
-
-      const additionals = additionsValidator.safeParse(ctx);
-
-      if (additionals.error) return createReqErr(additionals.error);
-
-      const res = await controller.get({ ...additionals.data, params: params.data });
+    GET: middleware(async (req, ctx) => {
+      const res = await controller.get({ ...ctx });
 
       switch (res.status) {
         case 200: {
@@ -77,7 +83,7 @@ const toHandler = (controller: Controller): ResHandler => {
         default:
           throw new Error(res.status satisfies never);
       }
-    },
+    }),
   };
 };
 
@@ -112,6 +118,10 @@ const createResponse = (body: unknown, init: ResponseInit): Response => {
 
   return NextResponse.json(body, init);
 };
+
+type FrourioError =
+  | { status: 422; error: string; issues: { path: (string | number)[]; message: string }[] }
+  | { status: 500; error: string; issues?: undefined };
 
 const createReqErr = (err: z.ZodError) =>
   NextResponse.json<FrourioError>(

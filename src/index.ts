@@ -10,7 +10,10 @@ type FrourioResponse = {
   };
 };
 
-export type FrourioSpec = { param?: z.ZodTypeAny; additionalContext?: z.ZodTypeAny } & {
+export type FrourioSpec = {
+  param?: z.ZodTypeAny;
+  middleware?: true | { context: z.ZodTypeAny };
+} & {
   [method in 'get' | 'head' | 'options']?: {
     headers?: z.ZodTypeAny;
     query?: z.ZodTypeAny;

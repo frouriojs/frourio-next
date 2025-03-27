@@ -31,7 +31,7 @@ export const generate = async (appDir: string): Promise<void> => {
   await writeDefaults(frourioDirs);
 
   const { program, checker } = initTSC(frourioDirs);
-  const havingCtxDirDict: Record<string, boolean | undefined> = {};
+  const middlewareDict: Record<string, { hasCtx: boolean } | undefined> = {};
   const data = frourioDirs
     .map((dirPath) => {
       const source = program.getSourceFile(path.posix.join(dirPath, FROURIO_FILE));
@@ -47,16 +47,20 @@ export const generate = async (appDir: string): Promise<void> => {
         const specProps = checker.getTypeAtLocation(decl.initializer).getProperties();
         const paramSymbol = specProps.find((t) => t.getName() === 'param');
         const paramZodType = paramSymbol ? inferZodType(checker, paramSymbol) : null;
-        const hasCtx = specProps.some((t) => t.getName() === 'additionalContext');
+        const middlewareSymbol = specProps.find((t) => t.getName() === 'middleware');
+        const middlewareType =
+          middlewareSymbol?.valueDeclaration &&
+          checker.getTypeOfSymbolAtLocation(middlewareSymbol, middlewareSymbol.valueDeclaration);
 
-        havingCtxDirDict[dirPath] = hasCtx;
+        middlewareDict[dirPath] = middlewareType && {
+          hasCtx: checker.typeToString(middlewareType) !== 'true',
+        };
 
         return {
           param: paramZodType ? getValidatorOption(checker, paramZodType) : null,
-          hasCtx,
           methods: specProps
             .map((t): ServerMethod | null => {
-              if (t.getName() === 'param' || t.getName() === 'additionalContext') return null;
+              if (t.getName() === 'param' || t.getName() === 'middleware') return null;
 
               const type =
                 t.valueDeclaration && checker.getTypeOfSymbolAtLocation(t, t.valueDeclaration);
@@ -109,8 +113,12 @@ export const generate = async (appDir: string): Promise<void> => {
         };
       });
 
-      const ancestorCtx = frourioDirs.findLast(
-        (dir) => dir !== dirPath && dirPath.includes(dir) && havingCtxDirDict[dir],
+      const ancestorMiddleware = frourioDirs.findLast(
+        (dir) => dir !== dirPath && dirPath.includes(dir) && middlewareDict[dir],
+      );
+
+      const ancestorMiddlewareCtx = frourioDirs.findLast(
+        (dir) => dir !== dirPath && dirPath.includes(dir) && middlewareDict[dir]?.hasCtx,
       );
 
       return (
@@ -119,13 +127,13 @@ export const generate = async (appDir: string): Promise<void> => {
           text: serverData(
             pathToParams(frourioDirs, dirPath, spec.param),
             {
-              ancestorFrourio:
-                ancestorCtx &&
-                path.posix.join(
-                  path.posix.relative(dirPath, ancestorCtx),
-                  SERVER_FILE.replace('.ts', ''),
-                ),
-              hasCurrentCtx: !!havingCtxDirDict[dirPath],
+              ancestor: ancestorMiddleware
+                ? path.posix.relative(dirPath, ancestorMiddleware)
+                : undefined,
+              ancestorCtx: ancestorMiddlewareCtx
+                ? path.posix.relative(dirPath, ancestorMiddlewareCtx)
+                : undefined,
+              current: middlewareDict[dirPath],
             },
             spec.methods,
           ),
@@ -139,22 +147,46 @@ export const generate = async (appDir: string): Promise<void> => {
 
 const serverData = (
   params: ParamsInfo | undefined,
-  ctxInfo: { ancestorFrourio: string | undefined; hasCurrentCtx: boolean },
+  middleware: {
+    ancestor: string | undefined;
+    ancestorCtx: string | undefined;
+    current: { hasCtx: boolean } | undefined;
+  },
   methods: ServerMethod[],
 ) => `import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import ${params ? '' : 'type '}{ z } from 'zod';${params?.ancestorFrourio ? `\nimport { paramsValidator as ancestorParamsValidator } from '${params.ancestorFrourio}';` : ''}${ctxInfo.ancestorFrourio ? `\nimport { additionsValidator as ancestorAdditionsValidator } from '${ctxInfo.ancestorFrourio}';` : ''}
+import ${params ? '' : 'type '}{ z } from 'zod';${params?.ancestorFrourio ? `\nimport { paramsValidator as ancestorParamsValidator } from '${params.ancestorFrourio}';` : ''}${
+  middleware.ancestor
+    ? `\nimport { middleware as ancestorMiddleweare } from '${middleware.ancestor}/route';`
+    : ''
+}${
+  middleware.ancestorCtx
+    ? `\nimport { contextSchema as ancestorContextSchema } from '${middleware.ancestorCtx}/${SERVER_FILE.replace('.ts', '')}';`
+    : ''
+}${middleware.ancestorCtx ? `\nimport type { ContextType as AncestorContextType } from '${middleware.ancestorCtx}/${SERVER_FILE.replace('.ts', '')}';` : ''}
 import { frourioSpec } from './frourio';
-import type { ${methods.map((m) => m.name.toUpperCase()).join(', ')} } from './route';
-${methods.length > 0 ? `\ntype RouteChecker = [${methods.map((m) => `typeof ${m.name.toUpperCase()}`).join(', ')}];` : ''}
-${params ? `\n${params.current ? `${params.current.param?.typeName !== 'number' ? '' : params.current.param.isArray ? paramToNumArrText : paramToNumText}` : ''}export const paramsValidator = ${paramsToText(params)};\n\ntype ParamsType = z.infer<typeof paramsValidator>;\n` : ''}${ctxInfo.ancestorFrourio || ctxInfo.hasCurrentCtx ? `\nexport const additionsValidator = ${ctxInfo.hasCurrentCtx ? 'frourioSpec.additionalContext' : ''}${ctxInfo.ancestorFrourio ? `${ctxInfo.hasCurrentCtx ? '.and(' : ''}ancestorAdditionsValidator${ctxInfo.hasCurrentCtx ? ')' : ''}` : ''};\n\ntype AdditionsType = z.infer<typeof additionsValidator>;\n` : ''}
-type SpecType = typeof frourioSpec;
+import type { ${[...methods.map((m) => m.name.toUpperCase()), ...(middleware.current ? ['middleware'] : [])].join(', ')} } from './route';
 
-type Controller = {
+type RouteChecker = [${[...methods.map((m) => `typeof ${m.name.toUpperCase()}`), ...(middleware.current ? ['typeof middleware'] : [])].join(', ')}];
+${params ? `\n${params.current ? `${params.current.param?.typeName !== 'number' ? '' : params.current.param.isArray ? paramToNumArrText : paramToNumText}` : ''}export const paramsValidator = ${paramsToText(params)};\n\ntype ParamsType = z.infer<typeof paramsValidator>;\n` : ''}
+type SpecType = typeof frourioSpec;
+${middleware.current?.hasCtx ? `\nexport const contextSchema = frourioSpec.middleware.context${middleware.ancestorCtx ? '.and(ancestorContextSchema)' : ''};\n\nexport type ContextType = z.infer<typeof contextSchema>;` : middleware.ancestorCtx ? '\nconst contextSchema = ancestorContextSchema;\n\ntype ContextType = z.infer<typeof contextSchema>;' : ''}
+${
+  middleware.current
+    ? `\ntype Middleware = (
+  req: NextRequest,
+  ctx: ${middleware.ancestorCtx || params ? [...(middleware.ancestorCtx ? ['AncestorContextType'] : []), ...(params ? ['{ params: ParamsType }'] : [])].join(' & ') : '{}'},
+  next: (
+    req: NextRequest,${middleware.ancestorCtx || middleware.current.hasCtx || params ? `\n    ctx: ${[...(middleware.ancestorCtx || middleware.current.hasCtx ? ['ContextType'] : []), ...(params ? ['{ params: ParamsType }'] : [])].join(' & ')}` : ''}
+  ) => Promise<Response>,
+) => Promise<Response>;\n`
+    : ''
+}
+type Controller = {${middleware.current ? '\n  middleware: Middleware;' : ''}
 ${methods
   .map(
     (m) =>
-      `  ${m.name}: (req: ${ctxInfo.ancestorFrourio || ctxInfo.hasCurrentCtx ? 'AdditionsType & ' : ''}{${params ? '\n    params: ParamsType;' : ''}${m.hasHeaders ? `\n    headers: z.infer<SpecType['${m.name}']['headers']>;` : ''}${m.query ? `\n    query: z.infer<SpecType['${m.name}']['query']>;` : ''}${m.body ? `\n    body: z.infer<SpecType['${m.name}']['body']>;` : ''}
+      `  ${m.name}: (req: ${middleware.ancestorCtx || middleware.current?.hasCtx ? 'ContextType & ' : ''}{${params ? '\n    params: ParamsType;' : ''}${m.hasHeaders ? `\n    headers: z.infer<SpecType['${m.name}']['headers']>;` : ''}${m.query ? `\n    query: z.infer<SpecType['${m.name}']['query']>;` : ''}${m.body ? `\n    body: z.infer<SpecType['${m.name}']['body']>;` : ''}
   }) => Promise<${
     m.res
       ? `\n${m.res
@@ -171,22 +203,69 @@ ${methods
   .join('\n')}
 };
 
-type FrourioError =
-  | { status: 422; error: string; issues: { path: (string | number)[]; message: string }[] }
-  | { status: 500; error: string; issues?: undefined };
-
-type ResHandler = {
+type ResHandler = {${
+  middleware.current
+    ? `\n  middleware: (next: (req: NextRequest${
+        middleware.current.hasCtx || params
+          ? `, ctx: ${[...(middleware.ancestor || middleware.current.hasCtx ? ['ContextType'] : []), ...(params ? ['{ params: ParamsType }'] : [])].join(' & ')}`
+          : ''
+      }) => Promise<Response>) => (originalReq: NextRequest, originalCtx: {${params ? `params: Promise<ParamsType>` : ''}}) => Promise<Response>;`
+    : ''
+}
 ${methods
   .map(
-    (m) => `  ${m.name.toUpperCase()}: (
-    req: NextRequest,${params ? '\n    ctx: { params: Promise<ParamsType> },' : ''}
-  ) => Promise<Response>;`,
+    (m) =>
+      `  ${m.name.toUpperCase()}: (req: NextRequest, ctx: {${params ? ' params: Promise<ParamsType> ' : ''}}) => Promise<Response>;`,
   )
   .join('\n')}
 };
 
 const toHandler = (controller: Controller): ResHandler => {
-  return {
+  const middleware = (next: (
+    req: NextRequest,
+${
+  params || middleware.ancestorCtx || middleware.current?.hasCtx
+    ? `    ctx: ${[...(middleware.ancestorCtx || middleware.current?.hasCtx ? ['ContextType'] : []), ...(params ? ['{ params: ParamsType }'] : [])].join(' & ')},\n`
+    : ''
+}  ) => Promise<Response>) => async (originalReq: NextRequest, originalCtx: {${params ? ' params: Promise<ParamsType> ' : ''}}): Promise<Response> => {
+${
+  params
+    ? `    const params = paramsValidator.safeParse(await originalCtx.params);
+
+    if (params.error) return createReqErr(params.error);\n`
+    : ''
+}
+    ${
+      middleware.ancestor
+        ? `return ancestorMiddleweare(async (req${middleware.ancestorCtx ? ', context' : ''}) => {
+${
+  middleware.ancestorCtx
+    ? `      const ctx = ancestorContextSchema.safeParse(context);
+
+      if (ctx.error) return createReqErr(ctx.error);`
+    : ''
+}`
+        : ''
+    }
+    ${
+      middleware.current
+        ? `return await controller.middleware(originalReq, { ${middleware.ancestorCtx ? '...ctx.data, ' : ''}${params ? ' params: params.data ' : ''}}, async (req${middleware.ancestorCtx || middleware.current.hasCtx ? ', context' : ''}) => {
+${
+  middleware.ancestorCtx || middleware.current.hasCtx
+    ? `      const ctx = contextSchema.safeParse(context);
+
+      if (ctx.error) return createReqErr(ctx.error);`
+    : ''
+}`
+        : ''
+    }
+
+      return await next(${middleware.ancestor || middleware.current ? 'req' : 'originalReq'}${params || middleware.ancestorCtx || middleware.current?.hasCtx ? `, { ${middleware.ancestorCtx || middleware.current?.hasCtx ? '...ctx.data,' : ''}${params ? 'params: params.data' : ''} }` : ''})
+       ${middleware.current ? '})' : ''}
+    ${middleware.ancestor ? '})(originalReq, originalCtx)' : ''}
+  };
+
+  return {${middleware.current ? '\n    middleware,' : ''}
 ${methods
   .map((m) => {
     const requests = [
@@ -229,8 +308,10 @@ ${m.body.data
       ],
     ].filter((r) => !!r);
 
-    return `    ${m.name.toUpperCase()}: async (req${params ? ', ctx' : ''}) => {${m.body?.isFormData ? '\n      const formData = await req.formData();' : ''}${requests.map((r) => `\n      const ${r[0]} = ${r[1]};\n\n      if (${r[0]}.error) return createReqErr(${r[0]}.error);\n`).join('')}${params ? '\n      const params = paramsValidator.safeParse(await ctx.params);\n\n      if (params.error) return createReqErr(params.error);\n' : ''}${ctxInfo.ancestorFrourio || ctxInfo.hasCurrentCtx ? '\n      const additionals = additionsValidator.safeParse(ctx);\n\n      if (additionals.error) return createReqErr(additionals.error);\n' : ''}
-      const res = await controller.${m.name}({ ${[...(ctxInfo.ancestorFrourio || ctxInfo.hasCurrentCtx ? ['...additionals.data'] : []), ...(params ? ['params: params.data'] : []), ...requests.map((r) => `${r[0]}: ${r[0]}.data`)].join(', ')} });
+    return `    ${m.name.toUpperCase()}: middleware(async (req${
+      params || middleware.ancestor || middleware.current ? ', ctx' : ''
+    }) => {${m.body?.isFormData ? '\n      const formData = await req.formData();' : ''}${requests.map((r) => `\n      const ${r[0]} = ${r[1]};\n\n      if (${r[0]}.error) return createReqErr(${r[0]}.error);\n`).join('')}
+      const res = await controller.${m.name}({ ${[...(middleware.ancestor || middleware.current?.hasCtx ? ['...ctx'] : []), ...requests.map((r) => `${r[0]}: ${r[0]}.data`)].join(', ')} });
 
       ${
         m.res
@@ -249,7 +330,7 @@ ${m.res
       }`
           : 'return res;'
       }
-    },`;
+    }),`;
   })
   .join('\n')}
   };
@@ -323,7 +404,11 @@ ${
 
 `
     : ''
-}const createReqErr = (err: z.ZodError) =>
+}type FrourioError =
+  | { status: 422; error: string; issues: { path: (string | number)[]; message: string }[] }
+  | { status: 500; error: string; issues?: undefined };
+
+const createReqErr = (err: z.ZodError) =>
   NextResponse.json<FrourioError>(
     {
       status: 422,

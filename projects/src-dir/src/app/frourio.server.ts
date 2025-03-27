@@ -8,6 +8,7 @@ type RouteChecker = [typeof POST];
 
 type SpecType = typeof frourioSpec;
 
+
 type Controller = {
   post: (req: {
     body: z.infer<SpecType['post']['body']>;
@@ -19,19 +20,25 @@ type Controller = {
   >;
 };
 
-type FrourioError =
-  | { status: 422; error: string; issues: { path: (string | number)[]; message: string }[] }
-  | { status: 500; error: string; issues?: undefined };
-
 type ResHandler = {
-  POST: (
-    req: NextRequest,
-  ) => Promise<Response>;
+  POST: (req: NextRequest, ctx: {}) => Promise<Response>;
 };
 
 const toHandler = (controller: Controller): ResHandler => {
+  const middleware = (next: (
+    req: NextRequest,
+  ) => Promise<Response>) => async (originalReq: NextRequest, originalCtx: {}): Promise<Response> => {
+
+    
+    
+
+      return await next(originalReq)
+       
+    
+  };
+
   return {
-    POST: async (req) => {
+    POST: middleware(async (req) => {
       const formData = await req.formData();
       const body = frourioSpec.post.body.safeParse(
         Object.fromEntries(
@@ -71,7 +78,7 @@ const toHandler = (controller: Controller): ResHandler => {
         default:
           throw new Error(res.status satisfies never);
       }
-    },
+    }),
   };
 };
 
@@ -106,6 +113,10 @@ const createResponse = (body: unknown, init: ResponseInit): Response => {
 
   return NextResponse.json(body, init);
 };
+
+type FrourioError =
+  | { status: 422; error: string; issues: { path: (string | number)[]; message: string }[] }
+  | { status: 500; error: string; issues?: undefined };
 
 const createReqErr = (err: z.ZodError) =>
   NextResponse.json<FrourioError>(

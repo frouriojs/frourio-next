@@ -8,6 +8,7 @@ type RouteChecker = [typeof GET, typeof POST];
 
 type SpecType = typeof frourioSpec;
 
+
 type Controller = {
   get: (req: {
     headers: z.infer<SpecType['get']['headers']>;
@@ -32,22 +33,26 @@ type Controller = {
   >;
 };
 
-type FrourioError =
-  | { status: 422; error: string; issues: { path: (string | number)[]; message: string }[] }
-  | { status: 500; error: string; issues?: undefined };
-
 type ResHandler = {
-  GET: (
-    req: NextRequest,
-  ) => Promise<Response>;
-  POST: (
-    req: NextRequest,
-  ) => Promise<Response>;
+  GET: (req: NextRequest, ctx: {}) => Promise<Response>;
+  POST: (req: NextRequest, ctx: {}) => Promise<Response>;
 };
 
 const toHandler = (controller: Controller): ResHandler => {
+  const middleware = (next: (
+    req: NextRequest,
+  ) => Promise<Response>) => async (originalReq: NextRequest, originalCtx: {}): Promise<Response> => {
+
+    
+    
+
+      return await next(originalReq)
+       
+    
+  };
+
   return {
-    GET: async (req) => {
+    GET: middleware(async (req) => {
       const headers = frourioSpec.get.headers.safeParse(Object.fromEntries(req.headers));
 
       if (headers.error) return createReqErr(headers.error);
@@ -74,8 +79,8 @@ const toHandler = (controller: Controller): ResHandler => {
         default:
           throw new Error(res satisfies never);
       }
-    },
-    POST: async (req) => {
+    }),
+    POST: middleware(async (req) => {
       const body = frourioSpec.post.body.safeParse(await req.json().catch(() => undefined));
 
       if (body.error) return createReqErr(body.error);
@@ -97,7 +102,7 @@ const toHandler = (controller: Controller): ResHandler => {
         default:
           throw new Error(res.status satisfies never);
       }
-    },
+    }),
   };
 };
 
@@ -132,6 +137,10 @@ const createResponse = (body: unknown, init: ResponseInit): Response => {
 
   return NextResponse.json(body, init);
 };
+
+type FrourioError =
+  | { status: 422; error: string; issues: { path: (string | number)[]; message: string }[] }
+  | { status: 500; error: string; issues?: undefined };
 
 const createReqErr = (err: z.ZodError) =>
   NextResponse.json<FrourioError>(

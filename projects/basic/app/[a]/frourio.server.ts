@@ -2,9 +2,9 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { frourioSpec } from './frourio';
-import type { GET } from './route';
+import type { GET, middleware } from './route';
 
-type RouteChecker = [typeof GET];
+type RouteChecker = [typeof GET, typeof middleware];
 
 const paramToNum = <T extends z.ZodTypeAny>(validator: T) =>
   z.string().or(z.number()).transform<z.infer<T>>((val, ctx) => {
@@ -20,14 +20,24 @@ export const paramsValidator = z.object({ 'a': paramToNum(frourioSpec.param) });
 
 type ParamsType = z.infer<typeof paramsValidator>;
 
-export const additionsValidator = frourioSpec.additionalContext;
-
-type AdditionsType = z.infer<typeof additionsValidator>;
-
 type SpecType = typeof frourioSpec;
 
+export const contextSchema = frourioSpec.middleware.context;
+
+export type ContextType = z.infer<typeof contextSchema>;
+
+type Middleware = (
+  req: NextRequest,
+  ctx: { params: ParamsType },
+  next: (
+    req: NextRequest,
+    ctx: ContextType & { params: ParamsType }
+  ) => Promise<Response>,
+) => Promise<Response>;
+
 type Controller = {
-  get: (req: AdditionsType & {
+  middleware: Middleware;
+  get: (req: ContextType & {
     params: ParamsType;
   }) => Promise<
     | {
@@ -37,29 +47,35 @@ type Controller = {
   >;
 };
 
-type FrourioError =
-  | { status: 422; error: string; issues: { path: (string | number)[]; message: string }[] }
-  | { status: 500; error: string; issues?: undefined };
-
 type ResHandler = {
-  GET: (
-    req: NextRequest,
-    ctx: { params: Promise<ParamsType> },
-  ) => Promise<Response>;
+  middleware: (next: (req: NextRequest, ctx: ContextType & { params: ParamsType }) => Promise<Response>) => (originalReq: NextRequest, originalCtx: {params: Promise<ParamsType>}) => Promise<Response>;
+  GET: (req: NextRequest, ctx: { params: Promise<ParamsType> }) => Promise<Response>;
 };
 
 const toHandler = (controller: Controller): ResHandler => {
+  const middleware = (next: (
+    req: NextRequest,
+    ctx: ContextType & { params: ParamsType },
+  ) => Promise<Response>) => async (originalReq: NextRequest, originalCtx: { params: Promise<ParamsType> }): Promise<Response> => {
+    const params = paramsValidator.safeParse(await originalCtx.params);
+
+    if (params.error) return createReqErr(params.error);
+
+    
+    return await controller.middleware(originalReq, {  params: params.data }, async (req, context) => {
+      const ctx = contextSchema.safeParse(context);
+
+      if (ctx.error) return createReqErr(ctx.error);
+
+      return await next(req, { ...ctx.data,params: params.data })
+       })
+    
+  };
+
   return {
-    GET: async (req, ctx) => {
-      const params = paramsValidator.safeParse(await ctx.params);
-
-      if (params.error) return createReqErr(params.error);
-
-      const additionals = additionsValidator.safeParse(ctx);
-
-      if (additionals.error) return createReqErr(additionals.error);
-
-      const res = await controller.get({ ...additionals.data, params: params.data });
+    middleware,
+    GET: middleware(async (req, ctx) => {
+      const res = await controller.get({ ...ctx });
 
       switch (res.status) {
         case 200: {
@@ -72,7 +88,7 @@ const toHandler = (controller: Controller): ResHandler => {
         default:
           throw new Error(res.status satisfies never);
       }
-    },
+    }),
   };
 };
 
@@ -107,6 +123,10 @@ const createResponse = (body: unknown, init: ResponseInit): Response => {
 
   return NextResponse.json(body, init);
 };
+
+type FrourioError =
+  | { status: 422; error: string; issues: { path: (string | number)[]; message: string }[] }
+  | { status: 500; error: string; issues?: undefined };
 
 const createReqErr = (err: z.ZodError) =>
   NextResponse.json<FrourioError>(

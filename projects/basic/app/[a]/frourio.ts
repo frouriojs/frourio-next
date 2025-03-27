@@ -3,7 +3,9 @@ import { z } from 'zod';
 
 export const frourioSpec = {
   param: z.number(),
-  additionalContext: z.object({ user: z.object({ name: z.string() })}),
+  middleware: {
+    context: z.object({ user: z.object({ name: z.string() })}),
+  },
   get: {
     res: { 200: { body: z.number() } },
   },

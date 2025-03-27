@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { middleware as ancestorMiddleweare } from '../../route';
 import { frourioSpec } from './frourio';
 import type { GET } from './route';
 
@@ -12,6 +13,7 @@ type ParamsType = z.infer<typeof paramsValidator>;
 
 type SpecType = typeof frourioSpec;
 
+
 type Controller = {
   get: (req: {
     params: ParamsType;
@@ -19,34 +21,40 @@ type Controller = {
   }) => Promise<Response>;
 };
 
-type FrourioError =
-  | { status: 422; error: string; issues: { path: (string | number)[]; message: string }[] }
-  | { status: 500; error: string; issues?: undefined };
-
 type ResHandler = {
-  GET: (
-    req: NextRequest,
-    ctx: { params: Promise<ParamsType> },
-  ) => Promise<Response>;
+  GET: (req: NextRequest, ctx: { params: Promise<ParamsType> }) => Promise<Response>;
 };
 
 const toHandler = (controller: Controller): ResHandler => {
+  const middleware = (next: (
+    req: NextRequest,
+    ctx: { params: ParamsType },
+  ) => Promise<Response>) => async (originalReq: NextRequest, originalCtx: { params: Promise<ParamsType> }): Promise<Response> => {
+    const params = paramsValidator.safeParse(await originalCtx.params);
+
+    if (params.error) return createReqErr(params.error);
+
+    return ancestorMiddleweare(async (req) => {
+
+    
+
+      return await next(req, { params: params.data })
+       
+    })(originalReq, originalCtx)
+  };
+
   return {
-    GET: async (req, ctx) => {
+    GET: middleware(async (req, ctx) => {
       const query = frourioSpec.get.query.safeParse({
         'message': req.nextUrl.searchParams.get('message') ?? undefined,
       });
 
       if (query.error) return createReqErr(query.error);
 
-      const params = paramsValidator.safeParse(await ctx.params);
-
-      if (params.error) return createReqErr(params.error);
-
-      const res = await controller.get({ params: params.data, query: query.data });
+      const res = await controller.get({ ...ctx, query: query.data });
 
       return res;
-    },
+    }),
   };
 };
 
@@ -63,6 +71,10 @@ export function createRoute<T extends Record<string, unknown>>(
 
   return { ...toHandler(cb(controllerOrDeps as T)), inject: (d: T) => toHandler(cb(d)) };
 }
+
+type FrourioError =
+  | { status: 422; error: string; issues: { path: (string | number)[]; message: string }[] }
+  | { status: 500; error: string; issues?: undefined };
 
 const createReqErr = (err: z.ZodError) =>
   NextResponse.json<FrourioError>(

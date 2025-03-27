@@ -52,22 +52,23 @@ test('generate', async () => {
 }, 20000);
 
 test('base handler', async () => {
-  const res1 = await baseRoute.GET(new NextRequest('http://example.com/'));
+  const res1 = await baseRoute.GET(new NextRequest('http://example.com/'), {});
 
   expect(res1.status).toBe(422);
 
   const val = 'foo';
-  const res2 = await baseRoute.GET(new NextRequest(`http://example.com/?aa=${val}`));
+  const res2 = await baseRoute.GET(new NextRequest(`http://example.com/?aa=${val}`), {});
 
   await expect(res2.json()).resolves.toEqual({ bb: val });
 
-  const res3 = await baseRoute.POST(new NextRequest('http://example.com/'));
+  const res3 = await baseRoute.POST(new NextRequest('http://example.com/'), {});
 
   expect(res3.status).toBe(422);
 
   const body = { bb: 3 };
   const res4 = await baseRoute.POST(
     new NextRequest('http://example.com/', { method: 'POST', body: JSON.stringify(body) }),
+    {},
   );
 
   await expect(res4.json()).resolves.toEqual([body.bb]);
@@ -253,6 +254,7 @@ test('formData request', async () => {
 
       const res = await formReqRoute.POST(
         new NextRequest('http://example.com/', { method: 'POST', body: formData }),
+        {},
       );
 
       await expect(res.json()).resolves.toEqual({
@@ -325,6 +327,7 @@ test('formData request', async () => {
 
       const res = await formReqRoute.POST(
         new NextRequest('http://example.com/', { method: 'POST', body: formData }),
+        {},
       );
 
       expect(res.status).toBe(422);
@@ -388,6 +391,7 @@ test('formData response', async () => {
 
       const res = await formResRoute.POST(
         new NextRequest('http://example.com/', { method: 'POST', body: reqFormData }),
+        {},
       );
 
       const resFormData = await res.formData();

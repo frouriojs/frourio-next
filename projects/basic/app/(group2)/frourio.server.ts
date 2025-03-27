@@ -8,7 +8,6 @@ type RouteChecker = [typeof middleware];
 
 type SpecType = typeof frourioSpec;
 
-
 type Middleware = (
   req: NextRequest,
   ctx: {},

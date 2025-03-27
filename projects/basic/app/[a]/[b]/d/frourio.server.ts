@@ -4,7 +4,6 @@ import { z } from 'zod';
 import { paramsValidator as ancestorParamsValidator } from '../../frourio.server';
 import { middleware as ancestorMiddleweare } from '../../route';
 import { contextSchema as ancestorContextSchema } from '../../frourio.server';
-import type { ContextType as AncestorContextType } from '../../frourio.server';
 import { frourioSpec } from './frourio';
 import type { GET } from './route';
 

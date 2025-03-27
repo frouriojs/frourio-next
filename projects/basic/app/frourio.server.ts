@@ -8,7 +8,6 @@ type RouteChecker = [typeof GET, typeof POST];
 
 type SpecType = typeof frourioSpec;
 
-
 type Controller = {
   get: (req: {
     headers: z.infer<SpecType['get']['headers']>;

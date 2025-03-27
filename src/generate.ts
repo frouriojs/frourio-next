@@ -12,6 +12,18 @@ import { initTSC } from './initTSC';
 import { listFrourioDirs } from './listFrourioDirs';
 import type { ParamsInfo } from './paramsUtil';
 import { paramsToText, pathToParams } from './paramsUtil';
+import {
+  formDataToBoolArrText,
+  formDataToBoolText,
+  formDataToNumArrText,
+  formDataToNumText,
+  paramToNumArrText,
+  paramToNumText,
+  queryToBoolArrText,
+  queryToBoolText,
+  queryToNumArrText,
+  queryToNumText,
+} from './serverDataChunks';
 import { writeDefaults } from './writeDefaults';
 
 type ServerMethod = {
@@ -153,36 +165,39 @@ const serverData = (
     current: { hasCtx: boolean } | undefined;
   },
   methods: ServerMethod[],
-) => `import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
-import ${params ? '' : 'type '}{ z } from 'zod';${params?.ancestorFrourio ? `\nimport { paramsValidator as ancestorParamsValidator } from '${params.ancestorFrourio}';` : ''}${
-  middleware.ancestor
-    ? `\nimport { middleware as ancestorMiddleweare } from '${middleware.ancestor}/route';`
-    : ''
-}${
-  middleware.ancestorCtx
-    ? `\nimport { contextSchema as ancestorContextSchema } from '${middleware.ancestorCtx}/${SERVER_FILE.replace('.ts', '')}';`
-    : ''
-}${middleware.ancestorCtx ? `\nimport type { ContextType as AncestorContextType } from '${middleware.ancestorCtx}/${SERVER_FILE.replace('.ts', '')}';` : ''}
-import { frourioSpec } from './frourio';
-import type { ${[...methods.map((m) => m.name.toUpperCase()), ...(middleware.current ? ['middleware'] : [])].join(', ')} } from './route';
+) => {
+  const imports: string[] = [
+    "import type { NextRequest } from 'next/server'",
+    "import { NextResponse } from 'next/server'",
+    `import ${params ? '' : 'type '}{ z } from 'zod'`,
+    params?.ancestorFrourio &&
+      `import { paramsValidator as ancestorParamsValidator } from '${params.ancestorFrourio}'`,
+    middleware.ancestor &&
+      `import { middleware as ancestorMiddleweare } from '${middleware.ancestor}/route'`,
+    middleware.ancestorCtx &&
+      `import { contextSchema as ancestorContextSchema${middleware.current ? ', type ContextType as AncestorContextType' : ''} } from '${middleware.ancestorCtx}/${SERVER_FILE.replace('.ts', '')}'`,
+    "import { frourioSpec } from './frourio'",
+    `import type { ${[...methods.map((m) => m.name.toUpperCase()), ...(middleware.current ? ['middleware'] : [])].join(', ')} } from './route'`,
+  ].filter((txt) => txt !== undefined);
 
-type RouteChecker = [${[...methods.map((m) => `typeof ${m.name.toUpperCase()}`), ...(middleware.current ? ['typeof middleware'] : [])].join(', ')}];
-${params ? `\n${params.current ? `${params.current.param?.typeName !== 'number' ? '' : params.current.param.isArray ? paramToNumArrText : paramToNumText}` : ''}export const paramsValidator = ${paramsToText(params)};\n\ntype ParamsType = z.infer<typeof paramsValidator>;\n` : ''}
-type SpecType = typeof frourioSpec;
-${middleware.current?.hasCtx ? `\nexport const contextSchema = frourioSpec.middleware.context${middleware.ancestorCtx ? '.and(ancestorContextSchema)' : ''};\n\nexport type ContextType = z.infer<typeof contextSchema>;` : middleware.ancestorCtx ? '\nconst contextSchema = ancestorContextSchema;\n\ntype ContextType = z.infer<typeof contextSchema>;' : ''}
-${
-  middleware.current
-    ? `\ntype Middleware = (
+  const chunks: string[] = [
+    `type RouteChecker = [${[...methods.map((m) => `typeof ${m.name.toUpperCase()}`), ...(middleware.current ? ['typeof middleware'] : [])].join(', ')}]`,
+    params &&
+      `${params.current ? `${params.current.param?.typeName !== 'number' ? '' : params.current.param.isArray ? paramToNumArrText : paramToNumText}` : ''}export const paramsValidator = ${paramsToText(params)};\n\ntype ParamsType = z.infer<typeof paramsValidator>`,
+    'type SpecType = typeof frourioSpec',
+    middleware.current?.hasCtx
+      ? `export const contextSchema = frourioSpec.middleware.context${middleware.ancestorCtx ? '.and(ancestorContextSchema)' : ''};\n\nexport type ContextType = z.infer<typeof contextSchema>`
+      : middleware.ancestorCtx &&
+        'const contextSchema = ancestorContextSchema;\n\ntype ContextType = z.infer<typeof contextSchema>',
+    middleware.current &&
+      `type Middleware = (
   req: NextRequest,
   ctx: ${middleware.ancestorCtx || params ? [...(middleware.ancestorCtx ? ['AncestorContextType'] : []), ...(params ? ['{ params: ParamsType }'] : [])].join(' & ') : '{}'},
   next: (
     req: NextRequest,${middleware.ancestorCtx || middleware.current.hasCtx || params ? `\n    ctx: ${[...(middleware.ancestorCtx || middleware.current.hasCtx ? ['ContextType'] : []), ...(params ? ['{ params: ParamsType }'] : [])].join(' & ')}` : ''}
   ) => Promise<Response>,
-) => Promise<Response>;\n`
-    : ''
-}
-type Controller = {${middleware.current ? '\n  middleware: Middleware;' : ''}
+) => Promise<Response>`,
+    `type Controller = {${middleware.current ? '\n  middleware: Middleware;' : ''}
 ${methods
   .map(
     (m) =>
@@ -201,26 +216,24 @@ ${methods
   }>;`,
   )
   .join('\n')}
-};
-
-type ResHandler = {${
-  middleware.current
-    ? `\n  middleware: (next: (req: NextRequest${
-        middleware.current.hasCtx || params
-          ? `, ctx: ${[...(middleware.ancestor || middleware.current.hasCtx ? ['ContextType'] : []), ...(params ? ['{ params: ParamsType }'] : [])].join(' & ')}`
-          : ''
-      }) => Promise<Response>) => (originalReq: NextRequest, originalCtx: {${params ? `params: Promise<ParamsType>` : ''}}) => Promise<Response>;`
-    : ''
-}
+}`,
+    `type ResHandler = {${
+      middleware.current
+        ? `\n  middleware: (next: (req: NextRequest${
+            middleware.current.hasCtx || params
+              ? `, ctx: ${[...(middleware.ancestor || middleware.current.hasCtx ? ['ContextType'] : []), ...(params ? ['{ params: ParamsType }'] : [])].join(' & ')}`
+              : ''
+          }) => Promise<Response>) => (originalReq: NextRequest, originalCtx: {${params ? `params: Promise<ParamsType>` : ''}}) => Promise<Response>;`
+        : ''
+    }
 ${methods
   .map(
     (m) =>
       `  ${m.name.toUpperCase()}: (req: NextRequest, ctx: {${params ? ' params: Promise<ParamsType> ' : ''}}) => Promise<Response>;`,
   )
   .join('\n')}
-};
-
-export const createRoute = (controller: Controller): ResHandler => {
+}`,
+    `export const createRoute = (controller: Controller): ResHandler => {
   const middleware = (next: (
     req: NextRequest,
 ${
@@ -334,11 +347,9 @@ ${m.res
   })
   .join('\n')}
   };
-};
-
-${
-  methods.some((m) => m.res?.some((r) => r.body && !r.body.isFormData))
-    ? `const createResponse = (body: unknown, init: ResponseInit): Response => {
+}`,
+    methods.some((m) => m.res?.some((r) => r.body && !r.body.isFormData)) &&
+      `const createResponse = (body: unknown, init: ResponseInit): Response => {
   if (
     ArrayBuffer.isView(body) ||
     body === undefined ||
@@ -354,13 +365,9 @@ ${
   }
 
   return NextResponse.json(body, init);
-};
-
-`
-    : ''
-}${
-  methods.some((m) => m.res?.some((r) => r.body?.isFormData))
-    ? `const createFormDataResponse = (
+}`,
+    methods.some((m) => m.res?.some((r) => r.body?.isFormData)) &&
+      `const createFormDataResponse = (
   body: Record<
     string,
     ((string | number | boolean | File)[] | string | number | boolean | File) | undefined
@@ -386,11 +393,33 @@ ${
   });
 
   return new NextResponse(formData, init);
-};
+}`,
+  ].filter((txt) => txt !== undefined && txt !== false);
 
-`
-    : ''
-}type FrourioError =
+  const suffixes: string[] = [
+    methods.some((m) => m.query?.some((q) => q.typeName === 'number' && !q.isArray)) &&
+      queryToNumText,
+    methods.some((m) => m.query?.some((q) => q.typeName === 'number' && q.isArray)) &&
+      queryToNumArrText,
+    methods.some((m) => m.query?.some((q) => q.typeName === 'boolean' && !q.isArray)) &&
+      queryToBoolText,
+    methods.some((m) => m.query?.some((q) => q.typeName === 'boolean' && q.isArray)) &&
+      queryToBoolArrText,
+    methods.some((m) => m.body?.data?.some((b) => b.typeName === 'number' && !b.isArray)) &&
+      formDataToNumText,
+    methods.some((m) => m.body?.data?.some((b) => b.typeName === 'number' && b.isArray)) &&
+      formDataToNumArrText,
+    methods.some((m) => m.body?.data?.some((b) => b.typeName === 'boolean' && !b.isArray)) &&
+      formDataToBoolText,
+    methods.some((m) => m.body?.data?.some((b) => b.typeName === 'boolean' && b.isArray)) &&
+      formDataToBoolArrText,
+  ].filter((txt) => txt !== undefined && txt !== false);
+
+  return `${imports.join(';\n')};
+
+${chunks.join(';\n\n')};
+
+type FrourioError =
   | { status: 422; error: string; issues: { path: (string | number)[]; message: string }[] }
   | { status: 500; error: string; issues?: undefined };
 
@@ -409,86 +438,5 @@ const createResErr = () =>
     { status: 500, error: 'Internal Server Error' },
     { status: 500 },
   );
-${methods.some((m) => m.query?.some((q) => q.typeName === 'number' && !q.isArray)) ? queryToNumText : ''}${methods.some((m) => m.query?.some((q) => q.typeName === 'number' && q.isArray)) ? queryToNumArrText : ''}${methods.some((m) => m.query?.some((q) => q.typeName === 'boolean' && !q.isArray)) ? queryToBoolText : ''}${methods.some((m) => m.query?.some((q) => q.typeName === 'boolean' && q.isArray)) ? queryToBoolArrText : ''}${methods.some((m) => m.body?.data?.some((b) => b.typeName === 'number' && !b.isArray)) ? formDataToNumText : ''}${methods.some((m) => m.body?.data?.some((b) => b.typeName === 'number' && b.isArray)) ? formDataToNumArrText : ''}${methods.some((m) => m.body?.data?.some((b) => b.typeName === 'boolean' && !b.isArray)) ? formDataToBoolText : ''}${methods.some((m) => m.body?.data?.some((b) => b.typeName === 'boolean' && b.isArray)) ? formDataToBoolArrText : ''}`;
-
-const paramToNumText = `const paramToNum = <T extends z.ZodTypeAny>(validator: T) =>
-  z.string().or(z.number()).transform<z.infer<T>>((val, ctx) => {
-    const numVal = Number(val);
-    const parsed = validator.safeParse(isNaN(numVal) ? val : numVal);
-
-    if (parsed.success) return parsed.data;
-
-    parsed.error.issues.forEach((issue) => ctx.addIssue(issue));
-  });
-
-`;
-
-const paramToNumArrText = `const paramToNumArr = <T extends z.ZodTypeAny>(validator: T) =>
-  z.array(z.string().or(z.number())).optional().transform<z.infer<T>>((val, ctx) => {
-    const numArr = val?.map((v) => {
-      const numVal = Number(v);
-
-      return isNaN(numVal) ? v : numVal;
-    });
-    const parsed = validator.safeParse(numArr);
-
-    if (parsed.success) return parsed.data;
-
-    parsed.error.issues.forEach((issue) => ctx.addIssue(issue));
-  });
-
-`;
-
-const queryToNumText = `
-const queryToNum = (val: string | undefined) => {
-  const num = Number(val);
-
-  return isNaN(num) ? val : num;
+${suffixes.length > 0 ? `\n${suffixes.join(';\n\n')};\n` : ''}`;
 };
-`;
-
-const queryToNumArrText = `
-const queryToNumArr = (val: string[]) =>
-  val.map((v) => {
-    const numVal = Number(v);
-
-    return isNaN(numVal) ? v : numVal;
-  });
-`;
-
-const queryToBoolText = `
-const queryToBool = (val: string | undefined) =>
-  val === 'true' ? true : val === 'false' ? false : val;
-`;
-
-const queryToBoolArrText = `
-const queryToBoolArr = (val: string[]) =>
-  val.map((v) => (v === 'true' ? true : v === 'false' ? false : v));
-`;
-
-const formDataToNumText = `
-const formDataToNum = (val: FormDataEntryValue | undefined) => {
-  const num = Number(val);
-
-  return isNaN(num) ? val : num;
-};
-`;
-
-const formDataToNumArrText = `
-const formDataToNumArr = (val: FormDataEntryValue[]) =>
-  val.map((v) => {
-    const numVal = Number(v);
-
-    return isNaN(numVal) ? v : numVal;
-  });
-`;
-
-const formDataToBoolText = `
-const formDataToBool = (val: FormDataEntryValue | undefined) =>
-  val === 'true' ? true : val === 'false' ? false : val;
-`;
-
-const formDataToBoolArrText = `
-const formDataToBoolArr = (val: FormDataEntryValue[]) =>
-  val.map((v) => (v === 'true' ? true : v === 'false' ? false : v));
-`;

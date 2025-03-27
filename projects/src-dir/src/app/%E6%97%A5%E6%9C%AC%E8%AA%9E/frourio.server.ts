@@ -8,7 +8,6 @@ type RouteChecker = [typeof POST];
 
 type SpecType = typeof frourioSpec;
 
-
 type Controller = {
   post: (req: {
     body: z.infer<SpecType['post']['body']>;

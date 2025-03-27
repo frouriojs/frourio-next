@@ -13,7 +13,6 @@ type ParamsType = z.infer<typeof paramsValidator>;
 
 type SpecType = typeof frourioSpec;
 
-
 type Controller = {
   get: (req: {
     params: ParamsType;

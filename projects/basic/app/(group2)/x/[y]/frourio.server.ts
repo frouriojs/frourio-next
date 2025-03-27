@@ -7,9 +7,9 @@ import type { GET } from './route';
 
 type RouteChecker = [typeof GET];
 
-export const paramsValidator = z.object({ 'y': z.string() });
+export const paramsSchema = z.object({ 'y': z.string() });
 
-type ParamsType = z.infer<typeof paramsValidator>;
+type ParamsType = z.infer<typeof paramsSchema>;
 
 type SpecType = typeof frourioSpec;
 
@@ -29,7 +29,7 @@ export const createRoute = (controller: Controller): ResHandler => {
     req: NextRequest,
     ctx: { params: ParamsType },
   ) => Promise<Response>) => async (originalReq: NextRequest, originalCtx: { params: Promise<ParamsType> }): Promise<Response> => {
-    const params = paramsValidator.safeParse(await originalCtx.params);
+    const params = paramsSchema.safeParse(await originalCtx.params);
 
     if (params.error) return createReqErr(params.error);
 

@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { paramsValidator as ancestorParamsValidator } from '../frourio.server';
+import { paramsSchema as ancestorParamsSchema } from '../frourio.server';
 import { middleware as ancestorMiddleweare } from '../../route';
 import { contextSchema as ancestorContextSchema } from '../../frourio.server';
 import { frourioSpec } from './frourio';
@@ -9,9 +9,9 @@ import type { GET } from './route';
 
 type RouteChecker = [typeof GET];
 
-export const paramsValidator = ancestorParamsValidator;
+export const paramsSchema = ancestorParamsSchema;
 
-type ParamsType = z.infer<typeof paramsValidator>;
+type ParamsType = z.infer<typeof paramsSchema>;
 
 type SpecType = typeof frourioSpec;
 
@@ -39,7 +39,7 @@ export const createRoute = (controller: Controller): ResHandler => {
     req: NextRequest,
     ctx: ContextType & { params: ParamsType },
   ) => Promise<Response>) => async (originalReq: NextRequest, originalCtx: { params: Promise<ParamsType> }): Promise<Response> => {
-    const params = paramsValidator.safeParse(await originalCtx.params);
+    const params = paramsSchema.safeParse(await originalCtx.params);
 
     if (params.error) return createReqErr(params.error);
 

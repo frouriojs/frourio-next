@@ -2,12 +2,7 @@ import { writeFile } from 'fs/promises';
 import path from 'path';
 import ts from 'typescript';
 import { FROURIO_FILE, SERVER_FILE } from './constants';
-import {
-  getPropOptions,
-  getValidatorOption,
-  inferZodType,
-  type PropOption,
-} from './getPropOptions';
+import { getPropOptions, getSchemaOption, inferZodType, type PropOption } from './getPropOptions';
 import { initTSC } from './initTSC';
 import { listFrourioDirs } from './listFrourioDirs';
 import type { ParamsInfo } from './paramsUtil';
@@ -69,7 +64,7 @@ export const generate = async (appDir: string): Promise<void> => {
         };
 
         return {
-          param: paramZodType ? getValidatorOption(checker, paramZodType) : null,
+          param: paramZodType ? getSchemaOption(checker, paramZodType) : null,
           methods: specProps
             .map((t): ServerMethod | null => {
               if (t.getName() === 'param' || t.getName() === 'middleware') return null;
@@ -171,7 +166,7 @@ const serverData = (
     "import { NextResponse } from 'next/server'",
     `import ${params ? '' : 'type '}{ z } from 'zod'`,
     params?.ancestorFrourio &&
-      `import { paramsValidator as ancestorParamsValidator } from '${params.ancestorFrourio}'`,
+      `import { paramsSchema as ancestorParamsSchema } from '${params.ancestorFrourio}'`,
     middleware.ancestor &&
       `import { middleware as ancestorMiddleweare } from '${middleware.ancestor}/route'`,
     middleware.ancestorCtx &&
@@ -183,7 +178,7 @@ const serverData = (
   const chunks: string[] = [
     `type RouteChecker = [${[...methods.map((m) => `typeof ${m.name.toUpperCase()}`), ...(middleware.current ? ['typeof middleware'] : [])].join(', ')}]`,
     params &&
-      `${params.current ? `${params.current.param?.typeName !== 'number' ? '' : params.current.param.isArray ? paramToNumArrText : paramToNumText}` : ''}export const paramsValidator = ${paramsToText(params)};\n\ntype ParamsType = z.infer<typeof paramsValidator>`,
+      `${params.current ? `${params.current.param?.typeName !== 'number' ? '' : params.current.param.isArray ? paramToNumArrText : paramToNumText}` : ''}export const paramsSchema = ${paramsToText(params)};\n\ntype ParamsType = z.infer<typeof paramsSchema>`,
     'type SpecType = typeof frourioSpec',
     middleware.current?.hasCtx
       ? `export const contextSchema = frourioSpec.middleware.context${middleware.ancestorCtx ? '.and(ancestorContextSchema)' : ''};\n\nexport type ContextType = z.infer<typeof contextSchema>`
@@ -243,7 +238,7 @@ ${
 }  ) => Promise<Response>) => async (originalReq: NextRequest, originalCtx: {${params ? ' params: Promise<ParamsType> ' : ''}}): Promise<Response> => {
 ${
   params
-    ? `    const params = paramsValidator.safeParse(await originalCtx.params);
+    ? `    const params = paramsSchema.safeParse(await originalCtx.params);
 
     if (params.error) return createReqErr(params.error);\n`
     : ''

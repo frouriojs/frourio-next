@@ -388,7 +388,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "number"
+                  "$ref": "#/components/schemas/1hyi9ch"
                 }
               }
             }
@@ -748,15 +748,30 @@
           "body"
         ]
       },
-      "1vu2plh": {
+      "5oeo02": {
         "type": "object",
         "properties": {
           "body": {
-            "type": "number"
+            "$ref": "#/components/schemas/1hyi9ch"
           }
         },
         "required": [
           "body"
+        ]
+      },
+      "1hyi9ch": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "param": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "name",
+          "param"
         ]
       },
       "rnl9wd": {

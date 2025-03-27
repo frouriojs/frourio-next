@@ -8,23 +8,23 @@ import type { GET } from './route';
 
 type RouteChecker = [typeof GET];
 
-const paramToNumArr = <T extends z.ZodTypeAny>(validator: T) =>
+const paramToNumArr = <T extends z.ZodTypeAny>(schema: T) =>
   z.array(z.string().or(z.number())).optional().transform<z.infer<T>>((val, ctx) => {
     const numArr = val?.map((v) => {
       const numVal = Number(v);
 
       return isNaN(numVal) ? v : numVal;
     });
-    const parsed = validator.safeParse(numArr);
+    const parsed = schema.safeParse(numArr);
 
     if (parsed.success) return parsed.data;
 
     parsed.error.issues.forEach((issue) => ctx.addIssue(issue));
   });
 
-export const paramsValidator = z.object({ 'slug': paramToNumArr(frourioSpec.param) });
+export const paramsSchema = z.object({ 'slug': paramToNumArr(frourioSpec.param) });
 
-type ParamsType = z.infer<typeof paramsValidator>;
+type ParamsType = z.infer<typeof paramsSchema>;
 
 type SpecType = typeof frourioSpec;
 
@@ -52,7 +52,7 @@ export const createRoute = (controller: Controller): ResHandler => {
     req: NextRequest,
     ctx: ContextType & { params: ParamsType },
   ) => Promise<Response>) => async (originalReq: NextRequest, originalCtx: { params: Promise<ParamsType> }): Promise<Response> => {
-    const params = paramsValidator.safeParse(await originalCtx.params);
+    const params = paramsSchema.safeParse(await originalCtx.params);
 
     if (params.error) return createReqErr(params.error);
 

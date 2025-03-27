@@ -6,19 +6,19 @@ import type { GET, middleware } from './route';
 
 type RouteChecker = [typeof GET, typeof middleware];
 
-const paramToNum = <T extends z.ZodTypeAny>(validator: T) =>
+const paramToNum = <T extends z.ZodTypeAny>(schema: T) =>
   z.string().or(z.number()).transform<z.infer<T>>((val, ctx) => {
     const numVal = Number(val);
-    const parsed = validator.safeParse(isNaN(numVal) ? val : numVal);
+    const parsed = schema.safeParse(isNaN(numVal) ? val : numVal);
 
     if (parsed.success) return parsed.data;
 
     parsed.error.issues.forEach((issue) => ctx.addIssue(issue));
   });
 
-export const paramsValidator = z.object({ 'a': paramToNum(frourioSpec.param) });
+export const paramsSchema = z.object({ 'a': paramToNum(frourioSpec.param) });
 
-type ParamsType = z.infer<typeof paramsValidator>;
+type ParamsType = z.infer<typeof paramsSchema>;
 
 type SpecType = typeof frourioSpec;
 
@@ -57,7 +57,7 @@ export const createRoute = (controller: Controller): ResHandler => {
     req: NextRequest,
     ctx: ContextType & { params: ParamsType },
   ) => Promise<Response>) => async (originalReq: NextRequest, originalCtx: { params: Promise<ParamsType> }): Promise<Response> => {
-    const params = paramsValidator.safeParse(await originalCtx.params);
+    const params = paramsSchema.safeParse(await originalCtx.params);
 
     if (params.error) return createReqErr(params.error);
 

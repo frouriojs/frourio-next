@@ -38,7 +38,7 @@ ${frourioDirs
 ${hasParamsDirs
   .map(
     (d, i) =>
-      `import type { paramsValidator as paramsValidator${i} } from '${path.posix.join(d, SERVER_FILE)}'`,
+      `import type { paramsSchema as paramsSchema${i} } from '${path.posix.join(d, SERVER_FILE)}'`,
   )
   .join('\n')}
 
@@ -120,7 +120,7 @@ type ToSpecType<T extends FrourioSpec> = {
 };
 
 type AllMethods = [${frourioDirs.map((_, i) => `ToSpecType<typeof frourioSpec${i}>`).join(', ')}]
-type AllParams = [${hasParamsDirs.map((_, i) => `z.infer<typeof paramsValidator${i}>`).join(', ')}]`;
+type AllParams = [${hasParamsDirs.map((_, i) => `z.infer<typeof paramsSchema${i}>`).join(', ')}]`;
 
   const typeFilePath = path.posix.join(params.appDir, `@openapi-${Date.now()}.ts`);
 

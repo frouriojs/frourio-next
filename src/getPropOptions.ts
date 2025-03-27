@@ -34,7 +34,7 @@ export const inferZodType = (checker: ts.TypeChecker, target: ts.Symbol): ts.Sym
   return type?.getProperty('_output') ?? null;
 };
 
-export const getValidatorOption = (checker: ts.TypeChecker, prop: ts.Symbol): PropOption | null =>
+export const getSchemaOption = (checker: ts.TypeChecker, prop: ts.Symbol): PropOption | null =>
   prop.valueDeclaration
     ? getPropOption(checker, checker.getTypeOfSymbolAtLocation(prop, prop.valueDeclaration), prop)
     : null;

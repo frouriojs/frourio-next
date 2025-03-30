@@ -3,9 +3,9 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { middleware as ancestorMiddleweare } from '../../route';
 import { frourioSpec } from './frourio';
-import type { GET } from './route';
+import type { GET, middleware } from './route';
 
-type RouteChecker = [typeof GET];
+type RouteChecker = [typeof GET, typeof middleware];
 
 export const paramsSchema = z.object({ 'y': z.string() });
 
@@ -13,7 +13,14 @@ type ParamsType = z.infer<typeof paramsSchema>;
 
 type SpecType = typeof frourioSpec;
 
+type Middleware = (
+  req: NextRequest,
+  ctx: { params: ParamsType },
+  next: (req: NextRequest) => Promise<Response>,
+) => Promise<Response>;
+
 type Controller = {
+  middleware: Middleware;
   get: (req: {
     params: ParamsType;
     query: z.infer<SpecType['get']['query']>;
@@ -21,6 +28,7 @@ type Controller = {
 };
 
 type ResHandler = {
+  middleware: (next: (req: NextRequest, ctx: { params: ParamsType }) => Promise<Response>) => (originalReq: NextRequest, originalCtx: {params: Promise<ParamsType>}) => Promise<Response>;
   GET: (req: NextRequest, ctx: { params: Promise<ParamsType> }) => Promise<Response>;
 };
 
@@ -35,14 +43,16 @@ export const createRoute = (controller: Controller): ResHandler => {
 
     return ancestorMiddleweare(async (req) => {
 
-    
+    return await controller.middleware(originalReq, {  params: params.data }, async (req) => {
+
 
       return await next(req, { params: params.data })
-       
+       })
     })(originalReq, originalCtx)
   };
 
   return {
+    middleware,
     GET: middleware(async (req, ctx) => {
       const query = frourioSpec.get.query.safeParse({
         'message': req.nextUrl.searchParams.get('message') ?? undefined,

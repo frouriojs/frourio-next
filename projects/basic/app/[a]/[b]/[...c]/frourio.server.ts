@@ -22,10 +22,7 @@ export type ContextType = z.infer<typeof contextSchema>;
 type Middleware = (
   req: NextRequest,
   ctx: AncestorContextType & { params: ParamsType },
-  next: (
-    req: NextRequest,
-    ctx: ContextType & { params: ParamsType }
-  ) => Promise<Response>,
+  next: (req: NextRequest, ctx: z.infer<typeof frourioSpec.middleware.context>) => Promise<Response>,
 ) => Promise<Response>;
 
 type Controller = {
@@ -54,16 +51,16 @@ export const createRoute = (controller: Controller): ResHandler => {
 
     if (params.error) return createReqErr(params.error);
 
-    return ancestorMiddleweare(async (req, context) => {
-      const ctx = ancestorContextSchema.safeParse(context);
+    return ancestorMiddleweare(async (req, ancestorContext) => {
+      const ancestorCtx = ancestorContextSchema.safeParse(ancestorContext);
+
+      if (ancestorCtx.error) return createReqErr(ancestorCtx.error);
+    return await controller.middleware(originalReq, { ...ancestorCtx.data,  params: params.data }, async (req, context) => {
+      const ctx = frourioSpec.middleware.context.safeParse(context);
 
       if (ctx.error) return createReqErr(ctx.error);
-    return await controller.middleware(originalReq, { ...ctx.data,  params: params.data }, async (req, context) => {
-      const ctx = contextSchema.safeParse(context);
 
-      if (ctx.error) return createReqErr(ctx.error);
-
-      return await next(req, { ...ctx.data,params: params.data })
+      return await next(req, { ...ancestorCtx.data,...ctx.data,params: params.data })
        })
     })(originalReq, originalCtx)
   };

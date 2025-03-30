@@ -38,20 +38,8 @@ type ResHandler = {
 };
 
 export const createRoute = (controller: Controller): ResHandler => {
-  const middleware = (next: (
-    req: NextRequest,
-  ) => Promise<Response>) => async (originalReq: NextRequest, originalCtx: {}): Promise<Response> => {
-
-    
-    
-
-      return await next(originalReq)
-       
-    
-  };
-
   return {
-    GET: middleware(async (req) => {
+    GET: async (req) => {
       const headers = frourioSpec.get.headers.safeParse(Object.fromEntries(req.headers));
 
       if (headers.error) return createReqErr(headers.error);
@@ -78,8 +66,8 @@ export const createRoute = (controller: Controller): ResHandler => {
         default:
           throw new Error(res satisfies never);
       }
-    }),
-    POST: middleware(async (req) => {
+    },
+    POST: async (req) => {
       const body = frourioSpec.post.body.safeParse(await req.json().catch(() => undefined));
 
       if (body.error) return createReqErr(body.error);
@@ -101,7 +89,7 @@ export const createRoute = (controller: Controller): ResHandler => {
         default:
           throw new Error(res.status satisfies never);
       }
-    }),
+    },
   };
 };
 

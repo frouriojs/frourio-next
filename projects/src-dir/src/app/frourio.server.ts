@@ -24,20 +24,8 @@ type ResHandler = {
 };
 
 export const createRoute = (controller: Controller): ResHandler => {
-  const middleware = (next: (
-    req: NextRequest,
-  ) => Promise<Response>) => async (originalReq: NextRequest, originalCtx: {}): Promise<Response> => {
-
-    
-    
-
-      return await next(originalReq)
-       
-    
-  };
-
   return {
-    POST: middleware(async (req) => {
+    POST: async (req) => {
       const formData = await req.formData();
       const body = frourioSpec.post.body.safeParse(
         Object.fromEntries(
@@ -77,7 +65,7 @@ export const createRoute = (controller: Controller): ResHandler => {
         default:
           throw new Error(res.status satisfies never);
       }
-    }),
+    },
   };
 };
 

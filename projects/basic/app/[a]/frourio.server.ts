@@ -29,10 +29,7 @@ export type ContextType = z.infer<typeof contextSchema>;
 type Middleware = (
   req: NextRequest,
   ctx: { params: ParamsType },
-  next: (
-    req: NextRequest,
-    ctx: ContextType & { params: ParamsType }
-  ) => Promise<Response>,
+  next: (req: NextRequest, ctx: z.infer<typeof frourioSpec.middleware.context>) => Promise<Response>,
 ) => Promise<Response>;
 
 type Controller = {
@@ -63,7 +60,7 @@ export const createRoute = (controller: Controller): ResHandler => {
 
     
     return await controller.middleware(originalReq, {  params: params.data }, async (req, context) => {
-      const ctx = contextSchema.safeParse(context);
+      const ctx = frourioSpec.middleware.context.safeParse(context);
 
       if (ctx.error) return createReqErr(ctx.error);
 

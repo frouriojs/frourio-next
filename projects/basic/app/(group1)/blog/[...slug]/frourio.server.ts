@@ -56,13 +56,13 @@ export const createRoute = (controller: Controller): ResHandler => {
 
     if (params.error) return createReqErr(params.error);
 
-    return ancestorMiddleweare(async (req, context) => {
-      const ctx = ancestorContextSchema.safeParse(context);
+    return ancestorMiddleweare(async (req, ancestorContext) => {
+      const ancestorCtx = ancestorContextSchema.safeParse(ancestorContext);
 
-      if (ctx.error) return createReqErr(ctx.error);
+      if (ancestorCtx.error) return createReqErr(ancestorCtx.error);
     
 
-      return await next(req, { ...ctx.data,params: params.data })
+      return await next(req, { ...ancestorCtx.data,params: params.data })
        
     })(originalReq, originalCtx)
   };

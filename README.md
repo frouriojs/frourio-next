@@ -276,14 +276,28 @@ export const { GET, middleware } = createRoute({
 });
 ```
 
+`app/api/articles/[articleId]/frourio.ts`
+
+```ts
+import type { FrourioSpec } from '@frourio/next';
+import { z } from 'zod';
+
+export const frourioSpec = {
+  middleware: true,
+  get: {
+    res: { 200: { body: z.object({ id: z.string(), userName: z.number() }) } },
+  },
+} satisfies FrourioSpec;
+```
+
 `app/api/articles/[articleId]/route.ts`
 
 ```ts
 import { createRoute } from './frourio.server';
 
 export const { GET, middleware } = createRoute({
-  middleware: async (req, ctx, next) => {
-    return next(req, ctx);
+  middleware: async (req, _ctx, next) => {
+    return next(req);
   },
   get: async ({ params, user }) => {
     return { status: 200, body: { id: params.articleId, userName: user.name } };

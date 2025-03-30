@@ -11,9 +11,7 @@ type SpecType = typeof frourioSpec;
 type Middleware = (
   req: NextRequest,
   ctx: {},
-  next: (
-    req: NextRequest,
-  ) => Promise<Response>,
+  next: (req: NextRequest) => Promise<Response>,
 ) => Promise<Response>;
 
 type Controller = {

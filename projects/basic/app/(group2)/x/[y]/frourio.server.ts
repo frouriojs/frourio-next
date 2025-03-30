@@ -14,53 +14,64 @@ type ParamsType = z.infer<typeof paramsSchema>;
 type SpecType = typeof frourioSpec;
 
 type Middleware = (
-  req: NextRequest,
-  ctx: { params: ParamsType },
-  next: (req: NextRequest) => Promise<Response>,
+  args: {
+    req: NextRequest,
+    params: ParamsType,
+    next: (req: NextRequest) => Promise<Response>,
+  },
 ) => Promise<Response>;
 
 type Controller = {
   middleware: Middleware;
-  get: (req: {
-    params: ParamsType;
-    query: z.infer<SpecType['get']['query']>;
-  }) => Promise<Response>;
+  get: (
+    req: {
+      params: ParamsType;
+      query: z.infer<SpecType['get']['query']>;
+    },
+  ) => Promise<Response>;
 };
 
 type ResHandler = {
-  middleware: (next: (req: NextRequest, ctx: { params: ParamsType }) => Promise<Response>) => (originalReq: NextRequest, originalCtx: {params: Promise<ParamsType>}) => Promise<Response>;
-  GET: (req: NextRequest, ctx: { params: Promise<ParamsType> }) => Promise<Response>;
+  middleware: (next: (
+    args: { req: NextRequest, params: ParamsType },
+  ) => Promise<Response>) => (originalReq: NextRequest, option: {params: Promise<ParamsType>}) => Promise<Response>;
+  GET: (req: NextRequest, option: { params: Promise<ParamsType> }) => Promise<Response>;
 };
 
 export const createRoute = (controller: Controller): ResHandler => {
   const middleware = (next: (
-    req: NextRequest,
-    ctx: { params: ParamsType },
-  ) => Promise<Response>) => async (originalReq: NextRequest, originalCtx: { params: Promise<ParamsType> }): Promise<Response> => {
-    const params = paramsSchema.safeParse(await originalCtx.params);
+    args: { req: NextRequest, params: ParamsType },
+  ) => Promise<Response>) => async (originalReq: NextRequest, option: { params: Promise<ParamsType> }): Promise<Response> => {
+    const params = paramsSchema.safeParse(await option.params);
 
     if (params.error) return createReqErr(params.error);
 
-    return ancestorMiddleweare(async (ancestorReq) => {
+    return ancestorMiddleweare(async (ancestorArgs) => {
 
-    return await controller.middleware(ancestorReq, {  params: params.data }, async (req) => {
+    return await controller.middleware(
+      {
+        req: ancestorArgs.req,
+        params: params.data,
+        next: async (req) => {
 
 
-      return await next(req, { params: params.data })
-       })
-    })(originalReq, originalCtx)
+      return await next({ req, params: params.data })
+      },
+      },
+    )
+    })(originalReq, option)
   };
 
   return {
     middleware,
-    GET: middleware(async (req, ctx) => {
+    GET: middleware(async ({ req, params }) => {
       const query = frourioSpec.get.query.safeParse({
         'message': req.nextUrl.searchParams.get('message') ?? undefined,
       });
 
       if (query.error) return createReqErr(query.error);
 
-      const res = await controller.get({ ...ctx, query: query.data });
+      const res = await controller.get({ query: query.data, params });
 
       return res;
     }),

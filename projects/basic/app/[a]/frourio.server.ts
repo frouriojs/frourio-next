@@ -27,16 +27,21 @@ export const contextSchema = frourioSpec.middleware.context;
 export type ContextType = z.infer<typeof contextSchema>;
 
 type Middleware = (
-  req: NextRequest,
-  ctx: { params: ParamsType },
-  next: (req: NextRequest, ctx: z.infer<typeof frourioSpec.middleware.context>) => Promise<Response>,
+  args: {
+    req: NextRequest,
+    params: ParamsType,
+    next: (req: NextRequest, ctx: z.infer<typeof frourioSpec.middleware.context>) => Promise<Response>,
+  },
 ) => Promise<Response>;
 
 type Controller = {
   middleware: Middleware;
-  get: (req: ContextType & {
-    params: ParamsType;
-  }) => Promise<
+  get: (
+    req: {
+      params: ParamsType;
+    },
+    ctx: ContextType,
+  ) => Promise<
     | {
         status: 200;
         body: z.infer<SpecType['get']['res'][200]['body']>;
@@ -45,34 +50,43 @@ type Controller = {
 };
 
 type ResHandler = {
-  middleware: (next: (req: NextRequest, ctx: ContextType & { params: ParamsType }) => Promise<Response>) => (originalReq: NextRequest, originalCtx: {params: Promise<ParamsType>}) => Promise<Response>;
-  GET: (req: NextRequest, ctx: { params: Promise<ParamsType> }) => Promise<Response>;
+  middleware: (next: (
+    args: { req: NextRequest, params: ParamsType },
+    ctx: ContextType,
+  ) => Promise<Response>) => (originalReq: NextRequest, option: {params: Promise<ParamsType>}) => Promise<Response>;
+  GET: (req: NextRequest, option: { params: Promise<ParamsType> }) => Promise<Response>;
 };
 
 export const createRoute = (controller: Controller): ResHandler => {
   const middleware = (next: (
-    req: NextRequest,
-    ctx: ContextType & { params: ParamsType },
-  ) => Promise<Response>) => async (originalReq: NextRequest, originalCtx: { params: Promise<ParamsType> }): Promise<Response> => {
-    const params = paramsSchema.safeParse(await originalCtx.params);
+    args: { req: NextRequest, params: ParamsType },
+    ctx: ContextType,
+  ) => Promise<Response>) => async (originalReq: NextRequest, option: { params: Promise<ParamsType> }): Promise<Response> => {
+    const params = paramsSchema.safeParse(await option.params);
 
     if (params.error) return createReqErr(params.error);
 
     
-    return await controller.middleware(originalReq, {  params: params.data }, async (req, context) => {
+    return await controller.middleware(
+      {
+        req: originalReq,
+        params: params.data,
+        next: async (req, context) => {
       const ctx = frourioSpec.middleware.context.safeParse(context);
 
       if (ctx.error) return createReqErr(ctx.error);
 
-      return await next(req, { ...ctx.data,params: params.data })
-       })
+      return await next({ req, params: params.data }, { ...ctx.data })
+      },
+      },
+    )
     
   };
 
   return {
     middleware,
-    GET: middleware(async (req, ctx) => {
-      const res = await controller.get({ ...ctx });
+    GET: middleware(async ({ req, params }, ctx) => {
+      const res = await controller.get({ params }, ctx);
 
       switch (res.status) {
         case 200: {

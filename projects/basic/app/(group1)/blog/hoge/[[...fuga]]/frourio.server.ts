@@ -19,9 +19,12 @@ const contextSchema = ancestorContextSchema;
 type ContextType = z.infer<typeof contextSchema>;
 
 type Controller = {
-  get: (req: ContextType & {
-    params: ParamsType;
-  }) => Promise<
+  get: (
+    req: {
+      params: ParamsType;
+    },
+    ctx: ContextType,
+  ) => Promise<
     | {
         status: 200;
         body: z.infer<SpecType['get']['res'][200]['body']>;
@@ -30,32 +33,32 @@ type Controller = {
 };
 
 type ResHandler = {
-  GET: (req: NextRequest, ctx: { params: Promise<ParamsType> }) => Promise<Response>;
+  GET: (req: NextRequest, option: { params: Promise<ParamsType> }) => Promise<Response>;
 };
 
 export const createRoute = (controller: Controller): ResHandler => {
   const middleware = (next: (
-    req: NextRequest,
-    ctx: ContextType & { params: ParamsType },
-  ) => Promise<Response>) => async (originalReq: NextRequest, originalCtx: { params: Promise<ParamsType> }): Promise<Response> => {
-    const params = paramsSchema.safeParse(await originalCtx.params);
+    args: { req: NextRequest, params: ParamsType },
+    ctx: ContextType,
+  ) => Promise<Response>) => async (originalReq: NextRequest, option: { params: Promise<ParamsType> }): Promise<Response> => {
+    const params = paramsSchema.safeParse(await option.params);
 
     if (params.error) return createReqErr(params.error);
 
-    return ancestorMiddleweare(async (ancestorReq, ancestorContext) => {
+    return ancestorMiddleweare(async (ancestorArgs, ancestorContext) => {
       const ancestorCtx = ancestorContextSchema.safeParse(ancestorContext);
 
       if (ancestorCtx.error) return createReqErr(ancestorCtx.error);
     
 
-      return await next(ancestorReq, { ...ancestorCtx.data,params: params.data })
-       
-    })(originalReq, originalCtx)
+      return await next({ req: ancestorArgs.req, params: params.data }, { ...ancestorCtx.data, })
+      
+    })(originalReq, option)
   };
 
   return {
-    GET: middleware(async (req, ctx) => {
-      const res = await controller.get({ ...ctx });
+    GET: middleware(async ({ req, params }, ctx) => {
+      const res = await controller.get({ params }, ctx);
 
       switch (res.status) {
         case 200: {

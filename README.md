@@ -267,10 +267,10 @@ export const frourioSpec = {
 import { createRoute } from './frourio.server';
 
 export const { GET, middleware } = createRoute({
-  middleware: async (req, _ctx, next) => {
+  middleware: async ({ req, next }) => {
     return next(req, { user: { name: 'mario' } });
   },
-  get: async ({ user }) => {
+  get: async (_, { user }) => {
     return { status: 200, body: { userName: user.name } };
   },
 });
@@ -296,10 +296,10 @@ export const frourioSpec = {
 import { createRoute } from './frourio.server';
 
 export const { GET, middleware } = createRoute({
-  middleware: async (req, _ctx, next) => {
+  middleware: async ({ req, next }, { user }) => {
     return next(req);
   },
-  get: async ({ params, user }) => {
+  get: async ({ params }, { user }) => {
     return { status: 200, body: { id: params.articleId, userName: user.name } };
   },
 });

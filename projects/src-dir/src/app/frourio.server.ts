@@ -9,9 +9,11 @@ type RouteChecker = [typeof POST];
 type SpecType = typeof frourioSpec;
 
 type Controller = {
-  post: (req: {
-    body: z.infer<SpecType['post']['body']>;
-  }) => Promise<
+  post: (
+    req: {
+      body: z.infer<SpecType['post']['body']>;
+    },
+  ) => Promise<
     | {
         status: 200;
         body: z.infer<SpecType['post']['res'][200]['body']>;
@@ -20,7 +22,7 @@ type Controller = {
 };
 
 type ResHandler = {
-  POST: (req: NextRequest, ctx: {}) => Promise<Response>;
+  POST: (req: NextRequest, option: {}) => Promise<Response>;
 };
 
 export const createRoute = (controller: Controller): ResHandler => {

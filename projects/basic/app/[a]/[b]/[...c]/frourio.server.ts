@@ -20,16 +20,22 @@ export const contextSchema = frourioSpec.middleware.context.and(ancestorContextS
 export type ContextType = z.infer<typeof contextSchema>;
 
 type Middleware = (
-  req: NextRequest,
-  ctx: AncestorContextType & { params: ParamsType },
-  next: (req: NextRequest, ctx: z.infer<typeof frourioSpec.middleware.context>) => Promise<Response>,
+  args: {
+    req: NextRequest,
+    params: ParamsType,
+    next: (req: NextRequest, ctx: z.infer<typeof frourioSpec.middleware.context>) => Promise<Response>,
+  },
+  ctx: AncestorContextType,
 ) => Promise<Response>;
 
 type Controller = {
   middleware: Middleware;
-  post: (req: ContextType & {
-    params: ParamsType;
-  }) => Promise<
+  post: (
+    req: {
+      params: ParamsType;
+    },
+    ctx: ContextType,
+  ) => Promise<
     | {
         status: 200;
         body: z.infer<SpecType['post']['res'][200]['body']>;
@@ -38,37 +44,47 @@ type Controller = {
 };
 
 type ResHandler = {
-  middleware: (next: (req: NextRequest, ctx: ContextType & { params: ParamsType }) => Promise<Response>) => (originalReq: NextRequest, originalCtx: {params: Promise<ParamsType>}) => Promise<Response>;
-  POST: (req: NextRequest, ctx: { params: Promise<ParamsType> }) => Promise<Response>;
+  middleware: (next: (
+    args: { req: NextRequest, params: ParamsType },
+    ctx: ContextType,
+  ) => Promise<Response>) => (originalReq: NextRequest, option: {params: Promise<ParamsType>}) => Promise<Response>;
+  POST: (req: NextRequest, option: { params: Promise<ParamsType> }) => Promise<Response>;
 };
 
 export const createRoute = (controller: Controller): ResHandler => {
   const middleware = (next: (
-    req: NextRequest,
-    ctx: ContextType & { params: ParamsType },
-  ) => Promise<Response>) => async (originalReq: NextRequest, originalCtx: { params: Promise<ParamsType> }): Promise<Response> => {
-    const params = paramsSchema.safeParse(await originalCtx.params);
+    args: { req: NextRequest, params: ParamsType },
+    ctx: ContextType,
+  ) => Promise<Response>) => async (originalReq: NextRequest, option: { params: Promise<ParamsType> }): Promise<Response> => {
+    const params = paramsSchema.safeParse(await option.params);
 
     if (params.error) return createReqErr(params.error);
 
-    return ancestorMiddleweare(async (ancestorReq, ancestorContext) => {
+    return ancestorMiddleweare(async (ancestorArgs, ancestorContext) => {
       const ancestorCtx = ancestorContextSchema.safeParse(ancestorContext);
 
       if (ancestorCtx.error) return createReqErr(ancestorCtx.error);
-    return await controller.middleware(ancestorReq, { ...ancestorCtx.data,  params: params.data }, async (req, context) => {
+    return await controller.middleware(
+      {
+        req: ancestorArgs.req,
+        params: params.data,
+        next: async (req, context) => {
       const ctx = frourioSpec.middleware.context.safeParse(context);
 
       if (ctx.error) return createReqErr(ctx.error);
 
-      return await next(req, { ...ancestorCtx.data,...ctx.data,params: params.data })
-       })
-    })(originalReq, originalCtx)
+      return await next({ req, params: params.data }, { ...ancestorCtx.data,...ctx.data })
+      },
+      },
+      ancestorCtx.data,
+    )
+    })(originalReq, option)
   };
 
   return {
     middleware,
-    POST: middleware(async (req, ctx) => {
-      const res = await controller.post({ ...ctx });
+    POST: middleware(async ({ req, params }, ctx) => {
+      const res = await controller.post({ params }, ctx);
 
       switch (res.status) {
         case 200: {

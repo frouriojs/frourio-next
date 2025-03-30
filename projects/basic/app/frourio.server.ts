@@ -9,10 +9,12 @@ type RouteChecker = [typeof GET, typeof POST];
 type SpecType = typeof frourioSpec;
 
 type Controller = {
-  get: (req: {
-    headers: z.infer<SpecType['get']['headers']>;
-    query: z.infer<SpecType['get']['query']>;
-  }) => Promise<
+  get: (
+    req: {
+      headers: z.infer<SpecType['get']['headers']>;
+      query: z.infer<SpecType['get']['query']>;
+    },
+  ) => Promise<
     | {
         status: 200;
         body: z.infer<SpecType['get']['res'][200]['body']>;
@@ -21,9 +23,11 @@ type Controller = {
         status: 404;
       }
   >;
-  post: (req: {
-    body: z.infer<SpecType['post']['body']>;
-  }) => Promise<
+  post: (
+    req: {
+      body: z.infer<SpecType['post']['body']>;
+    },
+  ) => Promise<
     | {
         status: 201;
         headers: z.infer<SpecType['post']['res'][201]['headers']>;
@@ -33,8 +37,8 @@ type Controller = {
 };
 
 type ResHandler = {
-  GET: (req: NextRequest, ctx: {}) => Promise<Response>;
-  POST: (req: NextRequest, ctx: {}) => Promise<Response>;
+  GET: (req: NextRequest, option: {}) => Promise<Response>;
+  POST: (req: NextRequest, option: {}) => Promise<Response>;
 };
 
 export const createRoute = (controller: Controller): ResHandler => {

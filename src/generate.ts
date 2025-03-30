@@ -186,16 +186,19 @@ const serverData = (
         'const contextSchema = ancestorContextSchema;\n\ntype ContextType = z.infer<typeof contextSchema>',
     middleware.current &&
       `type Middleware = (
-  req: NextRequest,
-  ctx: ${middleware.ancestorCtx || params ? [...(middleware.ancestorCtx ? ['AncestorContextType'] : []), ...(params ? ['{ params: ParamsType }'] : [])].join(' & ') : '{}'},
-  next: (req: NextRequest${middleware.current.hasCtx ? ', ctx: z.infer<typeof frourioSpec.middleware.context>' : ''}) => Promise<Response>,
+  args: {
+    req: NextRequest,${params ? '\n    params: ParamsType,' : ''}
+    next: (req: NextRequest${middleware.current.hasCtx ? ', ctx: z.infer<typeof frourioSpec.middleware.context>' : ''}) => Promise<Response>,
+  },${middleware.ancestorCtx ? '\n  ctx: AncestorContextType,' : ''}
 ) => Promise<Response>`,
     `type Controller = {${middleware.current ? '\n  middleware: Middleware;' : ''}
 ${methods
   .map(
     (m) =>
-      `  ${m.name}: (req: ${middleware.ancestorCtx || middleware.current?.hasCtx ? 'ContextType & ' : ''}{${params ? '\n    params: ParamsType;' : ''}${m.hasHeaders ? `\n    headers: z.infer<SpecType['${m.name}']['headers']>;` : ''}${m.query ? `\n    query: z.infer<SpecType['${m.name}']['query']>;` : ''}${m.body ? `\n    body: z.infer<SpecType['${m.name}']['body']>;` : ''}
-  }) => Promise<${
+      `  ${m.name}: (
+    req: {${params ? '\n      params: ParamsType;' : ''}${m.hasHeaders ? `\n      headers: z.infer<SpecType['${m.name}']['headers']>;` : ''}${m.query ? `\n      query: z.infer<SpecType['${m.name}']['query']>;` : ''}${m.body ? `\n      body: z.infer<SpecType['${m.name}']['body']>;` : ''}
+    },${middleware.ancestorCtx || middleware.current?.hasCtx ? '\n    ctx: ContextType,' : ''}
+  ) => Promise<${
     m.res
       ? `\n${m.res
           .map(
@@ -212,17 +215,15 @@ ${methods
 }`,
     `type ResHandler = {${
       middleware.current
-        ? `\n  middleware: (next: (req: NextRequest${
-            middleware.current.hasCtx || params
-              ? `, ctx: ${[...(middleware.ancestorCtx || middleware.current.hasCtx ? ['ContextType'] : []), ...(params ? ['{ params: ParamsType }'] : [])].join(' & ')}`
-              : ''
-          }) => Promise<Response>) => (originalReq: NextRequest, originalCtx: {${params ? `params: Promise<ParamsType>` : ''}}) => Promise<Response>;`
+        ? `\n  middleware: (next: (
+    args: { req: NextRequest${params ? ', params: ParamsType' : ''} },${middleware.ancestorCtx || middleware.current.hasCtx ? '\n    ctx: ContextType,' : ''}
+  ) => Promise<Response>) => (originalReq: NextRequest, option: {${params ? `params: Promise<ParamsType>` : ''}}) => Promise<Response>;`
         : ''
     }
 ${methods
   .map(
     (m) =>
-      `  ${m.name.toUpperCase()}: (req: NextRequest, ctx: {${params ? ' params: Promise<ParamsType> ' : ''}}) => Promise<Response>;`,
+      `  ${m.name.toUpperCase()}: (req: NextRequest, option: {${params ? ' params: Promise<ParamsType> ' : ''}}) => Promise<Response>;`,
   )
   .join('\n')}
 }`,
@@ -230,22 +231,18 @@ ${methods
 ${
   middleware.ancestor || middleware.current || params
     ? `  const middleware = (next: (
-    req: NextRequest,
-${
-  params || middleware.ancestorCtx || middleware.current?.hasCtx
-    ? `    ctx: ${[...(middleware.ancestorCtx || middleware.current?.hasCtx ? ['ContextType'] : []), ...(params ? ['{ params: ParamsType }'] : [])].join(' & ')},\n`
-    : ''
-}  ) => Promise<Response>) => async (originalReq: NextRequest, originalCtx: {${params ? ' params: Promise<ParamsType> ' : ''}}): Promise<Response> => {
+    args: { req: NextRequest${params ? ', params: ParamsType' : ''} },${middleware.ancestorCtx || middleware.current?.hasCtx ? '\n    ctx: ContextType,' : ''}
+  ) => Promise<Response>) => async (originalReq: NextRequest, option: {${params ? ' params: Promise<ParamsType> ' : ''}}): Promise<Response> => {
 ${
   params
-    ? `    const params = paramsSchema.safeParse(await originalCtx.params);
+    ? `    const params = paramsSchema.safeParse(await option.params);
 
     if (params.error) return createReqErr(params.error);\n`
     : ''
 }
     ${
       middleware.ancestor
-        ? `return ancestorMiddleweare(async (ancestorReq${middleware.ancestorCtx ? ', ancestorContext' : ''}) => {
+        ? `return ancestorMiddleweare(async (ancestorArgs${middleware.ancestorCtx ? ', ancestorContext' : ''}) => {
 ${
   middleware.ancestorCtx
     ? `      const ancestorCtx = ancestorContextSchema.safeParse(ancestorContext);
@@ -257,7 +254,10 @@ ${
     }
     ${
       middleware.current
-        ? `return await controller.middleware(${middleware.ancestor ? 'ancestorReq' : 'originalReq'}, { ${middleware.ancestorCtx ? '...ancestorCtx.data, ' : ''}${params ? ' params: params.data ' : ''}}, async (req${middleware.ancestorCtx || middleware.current.hasCtx ? ', context' : ''}) => {
+        ? `return await controller.middleware(
+      {
+        req: ${middleware.ancestor ? 'ancestorArgs.req' : 'originalReq'},${params ? '\n        params: params.data,' : ''}
+        next: async (req${middleware.ancestorCtx || middleware.current.hasCtx ? ', context' : ''}) => {
 ${
   middleware.current.hasCtx
     ? `      const ctx = frourioSpec.middleware.context.safeParse(context);
@@ -268,9 +268,15 @@ ${
         : ''
     }
 
-      return await next(${middleware.current ? 'req' : middleware.ancestor ? 'ancestorReq' : 'originalReq'}${params || middleware.ancestorCtx || middleware.current?.hasCtx ? `, { ${middleware.ancestorCtx ? '...ancestorCtx.data,' : ''}${middleware.current?.hasCtx ? '...ctx.data,' : ''}${params ? 'params: params.data' : ''} }` : ''})
-       ${middleware.current ? '})' : ''}
-    ${middleware.ancestor ? '})(originalReq, originalCtx)' : ''}
+      return await next({ req${middleware.current ? '' : middleware.ancestor ? ': ancestorArgs.req' : ': originalReq'}${params ? ', params: params.data' : ''} }${middleware.ancestorCtx || middleware.current?.hasCtx ? `, { ${middleware.ancestorCtx ? '...ancestorCtx.data,' : ''}${middleware.current?.hasCtx ? '...ctx.data' : ''} }` : ''})
+      ${
+        middleware.current
+          ? `},
+      },${middleware.ancestorCtx ? '\n      ancestorCtx.data,' : ''}
+    )`
+          : ''
+      }
+    ${middleware.ancestor ? '})(originalReq, option)' : ''}
   };
 
 `
@@ -318,10 +324,14 @@ ${m.body.data
       ],
     ].filter((r) => !!r);
 
-    return `    ${m.name.toUpperCase()}: ${params || middleware.ancestor || middleware.current ? 'middleware(' : ''}async (req${
-      params || middleware.ancestor || middleware.current ? ', ctx' : ''
+    return `    ${m.name.toUpperCase()}: ${
+      params || middleware.ancestor || middleware.current
+        ? `middleware(async ({ req${params ? ', params' : ''} }${
+            middleware.ancestorCtx || middleware.current?.hasCtx ? ', ctx' : ''
+          }`
+        : 'async (req'
     }) => {${m.body?.isFormData ? '\n      const formData = await req.formData();' : ''}${requests.map((r) => `\n      const ${r[0]} = ${r[1]};\n\n      if (${r[0]}.error) return createReqErr(${r[0]}.error);\n`).join('')}
-      const res = await controller.${m.name}({ ${[...(middleware.ancestor || middleware.current?.hasCtx ? ['...ctx'] : []), ...requests.map((r) => `${r[0]}: ${r[0]}.data`)].join(', ')} });
+      const res = await controller.${m.name}({ ${[...requests.map((r) => `${r[0]}: ${r[0]}.data`), ...(params ? ['params'] : [])].join(', ')} }${middleware.ancestorCtx || middleware.current?.hasCtx ? ', ctx' : ''});
 
       ${
         m.res

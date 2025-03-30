@@ -1,7 +1,7 @@
 import { createRoute } from './frourio.server';
 
 export const { POST, middleware } = createRoute({
-  middleware: async (req, _ctx, next) => {
+  middleware: async ({ req, next }) => {
     return next(req, { token: 'bbb' });
   },
   post: async ({ params }) => {

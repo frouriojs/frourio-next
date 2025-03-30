@@ -51,11 +51,11 @@ export const createRoute = (controller: Controller): ResHandler => {
 
     if (params.error) return createReqErr(params.error);
 
-    return ancestorMiddleweare(async (req, ancestorContext) => {
+    return ancestorMiddleweare(async (ancestorReq, ancestorContext) => {
       const ancestorCtx = ancestorContextSchema.safeParse(ancestorContext);
 
       if (ancestorCtx.error) return createReqErr(ancestorCtx.error);
-    return await controller.middleware(originalReq, { ...ancestorCtx.data,  params: params.data }, async (req, context) => {
+    return await controller.middleware(ancestorReq, { ...ancestorCtx.data,  params: params.data }, async (req, context) => {
       const ctx = frourioSpec.middleware.context.safeParse(context);
 
       if (ctx.error) return createReqErr(ctx.error);

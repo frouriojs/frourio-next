@@ -245,7 +245,7 @@ ${
 }
     ${
       middleware.ancestor
-        ? `return ancestorMiddleweare(async (req${middleware.ancestorCtx ? ', ancestorContext' : ''}) => {
+        ? `return ancestorMiddleweare(async (ancestorReq${middleware.ancestorCtx ? ', ancestorContext' : ''}) => {
 ${
   middleware.ancestorCtx
     ? `      const ancestorCtx = ancestorContextSchema.safeParse(ancestorContext);
@@ -257,7 +257,7 @@ ${
     }
     ${
       middleware.current
-        ? `return await controller.middleware(originalReq, { ${middleware.ancestorCtx ? '...ancestorCtx.data, ' : ''}${params ? ' params: params.data ' : ''}}, async (req${middleware.ancestorCtx || middleware.current.hasCtx ? ', context' : ''}) => {
+        ? `return await controller.middleware(${middleware.ancestor ? 'ancestorReq' : 'originalReq'}, { ${middleware.ancestorCtx ? '...ancestorCtx.data, ' : ''}${params ? ' params: params.data ' : ''}}, async (req${middleware.ancestorCtx || middleware.current.hasCtx ? ', context' : ''}) => {
 ${
   middleware.current.hasCtx
     ? `      const ctx = frourioSpec.middleware.context.safeParse(context);
@@ -268,7 +268,7 @@ ${
         : ''
     }
 
-      return await next(${middleware.ancestor || middleware.current ? 'req' : 'originalReq'}${params || middleware.ancestorCtx || middleware.current?.hasCtx ? `, { ${middleware.ancestorCtx ? '...ancestorCtx.data,' : ''}${middleware.current?.hasCtx ? '...ctx.data,' : ''}${params ? 'params: params.data' : ''} }` : ''})
+      return await next(${middleware.current ? 'req' : middleware.ancestor ? 'ancestorReq' : 'originalReq'}${params || middleware.ancestorCtx || middleware.current?.hasCtx ? `, { ${middleware.ancestorCtx ? '...ancestorCtx.data,' : ''}${middleware.current?.hasCtx ? '...ctx.data,' : ''}${params ? 'params: params.data' : ''} }` : ''})
        ${middleware.current ? '})' : ''}
     ${middleware.ancestor ? '})(originalReq, originalCtx)' : ''}
   };

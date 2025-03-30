@@ -41,9 +41,9 @@ export const createRoute = (controller: Controller): ResHandler => {
 
     if (params.error) return createReqErr(params.error);
 
-    return ancestorMiddleweare(async (req) => {
+    return ancestorMiddleweare(async (ancestorReq) => {
 
-    return await controller.middleware(originalReq, {  params: params.data }, async (req) => {
+    return await controller.middleware(ancestorReq, {  params: params.data }, async (req) => {
 
 
       return await next(req, { params: params.data })

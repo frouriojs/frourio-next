@@ -29,7 +29,7 @@ type ServerMethod = {
     | { isFormData: true; data: PropOption[] | null }
     | { isFormData: false; data?: undefined }
     | null;
-  res: { status: string; hasHeaders: boolean; body: { isFormData: boolean } | null }[] | undefined;
+  res: { status: string; hasHeaders: boolean; hasBody: boolean }[] | undefined;
 };
 
 export const generate = async (appDir: string): Promise<void> => {
@@ -107,14 +107,11 @@ export const generate = async (appDir: string): Promise<void> => {
                     if (!statusType) return null;
 
                     const statusProps = statusType.getProperties();
-                    const body = statusProps.find((p) => p.getName() === 'body');
 
                     return {
                       status: s.getName(),
                       hasHeaders: statusProps.some((p) => p.getName() === 'headers'),
-                      body: body
-                        ? { isFormData: statusProps.some((p) => p.getName() === 'format') }
-                        : null,
+                      hasBody: statusProps.some((p) => p.getName() === 'body'),
                     };
                   })
                   .filter((s) => s !== null),
@@ -337,7 +334,17 @@ const serverData = (
   const chunks: string[] = [
     `type RouteChecker = [${[...methods.map((m) => `typeof ${m.name.toUpperCase()}`), ...(middleware.current ? ['typeof middleware'] : [])].join(', ')}]`,
     params &&
-      `${params.current ? `${params.current.param?.typeName !== 'number' ? '' : params.current.param.isArray ? paramToNumArrText : paramToNumText}` : ''}export const paramsSchema = ${paramsToText(params)};\n\ntype ParamsType = z.infer<typeof paramsSchema>`,
+      `${
+        params.current
+          ? `${
+              params.current.param?.typeName !== 'number'
+                ? ''
+                : params.current.param.isArray
+                  ? paramToNumArrText
+                  : paramToNumText
+            }`
+          : ''
+      }export const paramsSchema = ${paramsToText(params)};\n\ntype ParamsType = z.infer<typeof paramsSchema>`,
     'type SpecType = typeof frourioSpec',
     middleware.current?.hasCtx
       ? `export const contextSchema = frourioSpec.middleware.context${middleware.ancestorCtx ? '.and(ancestorContextSchema)' : ''};\n\nexport type ContextType = z.infer<typeof contextSchema>`
@@ -355,7 +362,11 @@ ${methods
   .map(
     (m) =>
       `  ${m.name}: (
-    req: {${params ? '\n      params: ParamsType;' : ''}${m.hasHeaders ? `\n      headers: z.infer<SpecType['${m.name}']['headers']>;` : ''}${m.query ? `\n      query: z.infer<SpecType['${m.name}']['query']>;` : ''}${m.body ? `\n      body: z.infer<SpecType['${m.name}']['body']>;` : ''}
+    req: {${params ? '\n      params: ParamsType;' : ''}${
+      m.hasHeaders ? `\n      headers: z.infer<SpecType['${m.name}']['headers']>;` : ''
+    }${m.query ? `\n      query: z.infer<SpecType['${m.name}']['query']>;` : ''}${
+      m.body ? `\n      body: z.infer<SpecType['${m.name}']['body']>;` : ''
+    }
     },${middleware.ancestorCtx || middleware.current?.hasCtx ? '\n    ctx: ContextType,' : ''}
   ) => Promise<${
     m.res
@@ -363,7 +374,11 @@ ${methods
           .map(
             (r) =>
               `    | {
-        status: ${r.status};${r.hasHeaders ? `\n        headers: z.infer<SpecType['${m.name}']['res'][${r.status}]['headers']>;` : ''}${r.body ? `\n        body: z.infer<SpecType['${m.name}']['res'][${r.status}]['body']>;` : ''}
+        status: ${r.status};${
+          r.hasHeaders
+            ? `\n        headers: z.infer<SpecType['${m.name}']['res'][${r.status}]['headers']>;`
+            : ''
+        }${r.hasBody ? `\n        body: z.infer<SpecType['${m.name}']['res'][${r.status}]['body']>;` : ''}
       }`,
           )
           .join('\n')}\n  `
@@ -473,7 +488,11 @@ ${m.query
 ${m.body.data
   .map((d) => {
     const fn = `formData.get${d.isArray ? 'All' : ''}('${d.name}')${d.isArray ? '' : ' ?? undefined'}`;
-    const wrapped = `${d.typeName === 'string' || d.typeName === 'File' ? '' : `formDataTo${d.typeName === 'number' ? 'Num' : 'Bool'}${d.isArray ? 'Arr' : ''}(`}${fn}${d.typeName === 'string' || d.typeName === 'File' ? '' : ')'}`;
+    const wrapped = `${
+      d.typeName === 'string' || d.typeName === 'File'
+        ? ''
+        : `formDataTo${d.typeName === 'number' ? 'Num' : 'Bool'}${d.isArray ? 'Arr' : ''}(`
+    }${fn}${d.typeName === 'string' || d.typeName === 'File' ? '' : ')'}`;
 
     return `            ['${d.name}', ${d.isArray && d.isOptional ? `${fn}.length > 0 ? ${wrapped} : undefined` : wrapped}],`;
   })
@@ -491,18 +510,33 @@ ${m.body.data
             middleware.ancestorCtx || middleware.current?.hasCtx ? ', ctx' : ''
           }`
         : 'async (req'
-    }) => {${m.body?.isFormData ? '\n      const formData = await req.formData();' : ''}${requests.map((r) => `\n      const ${r[0]} = ${r[1]};\n\n      if (${r[0]}.error) return createReqErr(${r[0]}.error);\n`).join('')}
-      const res = await controller.${m.name}({ ${[...requests.map((r) => `${r[0]}: ${r[0]}.data`), ...(params ? ['params'] : [])].join(', ')} }${middleware.ancestorCtx || middleware.current?.hasCtx ? ', ctx' : ''});
+    }) => {${m.body?.isFormData ? '\n      const formData = await req.formData();' : ''}${requests
+      .map(
+        (r) =>
+          `\n      const ${r[0]} = ${r[1]};\n\n      if (${r[0]}.error) return createReqErr(${r[0]}.error);\n`,
+      )
+      .join('')}
+      const res = await controller.${m.name}({ ${[
+        ...requests.map((r) => `${r[0]}: ${r[0]}.data`),
+        ...(params ? ['params'] : []),
+      ].join(', ')} }${middleware.ancestorCtx || middleware.current?.hasCtx ? ', ctx' : ''});
 
       ${
         m.res
           ? `switch (res.status) {
 ${m.res
   .map((r) => {
-    const resTypes = [r.hasHeaders && 'headers', r.body && 'body'].filter((r) => !!r);
+    const resTypes = [r.hasHeaders && 'headers', r.hasBody && 'body'].filter((r) => !!r);
 
-    return `        case ${r.status}: {${resTypes.map((t) => `\n          const ${t} = frourioSpec.${m.name}.res[${r.status}].${t}.safeParse(res.${t});\n\n          if (${t}.error) return createResErr();\n`).join('')}
-          return ${!r.body ? `new Response(null` : r.body.isFormData ? 'createFormDataResponse(body.data' : 'createResponse(body.data'}, { status: ${r.status}${r.hasHeaders ? ', headers: headers.data' : ''} });
+    return `        case ${r.status}: {${resTypes
+      .map(
+        (t) =>
+          `\n          const ${t} = frourioSpec.${m.name}.res[${r.status}].${t}.safeParse(res.${t});\n\n          if (${t}.error) return createResErr();\n`,
+      )
+      .join('')}
+          return ${
+            r.hasBody ? 'createResponse(body.data' : `new Response(null`
+          }, { status: ${r.status}${r.hasHeaders ? ', headers: headers.data' : ''} });
         }`;
   })
   .join('\n')}
@@ -516,7 +550,7 @@ ${m.res
   .join('\n')}
   };
 }`,
-    methods.some((m) => m.res?.some((r) => r.body && !r.body.isFormData)) &&
+    methods.some((m) => m.res?.some((r) => r.hasBody)) &&
       `const createResponse = (body: unknown, init: ResponseInit): Response => {
   if (
     ArrayBuffer.isView(body) ||
@@ -534,34 +568,6 @@ ${m.res
 
   return NextResponse.json(body, init);
 }`,
-    methods.some((m) => m.res?.some((r) => r.body?.isFormData)) &&
-      `const createFormDataResponse = (
-  body: Record<
-    string,
-    ((string | number | boolean | File)[] | string | number | boolean | File) | undefined
-  >,
-  init: ResponseInit,
-) => {
-  const formData = new FormData();
-
-  Object.entries(body).forEach(([key, value]) => {
-    if (value === undefined) return;
-
-    if (Array.isArray(value)) {
-      value.forEach((item) =>
-        item instanceof File
-          ? formData.append(key, item, item.name)
-          : formData.append(key, item.toString()),
-      );
-    } else if (value instanceof File) {
-      formData.set(key, value, value.name);
-    } else {
-      formData.set(key, value.toString());
-    }
-  });
-
-  return new NextResponse(formData, init);
-}`,
   ].filter((txt) => txt !== undefined && txt !== false);
 
   const suffixes: string[] = [
@@ -573,14 +579,18 @@ ${m.res
       queryToBoolText,
     methods.some((m) => m.query?.some((q) => q.typeName === 'boolean' && q.isArray)) &&
       queryToBoolArrText,
-    methods.some((m) => m.body?.data?.some((b) => b.typeName === 'number' && !b.isArray)) &&
-      formDataToNumText,
-    methods.some((m) => m.body?.data?.some((b) => b.typeName === 'number' && b.isArray)) &&
-      formDataToNumArrText,
-    methods.some((m) => m.body?.data?.some((b) => b.typeName === 'boolean' && !b.isArray)) &&
-      formDataToBoolText,
-    methods.some((m) => m.body?.data?.some((b) => b.typeName === 'boolean' && b.isArray)) &&
-      formDataToBoolArrText,
+    methods.some(
+      (m) => m.body?.isFormData && m.body.data?.some((b) => b.typeName === 'number' && !b.isArray),
+    ) && formDataToNumText,
+    methods.some(
+      (m) => m.body?.isFormData && m.body.data?.some((b) => b.typeName === 'number' && b.isArray),
+    ) && formDataToNumArrText,
+    methods.some(
+      (m) => m.body?.isFormData && m.body.data?.some((b) => b.typeName === 'boolean' && !b.isArray),
+    ) && formDataToBoolText,
+    methods.some(
+      (m) => m.body?.isFormData && m.body.data?.some((b) => b.typeName === 'boolean' && b.isArray),
+    ) && formDataToBoolArrText,
   ].filter((txt) => txt !== undefined && txt !== false);
 
   return `${imports.join(';\n')};

@@ -5,7 +5,6 @@ type Digit = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 type FrourioResponse = {
   [Status in `${2 | 4 | 5}${Digit}${Digit}`]?: {
     headers?: z.ZodTypeAny;
-    format?: 'formData';
     body?: z.ZodTypeAny;
   };
 };

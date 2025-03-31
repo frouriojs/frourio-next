@@ -24,7 +24,6 @@ export const frourioSpec = {
     }),
     res: {
       200: {
-        format: 'formData',
         body: z.object({
           string: z.string(),
           number: z.number(),

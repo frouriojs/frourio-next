@@ -45,7 +45,7 @@
           "200": {
             "description": "",
             "content": {
-              "multipart/form-data": {
+              "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/1dvh1go"
                 }
@@ -334,20 +334,15 @@
           "stringArr"
         ]
       },
-      "d3x1z2": {
+      "1rwcn9k": {
         "type": "object",
         "properties": {
-          "format": {
-            "type": "string",
-            "const": "formData"
-          },
           "body": {
             "$ref": "#/components/schemas/1dvh1go"
           }
         },
         "required": [
-          "body",
-          "format"
+          "body"
         ]
       },
       "1dvh1go": {

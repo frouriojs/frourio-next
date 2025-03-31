@@ -62,7 +62,7 @@ export const createRoute = (controller: Controller): ResHandler => {
 
           if (body.error) return createResErr();
 
-          return createFormDataResponse(body.data, { status: 200 });
+          return createResponse(body.data, { status: 200 });
         }
         default:
           throw new Error(res.status satisfies never);
@@ -71,32 +71,22 @@ export const createRoute = (controller: Controller): ResHandler => {
   };
 };
 
-const createFormDataResponse = (
-  body: Record<
-    string,
-    ((string | number | boolean | File)[] | string | number | boolean | File) | undefined
-  >,
-  init: ResponseInit,
-) => {
-  const formData = new FormData();
+const createResponse = (body: unknown, init: ResponseInit): Response => {
+  if (
+    ArrayBuffer.isView(body) ||
+    body === undefined ||
+    body === null ||
+    body instanceof Blob ||
+    body instanceof ArrayBuffer ||
+    body instanceof FormData ||
+    body instanceof ReadableStream ||
+    body instanceof URLSearchParams ||
+    typeof body === 'string'
+  ) {
+    return new NextResponse(body, init);
+  }
 
-  Object.entries(body).forEach(([key, value]) => {
-    if (value === undefined) return;
-
-    if (Array.isArray(value)) {
-      value.forEach((item) =>
-        item instanceof File
-          ? formData.append(key, item, item.name)
-          : formData.append(key, item.toString()),
-      );
-    } else if (value instanceof File) {
-      formData.set(key, value, value.name);
-    } else {
-      formData.set(key, value.toString());
-    }
-  });
-
-  return new NextResponse(formData, init);
+  return NextResponse.json(body, init);
 };
 
 type FrourioError =

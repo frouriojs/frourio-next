@@ -5,8 +5,8 @@ import path from 'path';
 import ts from 'typescript';
 import * as TJS from 'typescript-json-schema';
 import { FROURIO_FILE, SERVER_FILE } from '../constants';
+import { createHash } from '../createHash';
 import { listFrourioDirs } from '../listFrourioDirs';
-import { createHash } from './createHash';
 
 export const generateOpenapi = (appDir: string, output: string) => {
   const existingDoc: OpenAPIV3_1.Document | undefined = existsSync(output)

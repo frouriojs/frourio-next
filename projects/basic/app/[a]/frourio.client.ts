@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { fc_2ijh4e } from './[b]/[...c]/frourio.client';
+import { fc_1yzfjrp } from './[b]/d/frourio.client';
 import { frourioSpec } from './frourio'
 
 const paramsSchema = z.object({ 'a': frourioSpec.param });
@@ -13,7 +15,10 @@ const $path = {
   },
 };
 
-export const fc = {
+export const fc_knqmrp = {
+  '[b]/[...c]': fc_2ijh4e,
+  '[b]/d': fc_1yzfjrp,
+  $path,
   async $get(req: { params: z.infer<typeof paramsSchema>, init?: RequestInit }) {
     const url = $path.get(req);
 
@@ -27,5 +32,4 @@ export const fc = {
       }
     );
   },
-  $path,
 };

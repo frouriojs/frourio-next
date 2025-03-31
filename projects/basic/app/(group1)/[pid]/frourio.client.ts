@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { fc_1c6qmxu } from './foo/frourio.client';
 import { frourioSpec } from './frourio'
 
 const paramsSchema = z.object({ 'pid': z.string() });
@@ -29,7 +30,9 @@ const $path = {
   },
 };
 
-export const fc = {
+export const fc_rket09 = {
+  'foo': fc_1c6qmxu,
+  $path,
   async $get(req: { params: z.infer<typeof paramsSchema>, query: z.infer<typeof frourioSpec.get.query>, init?: RequestInit }) {
     const url = $path.get(req);
 
@@ -43,5 +46,4 @@ export const fc = {
       }
     );
   },
-  $path,
 };

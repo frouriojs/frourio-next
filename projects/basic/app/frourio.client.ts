@@ -1,4 +1,7 @@
 import { z } from 'zod';
+import { fc_82hx7j } from './(group1)/frourio.client';
+import { fc_17lcihw } from './(group2)/frourio.client';
+import { fc_knqmrp } from './[a]/frourio.client';
 import { frourioSpec } from './frourio'
 
 const $path = {
@@ -27,6 +30,10 @@ const $path = {
 };
 
 export const fc = {
+  '(group1)': fc_82hx7j,
+  '(group2)': fc_17lcihw,
+  '[a]': fc_knqmrp,
+  $path,
   async $get(req: { headers: z.infer<typeof frourioSpec.get.headers>, query: z.infer<typeof frourioSpec.get.query>, init?: RequestInit }) {
     const url = $path.get(req);
 
@@ -64,5 +71,4 @@ export const fc = {
       }
     );
   },
-  $path,
 };

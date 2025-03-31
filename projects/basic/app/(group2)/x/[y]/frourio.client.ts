@@ -29,7 +29,8 @@ const $path = {
   },
 };
 
-export const fc = {
+export const fc_13e9lnf = {
+  $path,
   async $get(req: { params: z.infer<typeof paramsSchema>, query: z.infer<typeof frourioSpec.get.query>, init?: RequestInit }) {
     const url = $path.get(req);
 
@@ -43,5 +44,4 @@ export const fc = {
       }
     );
   },
-  $path,
 };

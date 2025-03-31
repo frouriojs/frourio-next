@@ -1,7 +1,8 @@
 import { writeFile } from 'fs/promises';
 import path from 'path';
 import ts from 'typescript';
-import { CLIENT_FILE, FROURIO_FILE, SERVER_FILE } from './constants';
+import { CLIENT_FILE, CLIENT_NAME, FROURIO_FILE, SERVER_FILE } from './constants';
+import { createHash } from './createHash';
 import { getPropOptions, getSchemaOption, inferZodType, type PropOption } from './getPropOptions';
 import { initTSC } from './initTSC';
 import { listFrourioDirs } from './listFrourioDirs';
@@ -150,7 +151,9 @@ export const generate = async (appDir: string): Promise<void> => {
           client: {
             filePath: path.posix.join(dirPath, CLIENT_FILE),
             text: clientData(
-              dirPath.replace(appDir, ''),
+              appDir,
+              dirPath,
+              frourioDirs,
               pathToClientParams(hasParamDict, dirPath, spec.param),
               spec.methods,
             ),
@@ -162,22 +165,38 @@ export const generate = async (appDir: string): Promise<void> => {
 
   await Promise.all(
     data.flatMap((d) => [
-      writeFile(d.server.filePath, d.server.text, 'utf8'),
-      writeFile(d.client.filePath, d.client.text, 'utf8'),
+      writeFile(d.server.filePath, d.server.text),
+      writeFile(d.client.filePath, d.client.text),
     ]),
   );
 };
 
 const clientData = (
-  apiPath: string,
+  appDir: string,
+  dirPath: string,
+  frourioDirs: string[],
   params: ClientParamsInfo | undefined,
   methods: ServerMethod[],
 ) => {
+  const childDirs = frourioDirs
+    .filter((dir) => dir.startsWith(dirPath) && dir !== dirPath)
+    .map((dir) => ({
+      import: dir.replace(`${dirPath}/`, ''),
+      hash: createHash(dir.replace(appDir, '')),
+    }))
+    .filter((dir, _, arr) =>
+      arr.every((other) => !dir.import.startsWith(other.import) || dir.import === other.import),
+    );
+  const apiPath = dirPath.replace(appDir, '').replace(/\/\(.+?\)/g, '');
   const imports: string[] = [
     `import { z } from 'zod'`,
     ...(params?.ancestors.map(
       ({ path }, n) => `import { frourioSpec as ancestorSpec${n} } from '${path}'`,
     ) ?? []),
+    ...childDirs.map(
+      (child) =>
+        `import { ${CLIENT_NAME}_${child.hash} } from './${child.import}/${CLIENT_FILE.replace('.ts', '')}'`,
+    ),
     "import { frourioSpec } from './frourio'",
   ];
 
@@ -215,24 +234,23 @@ ${
       }    return \`${
         params
           ? apiPath
-              .replace(/\/\(.+?\)/g, '')
               .replace(
                 /\/\[\[\.\.\.(.+?)\]\]/,
                 "${parsedParams.data.$1 !== undefined && parsedParams.data.$1.length > 0 ? `/${parsedParams.data.$1.join('/')}` : ''}",
               )
               .replace(/\[\.\.\.(.+?)\]/, "${parsedParams.data.$1.join('/')}")
               .replace(/\[(.+?)\]/g, '${parsedParams.data.$1}')
-          : apiPath.replace(/\/\(.+?\)/g, '')
+          : apiPath
       }${method.query ? `?\${searchParams.toString()}` : ''}\`;
   },`,
     )
     .join('')}
 };
 
-export const fc = {
-  ${methods
+export const ${CLIENT_NAME}${dirPath !== appDir ? `_${createHash(dirPath.replace(appDir, ''))}` : ''} = {${childDirs.map((child) => `\n  '${child.import}': ${CLIENT_NAME}_${child.hash},`).join('')}
+  $path,${methods
     .map(
-      (method) => `async $${method.name}(req: { ${[
+      (method) => `\n  async $${method.name}(req: { ${[
         ...(params ? ['params: z.infer<typeof paramsSchema>'] : []),
         ...(method.hasHeaders
           ? [`headers: z.infer<typeof frourioSpec.${method.name}.headers>`]
@@ -302,8 +320,7 @@ ${
     );
   },`,
     )
-    .join('\n  ')}
-  $path,
+    .join('')}
 };
 `;
 };

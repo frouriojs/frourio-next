@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { fc_10q2n2o } from './%E6%97%A5%E6%9C%AC%E8%AA%9E/frourio.client';
 import { frourioSpec } from './frourio'
 
 const $path = {
@@ -8,6 +9,8 @@ const $path = {
 };
 
 export const fc = {
+  '%E6%97%A5%E6%9C%AC%E8%AA%9E': fc_10q2n2o,
+  $path,
   async $post(req: { body: z.infer<typeof frourioSpec.post.body>, init?: RequestInit }) {
     const url = $path.post(req);
 
@@ -45,5 +48,4 @@ export const fc = {
       }
     );
   },
-  $path,
 };

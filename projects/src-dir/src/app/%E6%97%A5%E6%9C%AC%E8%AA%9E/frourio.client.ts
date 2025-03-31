@@ -7,7 +7,8 @@ const $path = {
   },
 };
 
-export const fc = {
+export const fc_10q2n2o = {
+  $path,
   async $post(req: { body: z.infer<typeof frourioSpec.post.body>, init?: RequestInit }) {
     const url = $path.post(req);
 
@@ -45,5 +46,4 @@ export const fc = {
       }
     );
   },
-  $path,
 };

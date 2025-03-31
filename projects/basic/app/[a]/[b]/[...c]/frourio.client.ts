@@ -14,7 +14,8 @@ const $path = {
   },
 };
 
-export const fc = {
+export const fc_2ijh4e = {
+  $path,
   async $post(req: { params: z.infer<typeof paramsSchema>, init?: RequestInit }) {
     const url = $path.post(req);
 
@@ -28,5 +29,4 @@ export const fc = {
       }
     );
   },
-  $path,
 };

@@ -1,12 +1,12 @@
 import { writeFile } from 'fs/promises';
 import path from 'path';
 import ts from 'typescript';
-import { FROURIO_FILE, SERVER_FILE } from './constants';
+import { CLIENT_FILE, FROURIO_FILE, SERVER_FILE } from './constants';
 import { getPropOptions, getSchemaOption, inferZodType, type PropOption } from './getPropOptions';
 import { initTSC } from './initTSC';
 import { listFrourioDirs } from './listFrourioDirs';
-import type { ParamsInfo } from './paramsUtil';
-import { paramsToText, pathToParams } from './paramsUtil';
+import type { ClientParamsInfo, ParamsInfo } from './paramsUtil';
+import { clientParamsToText, paramsToText, pathToClientParams, pathToParams } from './paramsUtil';
 import {
   formDataToBoolArrText,
   formDataToBoolText,
@@ -38,6 +38,7 @@ export const generate = async (appDir: string): Promise<void> => {
   await writeDefaults(frourioDirs);
 
   const { program, checker } = initTSC(frourioDirs);
+  const hasParamDict: Record<string, boolean> = {};
   const middlewareDict: Record<string, { hasCtx: boolean } | undefined> = {};
   const data = frourioDirs
     .map((dirPath) => {
@@ -54,6 +55,9 @@ export const generate = async (appDir: string): Promise<void> => {
         const specProps = checker.getTypeAtLocation(decl.initializer).getProperties();
         const paramSymbol = specProps.find((t) => t.getName() === 'param');
         const paramZodType = paramSymbol ? inferZodType(checker, paramSymbol) : null;
+
+        hasParamDict[dirPath] = !!paramSymbol;
+
         const middlewareSymbol = specProps.find((t) => t.getName() === 'middleware');
         const middlewareType =
           middlewareSymbol?.valueDeclaration &&
@@ -130,26 +134,181 @@ export const generate = async (appDir: string): Promise<void> => {
 
       return (
         spec && {
-          filePath: path.posix.join(dirPath, SERVER_FILE),
-          text: serverData(
-            pathToParams(frourioDirs, dirPath, spec.param),
-            {
-              ancestor: ancestorMiddleware
-                ? path.posix.relative(dirPath, ancestorMiddleware)
-                : undefined,
-              ancestorCtx: ancestorMiddlewareCtx
-                ? path.posix.relative(dirPath, ancestorMiddlewareCtx)
-                : undefined,
-              current: middlewareDict[dirPath],
-            },
-            spec.methods,
-          ),
+          server: {
+            filePath: path.posix.join(dirPath, SERVER_FILE),
+            text: serverData(
+              pathToParams(frourioDirs, dirPath, spec.param),
+              {
+                ancestor: ancestorMiddleware
+                  ? path.posix.relative(dirPath, ancestorMiddleware)
+                  : undefined,
+                ancestorCtx: ancestorMiddlewareCtx
+                  ? path.posix.relative(dirPath, ancestorMiddlewareCtx)
+                  : undefined,
+                current: middlewareDict[dirPath],
+              },
+              spec.methods,
+            ),
+          },
+          client: {
+            filePath: path.posix.join(dirPath, CLIENT_FILE),
+            text: clientData(
+              dirPath.replace(appDir, ''),
+              pathToClientParams(hasParamDict, dirPath, spec.param),
+              spec.methods,
+            ),
+          },
         }
       );
     })
     .filter((d) => d !== undefined);
 
-  await Promise.all(data.map((d) => writeFile(d.filePath, d.text, 'utf8')));
+  await Promise.all(
+    data.flatMap((d) => [
+      writeFile(d.server.filePath, d.server.text, 'utf8'),
+      writeFile(d.client.filePath, d.client.text, 'utf8'),
+    ]),
+  );
+};
+
+const clientData = (
+  apiPath: string,
+  params: ClientParamsInfo | undefined,
+  methods: ServerMethod[],
+) => {
+  const imports: string[] = [
+    `import { z } from 'zod'`,
+    ...(params?.ancestors.map(
+      ({ path }, n) => `import { frourioSpec as ancestorSpec${n} } from '${path}'`,
+    ) ?? []),
+    "import { frourioSpec } from './frourio'",
+  ];
+
+  return `${imports.join(';\n')}
+${params ? `\nconst paramsSchema = ${clientParamsToText(params)};\n` : ''}
+const $path = {${methods
+    .map(
+      (
+        method,
+      ) => `\n  ${method.name}(req: { ${[...(params ? ['params: z.infer<typeof paramsSchema>'] : []), ...(method.query ? [`query: z.infer<typeof frourioSpec.${method.name}.query>`] : [])].join(',')} }) {
+${
+  params
+    ? `    const parsedParams = paramsSchema.safeParse(req.params);
+
+    if (!parsedParams.success) return;\n\n`
+    : ''
+}${
+        method.query
+          ? `    const parsedQuery = frourioSpec.${method.name}.query.safeParse(req.query);
+
+    if (!parsedQuery.success) return;
+
+    const searchParams = new URLSearchParams();
+
+    Object.entries(parsedQuery.data).forEach(([key, value]) => {
+      if (value === undefined) return;
+
+      if (Array.isArray(value)) {
+        value.forEach(item => searchParams.append(key, item.toString()));
+      } else {
+        searchParams.append(key, value.toString());
+      }
+    });\n\n`
+          : ''
+      }    return \`${
+        params
+          ? apiPath
+              .replace(/\/\(.+?\)/g, '')
+              .replace(
+                /\/\[\[\.\.\.(.+?)\]\]/,
+                "${parsedParams.data.$1 !== undefined && parsedParams.data.$1.length > 0 ? `/${parsedParams.data.$1.join('/')}` : ''}",
+              )
+              .replace(/\[\.\.\.(.+?)\]/, "${parsedParams.data.$1.join('/')}")
+              .replace(/\[(.+?)\]/g, '${parsedParams.data.$1}')
+          : apiPath.replace(/\/\(.+?\)/g, '')
+      }${method.query ? `?\${searchParams.toString()}` : ''}\`;
+  },`,
+    )
+    .join('')}
+};
+
+export const fc = {
+  ${methods
+    .map(
+      (method) => `async $${method.name}(req: { ${[
+        ...(params ? ['params: z.infer<typeof paramsSchema>'] : []),
+        ...(method.hasHeaders
+          ? [`headers: z.infer<typeof frourioSpec.${method.name}.headers>`]
+          : []),
+        ...(method.query ? [`query: z.infer<typeof frourioSpec.${method.name}.query>`] : []),
+        ...(method.body ? [`body: z.infer<typeof frourioSpec.${method.name}.body>`] : []),
+        'init?: RequestInit',
+      ].join(', ')} }) {
+    const url = $path.${method.name}(req);
+
+    if (!url) return;
+${
+  method.hasHeaders
+    ? `\n    const parsedHeaders = frourioSpec.${method.name}.headers.safeParse(req.headers);
+
+    if (!parsedHeaders.success) return;\n`
+    : ''
+}${
+        method.body
+          ? `\n    const parsedBody = frourioSpec.${method.name}.body.safeParse(req.body);
+
+    if (!parsedBody.success) return;\n`
+          : ''
+      }${
+        method.body?.isFormData
+          ? `\n    const formData = new FormData();
+
+    Object.entries(parsedBody.data).forEach(([key, value]) => {
+      if (value === undefined) return;
+
+      if (Array.isArray(value)) {
+        value.forEach((item) =>
+          item instanceof File
+            ? formData.append(key, item, item.name)
+            : formData.append(key, item.toString()),
+        );
+      } else if (value instanceof File) {
+        formData.set(key, value, value.name);
+      } else {
+        formData.set(key, value.toString());
+      }
+    });\n`
+          : ''
+      }
+    const res = await fetch(
+      url,
+      {
+        method: '${method.name.toUpperCase()}',${
+          method.body || method.hasHeaders
+            ? `\n        headers: { ${
+                method.body?.isFormData
+                  ? "'content-type': 'multipart/form-data',"
+                  : method.body
+                    ? "'content-type': 'application/json',"
+                    : ''
+              }${method.hasHeaders ? ' ...parsedHeaders.data as HeadersInit' : ''} },`
+            : ''
+        }${
+          method.body?.isFormData
+            ? '\n        body: formData,'
+            : method.body
+              ? '\n        body: JSON.stringify(parsedBody.data),'
+              : ''
+        }
+        ...req.init,
+      }
+    );
+  },`,
+    )
+    .join('\n  ')}
+  $path,
+};
+`;
 };
 
 const serverData = (
@@ -268,14 +427,16 @@ ${
         : ''
     }
 
-      return await next({ req${middleware.current ? '' : middleware.ancestor ? ': ancestorArgs.req' : ': originalReq'}${params ? ', params: params.data' : ''} }${middleware.ancestorCtx || middleware.current?.hasCtx ? `, { ${middleware.ancestorCtx ? '...ancestorCtx.data,' : ''}${middleware.current?.hasCtx ? '...ctx.data' : ''} }` : ''})
-      ${
-        middleware.current
-          ? `},
-      },${middleware.ancestorCtx ? '\n      ancestorCtx.data,' : ''}
-    )`
+      return await next({ req${
+        middleware.current ? '' : middleware.ancestor ? ': ancestorArgs.req' : ': originalReq'
+      }${params ? ', params: params.data' : ''} }${
+        middleware.ancestorCtx || middleware.current?.hasCtx
+          ? `, { ${middleware.ancestorCtx ? '...ancestorCtx.data,' : ''}${
+              middleware.current?.hasCtx ? '...ctx.data' : ''
+            } }`
           : ''
-      }
+      })
+      ${middleware.current ? `},\n      },${middleware.ancestorCtx ? '\n      ancestorCtx.data,' : ''}\n    )` : ''}
     ${middleware.ancestor ? '})(originalReq, option)' : ''}
   };
 
@@ -390,12 +551,12 @@ ${m.res
       value.forEach((item) =>
         item instanceof File
           ? formData.append(key, item, item.name)
-          : formData.append(key, String(item)),
+          : formData.append(key, item.toString()),
       );
     } else if (value instanceof File) {
       formData.set(key, value, value.name);
     } else {
-      formData.set(key, String(value));
+      formData.set(key, value.toString());
     }
   });
 

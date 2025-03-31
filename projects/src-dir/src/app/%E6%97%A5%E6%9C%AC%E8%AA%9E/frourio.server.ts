@@ -87,12 +87,12 @@ const createFormDataResponse = (
       value.forEach((item) =>
         item instanceof File
           ? formData.append(key, item, item.name)
-          : formData.append(key, String(item)),
+          : formData.append(key, item.toString()),
       );
     } else if (value instanceof File) {
       formData.set(key, value, value.name);
     } else {
-      formData.set(key, String(value));
+      formData.set(key, value.toString());
     }
   });
 

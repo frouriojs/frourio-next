@@ -187,7 +187,7 @@ const clientData = (
     .filter((dir, _, arr) =>
       arr.every((other) => !dir.import.startsWith(other.import) || dir.import === other.import),
     );
-  const apiPath = dirPath.replace(appDir, '').replace(/\/\(.+?\)/g, '');
+  const apiPath = dirPath === appDir ? '/' : dirPath.replace(appDir, '').replace(/\/\(.+?\)/g, '');
   const imports: string[] = [
     `import { z } from 'zod'`,
     ...(params?.ancestors.map(
@@ -204,20 +204,23 @@ const clientData = (
 ${params ? `\nconst paramsSchema = ${clientParamsToText(params)};\n` : ''}
 const $path = {${methods
     .map(
-      (
-        method,
-      ) => `\n  ${method.name}(req: { ${[...(params ? ['params: z.infer<typeof paramsSchema>'] : []), ...(method.query ? [`query: z.infer<typeof frourioSpec.${method.name}.query>`] : [])].join(',')} }) {
+      (method) => `\n  ${method.name}(req: { ${[
+        ...(params ? ['params: z.infer<typeof paramsSchema>'] : []),
+        ...(method.query ? [`query: z.infer<typeof frourioSpec.${method.name}.query>`] : []),
+      ].join(
+        ',',
+      )} }): { isValid: true; data: string; error?: undefined } | { isValid: false, data?: undefined; error: z.ZodError } {
 ${
   params
     ? `    const parsedParams = paramsSchema.safeParse(req.params);
 
-    if (!parsedParams.success) return;\n\n`
+    if (!parsedParams.success) return { isValid: false, error: parsedParams.error };\n\n`
     : ''
 }${
         method.query
           ? `    const parsedQuery = frourioSpec.${method.name}.query.safeParse(req.query);
 
-    if (!parsedQuery.success) return;
+    if (!parsedQuery.success) return { isValid: false, error: parsedQuery.error };
 
     const searchParams = new URLSearchParams();
 
@@ -231,7 +234,7 @@ ${
       }
     });\n\n`
           : ''
-      }    return \`${
+      }    return { isValid: true, data: \`${
         params
           ? apiPath
               .replace(
@@ -241,16 +244,18 @@ ${
               .replace(/\[\.\.\.(.+?)\]/, "${parsedParams.data.$1.join('/')}")
               .replace(/\[(.+?)\]/g, '${parsedParams.data.$1}')
           : apiPath
-      }${method.query ? `?\${searchParams.toString()}` : ''}\`;
+      }${method.query ? `?\${searchParams.toString()}` : ''}\` };
   },`,
     )
     .join('')}
 };
 
-export const ${CLIENT_NAME}${dirPath !== appDir ? `_${createHash(dirPath.replace(appDir, ''))}` : ''} = {${childDirs.map((child) => `\n  '${child.import}': ${CLIENT_NAME}_${child.hash},`).join('')}
+export const ${CLIENT_NAME}${dirPath !== appDir ? `_${createHash(dirPath.replace(appDir, ''))}` : ''} = {${childDirs
+    .map((child) => `\n  '${child.import}': ${CLIENT_NAME}_${child.hash},`)
+    .join('')}
   $path,${methods
-    .map(
-      (method) => `\n  async $${method.name}(req: { ${[
+    .map((method) => {
+      return `\n  async $${method.name}(req: { ${[
         ...(params ? ['params: z.infer<typeof paramsSchema>'] : []),
         ...(method.hasHeaders
           ? [`headers: z.infer<typeof frourioSpec.${method.name}.headers>`]
@@ -258,21 +263,68 @@ export const ${CLIENT_NAME}${dirPath !== appDir ? `_${createHash(dirPath.replace
         ...(method.query ? [`query: z.infer<typeof frourioSpec.${method.name}.query>`] : []),
         ...(method.body ? [`body: z.infer<typeof frourioSpec.${method.name}.body>`] : []),
         'init?: RequestInit',
-      ].join(', ')} }) {
+      ].join(', ')} }): Promise<
+    ${
+      !method.res
+        ? '{ ok: boolean; isValid: true; data: Response'
+        : `{ ok: true; isValid: true; data${
+            method.res.some((r) => r.status.startsWith('2'))
+              ? `: ${method.res
+                  .filter((r) => r.status.startsWith('2'))
+                  .map(
+                    (r) =>
+                      `{ status: ${r.status}; headers${
+                        r.hasHeaders
+                          ? `: z.infer<typeof frourioSpec.${method.name}.res[${r.status}]['headers']>`
+                          : '?: undefined'
+                      }; body${
+                        r.hasBody
+                          ? `: z.infer<typeof frourioSpec.${method.name}.res[${r.status}]['body']>`
+                          : '?: undefined'
+                      } }`,
+                  )
+                  .join(' | ')}`
+              : '?: undefined'
+          }; error?: undefined } |
+    { ok: false; isValid: true; data${
+      method.res.some((r) => !r.status.startsWith('2'))
+        ? `: ${method.res
+            .filter((r) => !r.status.startsWith('2'))
+            .map(
+              (r) =>
+                `{ status: ${r.status}; headers${
+                  r.hasHeaders
+                    ? `: z.infer<typeof frourioSpec.${method.name}.res[${r.status}]['headers']>`
+                    : '?: undefined'
+                }; body${
+                  r.hasBody
+                    ? `: z.infer<typeof frourioSpec.${method.name}.res[${r.status}]['body']>`
+                    : '?: undefined'
+                } }`,
+            )
+            .join(' | ')}`
+        : '?: undefined'
+    }`
+    }; error?: undefined } |
+    { ok: boolean; isValid: false; data: Response; error: z.ZodError } |
+    { ok: boolean; isValid?: undefined; data: Response; error: unknown } |
+    { ok?: undefined; isValid: false; data?: undefined; error: z.ZodError } |
+    { ok?: undefined; isValid?: undefined; data?: undefined; error: unknown }
+  > {
     const url = $path.${method.name}(req);
 
-    if (!url) return;
+    if (url.error) return url;
 ${
   method.hasHeaders
     ? `\n    const parsedHeaders = frourioSpec.${method.name}.headers.safeParse(req.headers);
 
-    if (!parsedHeaders.success) return;\n`
+    if (!parsedHeaders.success) return { isValid: false, error: parsedHeaders.error };\n`
     : ''
 }${
         method.body
           ? `\n    const parsedBody = frourioSpec.${method.name}.body.safeParse(req.body);
 
-    if (!parsedBody.success) return;\n`
+    if (!parsedBody.success) return { isValid: false, error: parsedBody.error };\n`
           : ''
       }${
         method.body?.isFormData
@@ -295,31 +347,68 @@ ${
     });\n`
           : ''
       }
-    const res = await fetch(
-      url,
+    const result: { success: true; res: Response } | { success: false; error: unknown } = await fetch(
+      url.data,
       {
         method: '${method.name.toUpperCase()}',${
-          method.body || method.hasHeaders
-            ? `\n        headers: { ${
-                method.body?.isFormData
-                  ? "'content-type': 'multipart/form-data',"
-                  : method.body
-                    ? "'content-type': 'application/json',"
-                    : ''
-              }${method.hasHeaders ? ' ...parsedHeaders.data as HeadersInit' : ''} },`
-            : ''
-        }${
           method.body?.isFormData
             ? '\n        body: formData,'
             : method.body
               ? '\n        body: JSON.stringify(parsedBody.data),'
               : ''
         }
-        ...req.init,
+        ...req.init,${
+          method.body || method.hasHeaders
+            ? `\n        headers: { ${
+                method.body?.isFormData
+                  ? "'content-type': 'multipart/form-data', "
+                  : method.body
+                    ? "'content-type': 'application/json', "
+                    : ''
+              }${method.hasHeaders ? '...parsedHeaders.data as HeadersInit, ' : ''}...req.init?.headers },`
+            : ''
+        }
       }
-    );
-  },`,
-    )
+    ).then(res => ({ success: true, res } as const)).catch(error => ({ success: false, error }));
+
+    if (!result.success) return { error: result.error };
+
+    ${
+      method.res
+        ? `switch (result.res.status) {${method.res
+            .map(
+              (item) => `\n      case ${item.status}: {${
+                item.hasHeaders
+                  ? `\n        const headers = frourioSpec.${method.name}.res[${item.status}].headers.safeParse(result.res.headers);
+
+        if (!headers.success) return { ok: ${item.status.startsWith('2')}, data: result.res, error: headers.error };\n`
+                  : ''
+              }${
+                item.hasBody
+                  ? `\n        const json: { success: true; data: unknown } | { success: false; error: unknown } = await result.res.json().then(data => ({ success: true, data } as const)).catch(error => ({ success: false, error }));
+
+        if (!json.success) return { ok: ${item.status.startsWith('2')}, data: result.res, error: json.error };
+
+        const body = frourioSpec.${method.name}.res[${item.status}].body.safeParse(json.data);
+
+        if (!body.success) return { ok: ${item.status.startsWith('2')}, data: result.res, error: body.error };\n`
+                  : ''
+              }
+        return {
+          ok: ${item.status.startsWith('2')},
+          isValid: true,
+          data: { status: ${item.status}${item.hasHeaders ? ', headers: headers.data' : ''}${item.hasBody ? ', body: body.data' : ''} }
+        };
+      }`,
+            )
+            .join('')}
+      default:
+        return { ok: result.res.ok, data: result.res, error: new Error(\`Unknown status: \${result.res.status}\`) };
+    }`
+        : 'return { ok: result.res.ok, isValid: true, data: result.res };'
+    }
+  },`;
+    })
     .join('')}
 };
 `;

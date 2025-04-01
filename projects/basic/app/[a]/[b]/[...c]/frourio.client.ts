@@ -5,28 +5,57 @@ import { frourioSpec } from './frourio'
 const paramsSchema = z.object({ 'a': ancestorSpec0.param, 'b': z.string(), 'c': z.array(z.string()) });
 
 const $path = {
-  post(req: { params: z.infer<typeof paramsSchema> }) {
+  post(req: { params: z.infer<typeof paramsSchema> }): { isValid: true; data: string; error?: undefined } | { isValid: false, data?: undefined; error: z.ZodError } {
     const parsedParams = paramsSchema.safeParse(req.params);
 
-    if (!parsedParams.success) return;
+    if (!parsedParams.success) return { isValid: false, error: parsedParams.error };
 
-    return `/${parsedParams.data.a}/${parsedParams.data.b}/${parsedParams.data.c.join('/')}`;
+    return { isValid: true, data: `/${parsedParams.data.a}/${parsedParams.data.b}/${parsedParams.data.c.join('/')}` };
   },
 };
 
 export const fc_2ijh4e = {
   $path,
-  async $post(req: { params: z.infer<typeof paramsSchema>, init?: RequestInit }) {
+  async $post(req: { params: z.infer<typeof paramsSchema>, init?: RequestInit }): Promise<
+    { ok: true; isValid: true; data: { status: 200; headers?: undefined; body: z.infer<typeof frourioSpec.post.res[200]['body']> }; error?: undefined } |
+    { ok: false; isValid: true; data?: undefined; error?: undefined } |
+    { ok: boolean; isValid: false; data: Response; error: z.ZodError } |
+    { ok: boolean; isValid?: undefined; data: Response; error: unknown } |
+    { ok?: undefined; isValid: false; data?: undefined; error: z.ZodError } |
+    { ok?: undefined; isValid?: undefined; data?: undefined; error: unknown }
+  > {
     const url = $path.post(req);
 
-    if (!url) return;
+    if (url.error) return url;
 
-    const res = await fetch(
-      url,
+    const result: { success: true; res: Response } | { success: false; error: unknown } = await fetch(
+      url.data,
       {
         method: 'POST',
         ...req.init,
       }
-    );
+    ).then(res => ({ success: true, res } as const)).catch(error => ({ success: false, error }));
+
+    if (!result.success) return { error: result.error };
+
+    switch (result.res.status) {
+      case 200: {
+        const json: { success: true; data: unknown } | { success: false; error: unknown } = await result.res.json().then(data => ({ success: true, data } as const)).catch(error => ({ success: false, error }));
+
+        if (!json.success) return { ok: true, data: result.res, error: json.error };
+
+        const body = frourioSpec.post.res[200].body.safeParse(json.data);
+
+        if (!body.success) return { ok: true, data: result.res, error: body.error };
+
+        return {
+          ok: true,
+          isValid: true,
+          data: { status: 200, body: body.data }
+        };
+      }
+      default:
+        return { ok: result.res.ok, data: result.res, error: new Error(`Unknown status: ${result.res.status}`) };
+    }
   },
 };

@@ -419,13 +419,9 @@ ${
               : ''
         }
         ...req.init,${
-          method.body || method.hasHeaders
+          method.body?.isFormData === false || method.hasHeaders
             ? `\n        headers: { ${
-                method.body?.isFormData
-                  ? "'content-type': 'multipart/form-data', "
-                  : method.body
-                    ? "'content-type': 'application/json', "
-                    : ''
+                method.body?.isFormData === false ? "'content-type': 'application/json', " : ''
               }${method.hasHeaders ? '...parsedHeaders.data as HeadersInit, ' : ''}...req.init?.headers },`
             : ''
         }

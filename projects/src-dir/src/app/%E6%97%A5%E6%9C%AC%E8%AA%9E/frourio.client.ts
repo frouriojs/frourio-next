@@ -72,7 +72,6 @@ const methods = (option?: FrourioClientOption) => ({
         method: 'POST',
         body: formData,
         ...req.init,
-        headers: { 'content-type': 'multipart/form-data', ...req.init?.headers },
       }
     ).then(res => ({ success: true, res } as const)).catch(error => ({ success: false, error }));
 

@@ -592,7 +592,7 @@ ${
         ? `return await controller.middleware(
       {
         req: ${middleware.ancestor ? 'ancestorArgs.req' : 'originalReq'},${params ? '\n        params: params.data,' : ''}
-        next: async (req${middleware.ancestorCtx || middleware.current.hasCtx ? ', context' : ''}) => {
+        next: async (req${middleware.current.hasCtx ? ', context' : ''}) => {
 ${
   middleware.current.hasCtx
     ? `      const ctx = frourioSpec.middleware.context.safeParse(context);

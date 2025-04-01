@@ -474,6 +474,133 @@
           }
         }
       }
+    },
+    "/api/mw": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/3wlr08"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/mw/admin": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/1pak35i"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/t6xdqk"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/cerl29"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/5egcor"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/u0w6th"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/mw/admin/users": {
+      "get": {
+        "parameters": [
+          {
+            "name": "role",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/eveg5u"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/tqwl4i"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/mw/public": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/scyknn"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -828,6 +955,218 @@
         },
         "required": [
           "value"
+        ]
+      },
+      "xc3q4t": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "$ref": "#/components/schemas/3wlr08"
+          }
+        },
+        "required": [
+          "body"
+        ]
+      },
+      "3wlr08": {
+        "type": "object",
+        "properties": {
+          "traceId": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "traceId"
+        ]
+      },
+      "1jb85rx": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "$ref": "#/components/schemas/1pak35i"
+          }
+        },
+        "required": [
+          "body"
+        ]
+      },
+      "1pak35i": {
+        "type": "object",
+        "properties": {
+          "traceId": {
+            "type": "string"
+          },
+          "isAdmin": {
+            "type": "boolean"
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "userId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "isAdmin",
+          "permissions",
+          "traceId"
+        ]
+      },
+      "1pcnyyb": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "$ref": "#/components/schemas/t6xdqk"
+          }
+        },
+        "required": [
+          "body"
+        ]
+      },
+      "t6xdqk": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "cerl29": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "1mwfxsa": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "$ref": "#/components/schemas/5egcor"
+          }
+        },
+        "required": [
+          "body"
+        ]
+      },
+      "5egcor": {
+        "type": "object",
+        "properties": {
+          "received": {
+            "type": "string"
+          },
+          "context": {
+            "$ref": "#/components/schemas/1pak35i"
+          }
+        },
+        "required": [
+          "context",
+          "received"
+        ]
+      },
+      "vq2zfz": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "$ref": "#/components/schemas/u0w6th"
+          }
+        },
+        "required": [
+          "body"
+        ]
+      },
+      "u0w6th": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "18qhf3f": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "$ref": "#/components/schemas/eveg5u"
+          }
+        },
+        "required": [
+          "body"
+        ]
+      },
+      "eveg5u": {
+        "type": "object",
+        "properties": {
+          "users": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "context": {}
+        },
+        "required": [
+          "users"
+        ]
+      },
+      "w02l4y": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "$ref": "#/components/schemas/tqwl4i"
+          }
+        },
+        "required": [
+          "body"
+        ]
+      },
+      "tqwl4i": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "wa26tx": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "$ref": "#/components/schemas/scyknn"
+          }
+        },
+        "required": [
+          "body"
+        ]
+      },
+      "scyknn": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
         ]
       }
     }

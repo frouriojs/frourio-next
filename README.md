@@ -402,8 +402,9 @@ Define middleware in `frourio.ts` to execute code before your main route handler
 
 ### 1. Define Middleware in `frourio.ts`
 
-- **Inherit**: Set `middleware: true` to use middleware defined in parent directories.
-- **Define**: Specify a `middleware` object with a `context` schema (using Zod) to define the data passed _from_ this middleware _to_ its children (handlers or nested middleware).
+- **Inherit & Execute Logic (No Context Change)**: Set `middleware: true` to inherit context from parent middleware AND execute middleware logic defined in the current directory's `route.ts`. The context passed to children (handlers or nested middleware) remains unchanged from the parent.
+- **Inherit & Add Context**: Specify a `middleware` object with a `context` schema (using Zod) to inherit context from parent middleware AND define additional context passed _from_ this middleware _to_ its children.
+- **Inherit Only (Default)**: Omitting the `middleware` property entirely defaults to inheriting context from the parent middleware without executing any middleware logic in the current directory. Handlers will receive the parent's context directly.
 
 `app/api/frourio.ts` (Root middleware - e.g., for authentication):
 

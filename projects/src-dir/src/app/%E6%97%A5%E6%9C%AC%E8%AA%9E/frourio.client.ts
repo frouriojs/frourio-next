@@ -1,14 +1,19 @@
+import type { FrourioClientOption } from '@frourio/next';
 import { z } from 'zod';
 import { frourioSpec } from './frourio'
 
-const $path = {
-  post(req: {  }): { isValid: true; data: string; error?: undefined } | { isValid: false, data?: undefined; error: z.ZodError } {
-    return { isValid: true, data: `/%E6%97%A5%E6%9C%AC%E8%AA%9E` };
-  },
-};
+export const fc_10q2n2o = (option?: FrourioClientOption) => ({
+  $path: $path(option),
+  ...methods(option),
+});
 
-export const fc_10q2n2o = {
-  $path,
+const $path = (option?: FrourioClientOption) => ({
+  post(req: {  }): { isValid: true; data: string; error?: undefined } | { isValid: false, data?: undefined; error: z.ZodError } {
+    return { isValid: true, data: `${option?.baseURL ?? ''}/foo/bar/%E6%97%A5%E6%9C%AC%E8%AA%9E` };
+  },
+});
+
+const methods = (option?: FrourioClientOption) => ({
   async $post(req: { body: z.infer<typeof frourioSpec.post.body>, init?: RequestInit }): Promise<
     { ok: true; isValid: true; data: { status: 200; headers?: undefined; body: z.infer<typeof frourioSpec.post.res[200]['body']> }; error?: undefined } |
     { ok: false; isValid: true; data?: undefined; error?: undefined } |
@@ -17,7 +22,7 @@ export const fc_10q2n2o = {
     { ok?: undefined; isValid: false; data?: undefined; error: z.ZodError } |
     { ok?: undefined; isValid?: undefined; data?: undefined; error: unknown }
   > {
-    const url = $path.post(req);
+    const url = $path(option).post(req);
 
     if (url.error) return url;
 
@@ -75,4 +80,4 @@ export const fc_10q2n2o = {
         return { ok: result.res.ok, data: result.res, error: new Error(`Unknown status: ${result.res.status}`) };
     }
   },
-};
+});

@@ -1,20 +1,25 @@
+import type { FrourioClientOption } from '@frourio/next';
 import { z } from 'zod';
 import { frourioSpec } from './frourio'
 
+export const fc_1c6qmxu = (option?: FrourioClientOption) => ({
+  $path: $path(option),
+  ...methods(option),
+});
+
 const paramsSchema = z.object({ 'pid': z.string() });
 
-const $path = {
+const $path = (option?: FrourioClientOption) => ({
   get(req: { params: z.infer<typeof paramsSchema> }): { isValid: true; data: string; error?: undefined } | { isValid: false, data?: undefined; error: z.ZodError } {
     const parsedParams = paramsSchema.safeParse(req.params);
 
     if (!parsedParams.success) return { isValid: false, error: parsedParams.error };
 
-    return { isValid: true, data: `/${parsedParams.data.pid}/foo` };
+    return { isValid: true, data: `${option?.baseURL ?? ''}//${parsedParams.data.pid}/foo` };
   },
-};
+});
 
-export const fc_1c6qmxu = {
-  $path,
+const methods = (option?: FrourioClientOption) => ({
   async $get(req: { params: z.infer<typeof paramsSchema>, init?: RequestInit }): Promise<
     { ok: true; isValid: true; data: { status: 200; headers?: undefined; body: z.infer<typeof frourioSpec.get.res[200]['body']> }; error?: undefined } |
     { ok: false; isValid: true; data?: undefined; error?: undefined } |
@@ -23,7 +28,7 @@ export const fc_1c6qmxu = {
     { ok?: undefined; isValid: false; data?: undefined; error: z.ZodError } |
     { ok?: undefined; isValid?: undefined; data?: undefined; error: unknown }
   > {
-    const url = $path.get(req);
+    const url = $path(option).get(req);
 
     if (url.error) return url;
 
@@ -57,4 +62,4 @@ export const fc_1c6qmxu = {
         return { ok: result.res.ok, data: result.res, error: new Error(`Unknown status: ${result.res.status}`) };
     }
   },
-};
+});

@@ -9,11 +9,11 @@ export const run = async (args: string[]) => {
     alias: { o: 'output', w: 'watch' },
   });
 
-  const { appDir, output } = getOpenapiConfig(argv.output);
+  const config = await getOpenapiConfig(argv.output);
 
-  if (!appDir) return;
+  await generateOpenapi(config);
 
-  await generateOpenapi(appDir, output);
-
-  if (argv.watch !== undefined) watch(appDir, () => generateOpenapi(appDir, output));
+  if (argv.watch !== undefined && config.appDir) {
+    watch(config.appDir, () => generateOpenapi(config));
+  }
 };

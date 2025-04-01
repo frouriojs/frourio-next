@@ -1,14 +1,17 @@
 import path from 'path';
 import { getConfig } from '../getConfig';
 
-export const getOpenapiConfig = (
+export type OpenapiConfig = {
+  appDir: string | undefined;
+  basePath: string | undefined;
+  output: string;
+};
+
+export const getOpenapiConfig = async (
   output: string | undefined,
   dir = process.cwd(),
-): {
-  appDir: string | undefined;
-  output: string;
-} => {
-  const config = getConfig(dir);
+): Promise<OpenapiConfig> => {
+  const config = await getConfig(dir);
 
-  return { appDir: config.appDir, output: output ?? path.posix.join(dir, 'public/openapi.json') };
+  return { ...config, output: output ?? path.posix.join(dir, 'public/openapi.json') };
 };

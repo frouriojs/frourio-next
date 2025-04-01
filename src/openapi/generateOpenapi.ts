@@ -7,14 +7,18 @@ import * as TJS from 'typescript-json-schema';
 import { FROURIO_FILE, SERVER_FILE } from '../constants';
 import { createHash } from '../createHash';
 import { listFrourioDirs } from '../listFrourioDirs';
+import type { OpenapiConfig } from './getOpenapiConfig';
 
-export const generateOpenapi = (appDir: string, output: string) => {
+export const generateOpenapi = ({ appDir, basePath, output }: OpenapiConfig) => {
+  if (!appDir) return;
+
   const existingDoc: OpenAPIV3_1.Document | undefined = existsSync(output)
     ? JSON.parse(readFileSync(output, 'utf8'))
     : undefined;
   const template: OpenAPIV3_1.Document = {
     openapi: '3.1.0',
     info: { title: `${output.split('/').at(-1)?.replace('.json', '')} api`, version: 'v0.0' },
+    ...(basePath ? { servers: [{ url: basePath }] } : {}),
     ...existingDoc,
     paths: {},
     components: {},

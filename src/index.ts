@@ -27,3 +27,5 @@ export type FrourioSpec = {
     res?: FrourioResponse;
   };
 };
+
+export type FrourioClientOption = { baseURL?: string };

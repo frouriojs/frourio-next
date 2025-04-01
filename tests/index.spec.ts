@@ -34,15 +34,15 @@ test('generate', async () => {
 
   await Promise.all(
     projectDirs.map(async (dir) => {
-      const { appDir, output } = getOpenapiConfig(undefined, dir);
+      const config = await getOpenapiConfig(undefined, dir);
 
-      assert(appDir);
+      assert(config.appDir);
 
-      const frourioDirs = listFrourioDirs(appDir);
+      const frourioDirs = listFrourioDirs(config.appDir);
 
       await Promise.all(frourioDirs.map((dir) => unlink(path.join(dir, SERVER_FILE))));
-      await generate(appDir);
-      await generateOpenapi(appDir, output);
+      await generate(config);
+      await generateOpenapi(config);
     }),
   );
 

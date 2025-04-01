@@ -9,11 +9,11 @@ export const run = async (args: string[]) => {
     alias: { w: 'watch' },
   });
 
-  const { appDir } = getConfig();
+  const config = await getConfig();
 
-  if (!appDir) return;
+  await generate(config);
 
-  await generate(appDir);
-
-  if (argv.watch !== undefined) watch(appDir, () => generate(appDir));
+  if (argv.watch !== undefined && config.appDir) {
+    watch(config.appDir, () => generate(config));
+  }
 };

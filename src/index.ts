@@ -28,4 +28,4 @@ export type FrourioSpec = {
   };
 };
 
-export type FrourioClientOption = { baseURL?: string };
+export type FrourioClientOption = { baseURL?: string; init?: RequestInit };

@@ -60,7 +60,9 @@ const methods = (option?: FrourioClientOption) => ({
       url.data,
       {
         method: 'GET',
+        ...option?.init,
         ...req.init,
+        headers: { ...option?.init?.headers, ...req.init?.headers },
       }
     ).then(res => ({ success: true, res } as const)).catch(error => ({ success: false, error }));
 

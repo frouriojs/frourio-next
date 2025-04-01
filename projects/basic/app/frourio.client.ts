@@ -97,8 +97,9 @@ const methods = (option?: FrourioClientOption) => ({
       url.data,
       {
         method: 'GET',
+        ...option?.init,
         ...req.init,
-        headers: { ...parsedHeaders.data as HeadersInit, ...req.init?.headers },
+        headers: { ...option?.init?.headers, ...parsedHeaders.data as HeadersInit, ...req.init?.headers },
       }
     ).then(res => ({ success: true, res } as const)).catch(error => ({ success: false, error }));
 
@@ -150,9 +151,10 @@ const methods = (option?: FrourioClientOption) => ({
       url.data,
       {
         method: 'POST',
+        ...option?.init,
         body: JSON.stringify(parsedBody.data),
         ...req.init,
-        headers: { 'content-type': 'application/json', ...req.init?.headers },
+        headers: { ...option?.init?.headers, 'content-type': 'application/json', ...req.init?.headers },
       }
     ).then(res => ({ success: true, res } as const)).catch(error => ({ success: false, error }));
 

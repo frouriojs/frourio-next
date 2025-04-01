@@ -411,20 +411,18 @@ ${
     const result: { success: true; res: Response } | { success: false; error: unknown } = await fetch(
       url.data,
       {
-        method: '${method.name.toUpperCase()}',${
+        method: '${method.name.toUpperCase()}',
+        ...option?.init,${
           method.body?.isFormData
             ? '\n        body: formData,'
             : method.body
               ? '\n        body: JSON.stringify(parsedBody.data),'
               : ''
         }
-        ...req.init,${
-          method.body?.isFormData === false || method.hasHeaders
-            ? `\n        headers: { ${
-                method.body?.isFormData === false ? "'content-type': 'application/json', " : ''
-              }${method.hasHeaders ? '...parsedHeaders.data as HeadersInit, ' : ''}...req.init?.headers },`
-            : ''
-        }
+        ...req.init,
+        headers: { ...option?.init?.headers, ${
+          method.body?.isFormData === false ? "'content-type': 'application/json', " : ''
+        }${method.hasHeaders ? '...parsedHeaders.data as HeadersInit, ' : ''}...req.init?.headers },
       }
     ).then(res => ({ success: true, res } as const)).catch(error => ({ success: false, error }));
 

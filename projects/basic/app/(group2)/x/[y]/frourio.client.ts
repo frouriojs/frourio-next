@@ -7,6 +7,27 @@ export const fc_13e9lnf = (option?: FrourioClientOption) => ({
   ...methods(option),
 });
 
+export const $fc_13e9lnf = (option?: FrourioClientOption) => ({
+  $path: {
+    get(req: Parameters<ReturnType<typeof $path>['get']>[0]): string {
+      const result = $path(option).get(req);
+
+      if (!result.isValid) throw result.error;
+
+      return result.data;
+    },
+  },
+  async $get(req: Parameters<ReturnType<typeof methods>['$get']>[0]): Promise<Response> {
+    const result = await methods(option).$get(req);
+
+    if (!result.isValid) throw result.error;
+
+    if (!result.ok) throw new Error(`HTTP Error: ${result.data.status}`);
+
+    return result.data;
+  },
+});
+
 const paramsSchema = z.object({ 'y': z.string() });
 
 const $path = (option?: FrourioClientOption) => ({
@@ -31,17 +52,17 @@ const $path = (option?: FrourioClientOption) => ({
       }
     });
 
-    return { isValid: true, data: `${option?.baseURL ?? ''}//x/${parsedParams.data.y}?${searchParams.toString()}` };
+    return { isValid: true, data: `${option?.baseURL ?? ''}/x/${parsedParams.data.y}?${searchParams.toString()}` };
   },
 });
 
 const methods = (option?: FrourioClientOption) => ({
   async $get(req: { params: z.infer<typeof paramsSchema>, query: z.infer<typeof frourioSpec.get.query>, init?: RequestInit }): Promise<
-    { ok: boolean; isValid: true; data: Response; error?: undefined } |
-    { ok: boolean; isValid: false; data: Response; error: z.ZodError } |
-    { ok: boolean; isValid?: undefined; data: Response; error: unknown } |
-    { ok?: undefined; isValid: false; data?: undefined; error: z.ZodError } |
-    { ok?: undefined; isValid?: undefined; data?: undefined; error: unknown }
+    | { ok: boolean; isValid: true; data: Response; error?: undefined }
+    | { ok: boolean; isValid: false; data: Response; error: z.ZodError }
+    | { ok: boolean; isValid?: undefined; data: Response; error: unknown }
+    | { ok?: undefined; isValid: false; data?: undefined; error: z.ZodError }
+    | { ok?: undefined; isValid?: undefined; data?: undefined; error: unknown }
   > {
     const url = $path(option).get(req);
 

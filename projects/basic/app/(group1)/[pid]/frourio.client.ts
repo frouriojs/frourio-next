@@ -1,12 +1,32 @@
 import type { FrourioClientOption } from '@frourio/next';
 import { z } from 'zod';
-import { fc_1c6qmxu } from './foo/frourio.client';
+import { fc_1c6qmxu, $fc_1c6qmxu } from './foo/frourio.client';
 import { frourioSpec } from './frourio'
 
 export const fc_rket09 = (option?: FrourioClientOption) => ({
   'foo': fc_1c6qmxu(option),
   $path: $path(option),
   ...methods(option),
+});
+
+export const $fc_rket09 = (option?: FrourioClientOption) => ({
+  'foo': $fc_1c6qmxu(option),
+  $path: {
+    get(req: Parameters<ReturnType<typeof $path>['get']>[0]): string {
+      const result = $path(option).get(req);
+
+      if (!result.isValid) throw result.error;
+
+      return result.data;
+    },
+  },
+  async $get(req: Parameters<ReturnType<typeof methods>['$get']>[0]): Promise<z.infer<typeof frourioSpec.get.res[200]['body']>> {
+    const result = await methods(option).$get(req);
+
+    if (!result.isValid) throw result.error;
+
+    return result.data.body;
+  },
 });
 
 const paramsSchema = z.object({ 'pid': z.string() });
@@ -33,18 +53,17 @@ const $path = (option?: FrourioClientOption) => ({
       }
     });
 
-    return { isValid: true, data: `${option?.baseURL ?? ''}//${parsedParams.data.pid}?${searchParams.toString()}` };
+    return { isValid: true, data: `${option?.baseURL ?? ''}/${parsedParams.data.pid}?${searchParams.toString()}` };
   },
 });
 
 const methods = (option?: FrourioClientOption) => ({
   async $get(req: { params: z.infer<typeof paramsSchema>, query: z.infer<typeof frourioSpec.get.query>, init?: RequestInit }): Promise<
-    { ok: true; isValid: true; data: { status: 200; headers?: undefined; body: z.infer<typeof frourioSpec.get.res[200]['body']> }; error?: undefined } |
-    { ok: false; isValid: true; data?: undefined; error?: undefined } |
-    { ok: boolean; isValid: false; data: Response; error: z.ZodError } |
-    { ok: boolean; isValid?: undefined; data: Response; error: unknown } |
-    { ok?: undefined; isValid: false; data?: undefined; error: z.ZodError } |
-    { ok?: undefined; isValid?: undefined; data?: undefined; error: unknown }
+    | { ok: true; isValid: true; data: { status: 200; headers?: undefined; body: z.infer<typeof frourioSpec.get.res[200]['body']> }; error?: undefined }
+    | { ok: boolean; isValid: false; data: Response; error: z.ZodError }
+    | { ok: boolean; isValid?: undefined; data: Response; error: unknown }
+    | { ok?: undefined; isValid: false; data?: undefined; error: z.ZodError }
+    | { ok?: undefined; isValid?: undefined; data?: undefined; error: unknown }
   > {
     const url = $path(option).get(req);
 

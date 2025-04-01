@@ -192,7 +192,6 @@ const clientData = (
     .filter((dir, _, arr) =>
       arr.every((other) => !dir.import.startsWith(other.import) || dir.import === other.import),
     );
-  const apiPath = `${basePath || '/'}${dirPath === appDir ? '' : dirPath.replace(appDir, '').replace(/\/\(.+?\)/g, '')}`;
   const imports: string[] = [
     "import type { FrourioClientOption } from '@frourio/next'",
     "import { z } from 'zod'",
@@ -201,10 +200,14 @@ const clientData = (
     ) ?? []),
     ...childDirs.map(
       (child) =>
-        `import { ${CLIENT_NAME}_${child.hash} } from './${child.import}/${CLIENT_FILE.replace('.ts', '')}'`,
+        `import { ${CLIENT_NAME}_${child.hash}, $${CLIENT_NAME}_${child.hash} } from './${child.import}/${CLIENT_FILE.replace('.ts', '')}'`,
     ),
     "import { frourioSpec } from './frourio'",
   ];
+  const apiPath =
+    dirPath === appDir
+      ? basePath || '/'
+      : `${basePath ?? ''}${dirPath.replace(appDir, '').replace(/\/\(.+?\)/g, '')}`;
 
   return `${imports.join(';\n')}
 
@@ -213,6 +216,56 @@ export const ${CLIENT_NAME}${dirPath !== appDir ? `_${createHash(dirPath.replace
     .join('')}
   $path: $path(option),
   ...methods(option),
+});
+
+export const $${CLIENT_NAME}${dirPath !== appDir ? `_${createHash(dirPath.replace(appDir, ''))}` : ''} = (option?: FrourioClientOption) => ({${childDirs
+    .map((child) => `\n  '${child.import}': $${CLIENT_NAME}_${child.hash}(option),`)
+    .join('')}
+  $path: {${methods
+    .map(
+      (method) => `
+    ${method.name}(req: Parameters<ReturnType<typeof $path>['${method.name}']>[0]): string {
+      const result = $path(option).${method.name}(req);
+
+      if (!result.isValid) throw result.error;
+
+      return result.data;
+    },`,
+    )
+    .join('')}
+  },${methods
+    .map(
+      (method) => `
+  async $${method.name}(req: Parameters<ReturnType<typeof methods>['$${method.name}']>[0]): Promise<${
+    method.res?.every((r) => !r.status.startsWith('2'))
+      ? 'never'
+      : !method.res
+        ? 'Response'
+        : `z.infer<typeof frourioSpec.${method.name}.res[${method.res
+            .filter((r) => r.status.startsWith('2'))
+            .map((r) => r.status)
+            .join(' | ')}]['body']>`
+  }> {
+    const result = await methods(option).$${method.name}(req);
+
+    if (!result.isValid) throw result.error;
+
+    ${
+      method.res?.every((r) => !r.status.startsWith('2'))
+        ? 'throw new Error(`HTTP Error: ${result.data.status}`);'
+        : !method.res
+          ? `if (!result.ok) throw new Error(\`HTTP Error: \${result.data.status}\`);
+
+    return result.data;`
+          : `${
+              method.res.some((r) => !r.status.startsWith('2'))
+                ? `if (!result.ok) throw new Error(\`HTTP Error: \${result.data.status}\`);\n\n    `
+                : ''
+            }return result.data.body;`
+    }
+  },`,
+    )
+    .join('')}
 });
 ${params ? `\nconst paramsSchema = ${clientParamsToText(params)};\n` : ''}
 const $path = (option?: FrourioClientOption) => ({${methods
@@ -273,53 +326,51 @@ const methods = (option?: FrourioClientOption) => ({${methods
         ...(method.query ? [`query: z.infer<typeof frourioSpec.${method.name}.query>`] : []),
         ...(method.body ? [`body: z.infer<typeof frourioSpec.${method.name}.body>`] : []),
         'init?: RequestInit',
-      ].join(', ')} }): Promise<
-    ${
-      !method.res
-        ? '{ ok: boolean; isValid: true; data: Response'
-        : `{ ok: true; isValid: true; data${
-            method.res.some((r) => r.status.startsWith('2'))
-              ? `: ${method.res
-                  .filter((r) => r.status.startsWith('2'))
-                  .map(
-                    (r) =>
-                      `{ status: ${r.status}; headers${
-                        r.hasHeaders
-                          ? `: z.infer<typeof frourioSpec.${method.name}.res[${r.status}]['headers']>`
-                          : '?: undefined'
-                      }; body${
-                        r.hasBody
-                          ? `: z.infer<typeof frourioSpec.${method.name}.res[${r.status}]['body']>`
-                          : '?: undefined'
-                      } }`,
-                  )
-                  .join(' | ')}`
-              : '?: undefined'
-          }; error?: undefined } |
-    { ok: false; isValid: true; data${
-      method.res.some((r) => !r.status.startsWith('2'))
-        ? `: ${method.res
-            .filter((r) => !r.status.startsWith('2'))
-            .map(
-              (r) =>
-                `{ status: ${r.status}; headers${
-                  r.hasHeaders
-                    ? `: z.infer<typeof frourioSpec.${method.name}.res[${r.status}]['headers']>`
-                    : '?: undefined'
-                }; body${
-                  r.hasBody
-                    ? `: z.infer<typeof frourioSpec.${method.name}.res[${r.status}]['body']>`
-                    : '?: undefined'
-                } }`,
-            )
-            .join(' | ')}`
-        : '?: undefined'
-    }`
-    }; error?: undefined } |
-    { ok: boolean; isValid: false; data: Response; error: z.ZodError } |
-    { ok: boolean; isValid?: undefined; data: Response; error: unknown } |
-    { ok?: undefined; isValid: false; data?: undefined; error: z.ZodError } |
-    { ok?: undefined; isValid?: undefined; data?: undefined; error: unknown }
+      ].join(', ')} }): Promise<${
+        !method.res
+          ? '\n    | { ok: boolean; isValid: true; data: Response; error?: undefined }'
+          : `${
+              method.res.some((r) => r.status.startsWith('2'))
+                ? `\n    | { ok: true; isValid: true; data: ${method.res
+                    .filter((r) => r.status.startsWith('2'))
+                    .map(
+                      (r) =>
+                        `{ status: ${r.status}; headers${
+                          r.hasHeaders
+                            ? `: z.infer<typeof frourioSpec.${method.name}.res[${r.status}]['headers']>`
+                            : '?: undefined'
+                        }; body${
+                          r.hasBody
+                            ? `: z.infer<typeof frourioSpec.${method.name}.res[${r.status}]['body']>`
+                            : '?: undefined'
+                        } }`,
+                    )
+                    .join(' | ')}; error?: undefined }`
+                : ''
+            }${
+              method.res.some((r) => !r.status.startsWith('2'))
+                ? `\n    | { ok: false; isValid: true; data: ${method.res
+                    .filter((r) => !r.status.startsWith('2'))
+                    .map(
+                      (r) =>
+                        `{ status: ${r.status}; headers${
+                          r.hasHeaders
+                            ? `: z.infer<typeof frourioSpec.${method.name}.res[${r.status}]['headers']>`
+                            : '?: undefined'
+                        }; body${
+                          r.hasBody
+                            ? `: z.infer<typeof frourioSpec.${method.name}.res[${r.status}]['body']>`
+                            : '?: undefined'
+                        } }`,
+                    )
+                    .join(' | ')}; error?: undefined }`
+                : ''
+            }`
+      }
+    | { ok: boolean; isValid: false; data: Response; error: z.ZodError }
+    | { ok: boolean; isValid?: undefined; data: Response; error: unknown }
+    | { ok?: undefined; isValid: false; data?: undefined; error: z.ZodError }
+    | { ok?: undefined; isValid?: undefined; data?: undefined; error: unknown }
   > {
     const url = $path(option).${method.name}(req);
 

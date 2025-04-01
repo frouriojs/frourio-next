@@ -1,7 +1,7 @@
 import type { FrourioClientOption } from '@frourio/next';
 import { z } from 'zod';
-import { fc_2ijh4e } from './[b]/[...c]/frourio.client';
-import { fc_1yzfjrp } from './[b]/d/frourio.client';
+import { fc_2ijh4e, $fc_2ijh4e } from './[b]/[...c]/frourio.client';
+import { fc_1yzfjrp, $fc_1yzfjrp } from './[b]/d/frourio.client';
 import { frourioSpec } from './frourio'
 
 export const fc_knqmrp = (option?: FrourioClientOption) => ({
@@ -9,6 +9,27 @@ export const fc_knqmrp = (option?: FrourioClientOption) => ({
   '[b]/d': fc_1yzfjrp(option),
   $path: $path(option),
   ...methods(option),
+});
+
+export const $fc_knqmrp = (option?: FrourioClientOption) => ({
+  '[b]/[...c]': $fc_2ijh4e(option),
+  '[b]/d': $fc_1yzfjrp(option),
+  $path: {
+    get(req: Parameters<ReturnType<typeof $path>['get']>[0]): string {
+      const result = $path(option).get(req);
+
+      if (!result.isValid) throw result.error;
+
+      return result.data;
+    },
+  },
+  async $get(req: Parameters<ReturnType<typeof methods>['$get']>[0]): Promise<z.infer<typeof frourioSpec.get.res[200]['body']>> {
+    const result = await methods(option).$get(req);
+
+    if (!result.isValid) throw result.error;
+
+    return result.data.body;
+  },
 });
 
 const paramsSchema = z.object({ 'a': frourioSpec.param });
@@ -19,18 +40,17 @@ const $path = (option?: FrourioClientOption) => ({
 
     if (!parsedParams.success) return { isValid: false, error: parsedParams.error };
 
-    return { isValid: true, data: `${option?.baseURL ?? ''}//${parsedParams.data.a}` };
+    return { isValid: true, data: `${option?.baseURL ?? ''}/${parsedParams.data.a}` };
   },
 });
 
 const methods = (option?: FrourioClientOption) => ({
   async $get(req: { params: z.infer<typeof paramsSchema>, init?: RequestInit }): Promise<
-    { ok: true; isValid: true; data: { status: 200; headers?: undefined; body: z.infer<typeof frourioSpec.get.res[200]['body']> }; error?: undefined } |
-    { ok: false; isValid: true; data?: undefined; error?: undefined } |
-    { ok: boolean; isValid: false; data: Response; error: z.ZodError } |
-    { ok: boolean; isValid?: undefined; data: Response; error: unknown } |
-    { ok?: undefined; isValid: false; data?: undefined; error: z.ZodError } |
-    { ok?: undefined; isValid?: undefined; data?: undefined; error: unknown }
+    | { ok: true; isValid: true; data: { status: 200; headers?: undefined; body: z.infer<typeof frourioSpec.get.res[200]['body']> }; error?: undefined }
+    | { ok: boolean; isValid: false; data: Response; error: z.ZodError }
+    | { ok: boolean; isValid?: undefined; data: Response; error: unknown }
+    | { ok?: undefined; isValid: false; data?: undefined; error: z.ZodError }
+    | { ok?: undefined; isValid?: undefined; data?: undefined; error: unknown }
   > {
     const url = $path(option).get(req);
 

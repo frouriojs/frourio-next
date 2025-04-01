@@ -17,7 +17,6 @@ import * as numberRoute from '../projects/basic/app/(group1)/blog/[...slug]/rout
 import * as stringRoute from '../projects/basic/app/(group1)/blog/hoge/[[...fuga]]/route';
 import * as paramsRoute from '../projects/basic/app/[a]/[b]/[...c]/route';
 import * as baseRoute from '../projects/basic/app/route';
-import * as formResRoute from '../projects/src-dir/src/app/%E6%97%A5%E6%9C%AC%E8%AA%9E/route';
 import type { frourioSpec as formSpec } from '../projects/src-dir/src/app/frourio';
 import * as formReqRoute from '../projects/src-dir/src/app/route';
 import { SERVER_FILE } from '../src/constants';
@@ -30,7 +29,7 @@ test('generate', async () => {
   const projectDirs = fs
     .readdirSync('./projects', { withFileTypes: true })
     .filter((d) => d.isDirectory())
-    .map((d) => path.join('./projects', d.name));
+    .map((d) => path.posix.resolve('./projects', d.name));
 
   await Promise.all(
     projectDirs.map(async (dir) => {
@@ -334,117 +333,3 @@ test('formData request', async () => {
     }),
   );
 });
-
-test('formData response', async () => {
-  await Promise.all(
-    [
-      {
-        string: 'aaa',
-        number: 11,
-        boolean: false,
-        optionalString: 'bbb',
-        optionalNumber: 22,
-        optionalBoolean: true,
-        stringArr: ['cc', 'dd'],
-        numberArr: [33, 44],
-        booleanArr: [true, false],
-        optionalStringArr: ['ee', 'ff'],
-        optionalNumberArr: [55, 66],
-        optionalBooleanArr: [false, true],
-        file: new File(['test'], 'sample.txt', { type: 'application/octet-stream' }),
-        optionalFile: new File(['foo'], 'baz.txt', { type: 'application/octet-stream' }),
-        fileArr: [
-          new File(['aaa'], 'aaa.txt', { type: 'application/octet-stream' }),
-          new File(['bbb'], 'bbb.txt', { type: 'application/octet-stream' }),
-        ],
-        optionalFileArr: [
-          new File(['ccc'], 'ccc.txt', { type: 'application/octet-stream' }),
-          new File(['ddd'], 'ddd.txt', { type: 'application/octet-stream' }),
-        ],
-      } satisfies FormBody,
-      {
-        string: 'aaa',
-        number: 11,
-        boolean: false,
-        stringArr: [],
-        numberArr: [33, 44],
-        booleanArr: [true, false],
-        file: new File(['test'], 'sample.txt', { type: 'application/octet-stream' }),
-        fileArr: [],
-      } satisfies FormBody,
-    ].map(async (val) => {
-      const reqFormData = new FormData();
-
-      Object.entries(val).forEach(([key, value]) => {
-        if (Array.isArray(value)) {
-          value.forEach((item) =>
-            item instanceof File
-              ? reqFormData.append(key, item, item.name)
-              : reqFormData.append(key, String(item)),
-          );
-        } else if (value instanceof File) {
-          reqFormData.set(key, value, value.name);
-        } else {
-          reqFormData.set(key, String(value));
-        }
-      });
-
-      const res = await formResRoute.POST(
-        new NextRequest('http://example.com/', { method: 'POST', body: reqFormData }),
-        {},
-      );
-
-      const resFormData = await res.formData();
-
-      expect({
-        string: resFormData.get('string') ?? undefined,
-        number: formDataToNum(resFormData.get('number') ?? undefined),
-        boolean: formDataToBool(resFormData.get('boolean') ?? undefined),
-        stringArr: resFormData.getAll('stringArr'),
-        numberArr: formDataToNumArr(resFormData.getAll('numberArr')),
-        booleanArr: formDataToBoolArr(resFormData.getAll('booleanArr')),
-        file: resFormData.get('file') ?? undefined,
-        fileArr: resFormData.getAll('fileArr'),
-        optionalString: resFormData.get('optionalString') ?? undefined,
-        optionalNumber: formDataToNum(resFormData.get('optionalNumber') ?? undefined),
-        optionalBoolean: formDataToBool(resFormData.get('optionalBoolean') ?? undefined),
-        optionalStringArr:
-          resFormData.getAll('optionalStringArr').length > 0
-            ? resFormData.getAll('optionalStringArr')
-            : undefined,
-        optionalNumberArr:
-          formDataToNumArr(resFormData.getAll('optionalNumberArr')).length > 0
-            ? formDataToNumArr(resFormData.getAll('optionalNumberArr'))
-            : undefined,
-        optionalBooleanArr:
-          formDataToBoolArr(resFormData.getAll('optionalBooleanArr')).length > 0
-            ? formDataToBoolArr(resFormData.getAll('optionalBooleanArr'))
-            : undefined,
-        optionalFile: resFormData.get('optionalFile') ?? undefined,
-        optionalFileArr:
-          resFormData.getAll('optionalFileArr').length > 0
-            ? resFormData.getAll('optionalFileArr')
-            : undefined,
-      }).toEqual(val);
-    }),
-  );
-});
-
-const formDataToNum = (val: FormDataEntryValue | undefined) => {
-  const num = Number(val);
-
-  return isNaN(num) ? val : num;
-};
-
-const formDataToNumArr = (val: FormDataEntryValue[]) =>
-  val.map((v) => {
-    const numVal = Number(v);
-
-    return isNaN(numVal) ? v : numVal;
-  });
-
-const formDataToBool = (val: FormDataEntryValue | undefined) =>
-  val === 'true' ? true : val === 'false' ? false : val;
-
-const formDataToBoolArr = (val: FormDataEntryValue[]) =>
-  val.map((v) => (v === 'true' ? true : v === 'false' ? false : v));

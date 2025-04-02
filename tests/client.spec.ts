@@ -264,7 +264,7 @@ describe('fc (Low-Level Client)', () => {
     expect(result.isValid).toBe(true);
     expect(result.data!.status).toBe(200);
     expect(Array.isArray(result.data!.body)).toBe(true);
-    const body = result.data!.body as User[];
+    const body = result.data!.body;
     expect(body).toHaveLength(2);
     expect(body[0]).toEqual({ id: 1, name: 'Alice', isAdmin: true });
     expect(body[1]).toEqual({ id: 2, name: 'Bob' });
@@ -280,7 +280,7 @@ describe('fc (Low-Level Client)', () => {
     expect(result.isValid).toBe(true);
     expect(result.data!.status).toBe(200);
     expect(Array.isArray(result.data!.body)).toBe(true);
-    const body = result.data!.body as User[];
+    const body = result.data!.body;
     expect(body).toHaveLength(1);
     expect(body[0]).toEqual({ id: 1, name: 'Alice', isAdmin: true });
     expect(result.failure).toBeUndefined();

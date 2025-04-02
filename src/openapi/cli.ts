@@ -11,7 +11,7 @@ export const run = async (args: string[]) => {
 
   const config = await getOpenapiConfig(argv.output);
 
-  await generateOpenapi(config);
+  generateOpenapi(config);
 
   if (argv.watch !== undefined && config.appDir) {
     watch(config.appDir, () => generateOpenapi(config));

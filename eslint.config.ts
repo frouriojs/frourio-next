@@ -8,7 +8,7 @@ export default tseslint.config(
   { files: ['**/*.ts'] },
   gitignore({ files: ['./.gitignore', './.prettierignore'] }),
   js.configs.recommended,
-  ...tseslint.configs.recommended,
+  tseslint.configs.recommended,
   {
     languageOptions: {
       globals: { ...globals.browser, ...globals.node, ...globals.es2020 },

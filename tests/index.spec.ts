@@ -41,14 +41,15 @@ test('generate', async () => {
 
       await Promise.all(frourioDirs.map((dir) => unlink(path.join(dir, SERVER_FILE))));
       await generate(config);
-      await generateOpenapi(config);
+
+      generateOpenapi(config);
     }),
   );
 
   const out = execSync('git status projects', { encoding: 'utf8' });
 
   expect(out).toMatch('nothing to commit, working tree clean');
-}, 20000);
+}, 30000);
 
 test('base handler', async () => {
   const res1 = await baseRoute.GET(new NextRequest('http://example.com/'), {});

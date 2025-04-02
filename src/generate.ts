@@ -421,7 +421,8 @@ ${
     });\n`
           : ''
       }
-    const result: { success: true; res: Response } | { success: false; error: unknown } = await fetch(
+    const fetchFn = option?.fetch ?? fetch;
+    const result: { success: true; res: Response } | { success: false; error: unknown } = await fetchFn(
       url.data,
       {
         method: '${method.name.toUpperCase()}',

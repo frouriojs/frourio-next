@@ -42,6 +42,7 @@ FrourioNext を使用して API ルートを開発する際の基本的な流れ
     *   このコマンドは内部的に `projects/dev.ts` を実行し、`frourio-next` CLI の機能によって以下のファイルを自動生成・更新します。
         *   **`.server.ts` (例: `frourio.server.ts`):** `route.ts` で使用する `createRoute` ヘルパー関数が含まれます。このヘルパーは、対応する `frourio.ts` の定義に基づいてリクエスト/レスポンスのバリデーションを自動的に行います。
         *   **`.client.ts` (例: `frourio.client.ts`):** 型安全な API クライアント関数 (`fc`, `$fc`) が含まれます。これらのクライアントは、フロントエンドや他のサーバーサイドコードから API を呼び出す際に使用でき、コンパイル時に型チェックが行われます。ルートディレクトリ (`app/` や `src/app/`) にも、プロジェクト全体の API クライアントを集約した `.client.ts` が生成されます。
+        *   **`public/openapi.json`:** `projects/dev.ts` はさらに `bin/openapi.js` を実行します。これは `src/openapi` ディレクトリ内のロジック (`src/openapi/generateOpenapi.ts` など) を利用し、各プロジェクト (`projects/*`) の `frourio.ts` ファイルを解析して、API の OpenAPI v3.1 仕様を記述した `public/openapi.json` ファイルを生成・更新します。
 
 ## 3. その他の効率化情報
 

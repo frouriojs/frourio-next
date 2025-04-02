@@ -107,7 +107,8 @@ const methods = (option?: FrourioClientOption) => ({
 
     if (url.reason) return url;
 
-    const result: { success: true; res: Response } | { success: false; error: unknown } = await fetch(
+    const fetchFn = option?.fetch ?? fetch;
+    const result: { success: true; res: Response } | { success: false; error: unknown } = await fetchFn(
       url.data,
       {
         method: 'GET',
@@ -172,7 +173,8 @@ const methods = (option?: FrourioClientOption) => ({
 
     if (!parsedBody.success) return { isValid: false, reason: parsedBody.error };
 
-    const result: { success: true; res: Response } | { success: false; error: unknown } = await fetch(
+    const fetchFn = option?.fetch ?? fetch;
+    const result: { success: true; res: Response } | { success: false; error: unknown } = await fetchFn(
       url.data,
       {
         method: 'POST',
@@ -272,7 +274,8 @@ const methods = (option?: FrourioClientOption) => ({
       }
     });
 
-    const result: { success: true; res: Response } | { success: false; error: unknown } = await fetch(
+    const fetchFn = option?.fetch ?? fetch;
+    const result: { success: true; res: Response } | { success: false; error: unknown } = await fetchFn(
       url.data,
       {
         method: 'PATCH',

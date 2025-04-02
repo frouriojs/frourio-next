@@ -48,7 +48,7 @@ const isArrayType = (type: ts.Type): boolean => {
     if (objectType.objectFlags & ts.ObjectFlags.Reference) {
       const referenceType = objectType as ts.TypeReference;
 
-      return referenceType.target.symbol.name === 'Array';
+      return referenceType.target.symbol?.name === 'Array';
     }
   }
 

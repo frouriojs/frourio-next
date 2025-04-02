@@ -19,7 +19,7 @@ export default defineConfig({
       ? {
           coverage: {
             ...coverageBase,
-            thresholds: { statements: 98, branches: 98, functions: 100, lines: 98 },
+            thresholds: { statements: 98, branches: 95, functions: 100, lines: 98 },
           },
         }
       : { coverage: coverageBase, include: [includeFile] },

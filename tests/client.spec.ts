@@ -249,6 +249,38 @@ describe('Frourio Client Tests', () => {
   });
 
   describe('fc (Low-Level Client)', () => {
+    it('should use custom fetch function when provided', async () => {
+      let customFetchCalled = false;
+      const customFetch: typeof fetch = async (input, init) => {
+        customFetchCalled = true;
+        // Add a custom header to verify it reaches the server mock
+        const headers = new Headers(init?.headers);
+        headers.set('X-Custom-Fetch', 'true');
+        return fetch(input, { ...init, headers });
+      };
+
+      // Add a handler to check for the custom header
+      server.use(
+        http.get('http://localhost/api/test-client', ({ request }) => {
+          if (request.headers.get('X-Custom-Fetch') === 'true') {
+            return HttpResponse.json([{ id: 99, name: 'CustomFetchUser' }]);
+          }
+          // Fallback to default handler if header is missing
+          return passthrough();
+        }),
+      );
+
+      const clientWithCustomFetch = baseFc({ baseURL, fetch: customFetch });
+      const result = await clientWithCustomFetch['api/test-client'].$get({ query: {} });
+
+      expect(customFetchCalled).toBe(true);
+      expect(result.ok).toBe(true);
+      expect(result.isValid).toBe(true);
+      expect(result.data?.status).toBe(200);
+      // Verify the response came from the specific handler checking the header
+      expect(result.data?.body).toEqual([{ id: 99, name: 'CustomFetchUser' }]);
+    });
+
     // GET tests
     it('GET /api/test-client - Success', async () => {
       const result = await lowLevelApiClient['api/test-client'].$get({ query: {} });

@@ -413,14 +413,16 @@ export function TaskDetails({ taskId }: TaskDetailsProps) {
 
   **`fc` Result Object Summary Table:**
 
-  | Scenario                      | `ok`        | `isValid`   | `data`          | `failure`       | `reason`    | `error`     | `raw`        |
-  | :---------------------------- | :---------- | :---------- | :-------------- | :-------------- | :---------- | :---------- | :----------- |
-  | **Success (2xx)**             | `true`      | `true`      | `{status,body}` | `undefined`     | `undefined` | `undefined` | `Response`   |
-  | **API Error (Non-2xx)**       | `false`     | `true`      | `undefined`     | `{status,body}` | `undefined` | `undefined` | `Response`   |
-  | **Response Validation Error** | `true`      | `false`     | `undefined`     | `undefined`     | `ZodError`  | `undefined` | `Response`   |
-  | **Request Validation Error**  | `undefined` | `false`     | `undefined`     | `undefined`     | `ZodError`  | `undefined` | `undefined`  |
-  | **Network/Fetch Error**       | `boolean`\* | `undefined` | `undefined`     | `undefined`     | `undefined` | `unknown`   | `Response`\* |
-  | **Unknown Status/Error**      | `boolean`   | `undefined` | `undefined`     | `undefined`     | `undefined` | `Error`     | `Response`   |
+  | Scenario                               | `ok`        | `isValid`   | `data`          | `failure`       | `reason`    | `error`     | `raw`        |
+  | :------------------------------------- | :---------- | :---------- | :-------------- | :-------------- | :---------- | :---------- | :----------- |
+  | **Success (2xx, with `res`)**          | `true`      | `true`      | `{status,body}` | `undefined`     | `undefined` | `undefined` | `Response`   |
+  | **API Error (Non-2xx, with `res`)**    | `false`     | `true`      | `undefined`     | `{status,body}` | `undefined` | `undefined` | `Response`   |
+  | **Response Validation Error (`res`)**  | `true`      | `false`     | `undefined`     | `undefined`     | `ZodError`  | `undefined` | `Response`   |
+  | **Request Validation Error**           | `undefined` | `false`     | `undefined`     | `undefined`     | `ZodError`  | `undefined` | `undefined`  |
+  | **Success (2xx, `res` omitted)**       | `true`      | `true`      | `Response`      | `undefined`     | `undefined` | `undefined` | `Response`   |
+  | **API Error (Non-2xx, `res` omitted)** | `false`     | `true`      | `undefined`     | `Response`      | `undefined` | `undefined` | `Response`   |
+  | **Network/Fetch Error**                | `boolean`\* | `undefined` | `undefined`     | `undefined`     | `undefined` | `unknown`   | `Response`\* |
+  | **Unknown Status/Error**               | `boolean`   | `undefined` | `undefined`     | `undefined`     | `undefined` | `Error`     | `Response`   |
 
   _\* Depends on when the error occurred relative to receiving the response._
 
@@ -616,21 +618,31 @@ export const { POST } = createRoute({
 });
 ```
 
-**Client-Side**: The generated clients (`fc`, `$fc`) handle `FormData` automatically when `format: 'formData'` is specified. Just pass a `FormData` object as the `body`.
+**Client-Side**: When `format: 'formData'` is specified in `frourio.ts`, the generated clients (`fc`, `$fc`) expect a plain JavaScript object matching the body schema defined in `frourio.ts`. The client automatically constructs the `FormData` request internally based on this object.
 
 ```typescript
-const formData = new FormData();
-formData.append('userId', 'user-123');
-formData.append('profileImage', fileInput.files[0]);
-// Append multiple files for array fields
-// documentFiles.forEach(file => formData.append('documents', file));
+// Assume fileInput is an <input type="file"> element
+const fileInput = document.getElementById('profile-image-input') as HTMLInputElement;
+const imageFile = fileInput.files?.[0];
+// Assume documentFiles is an array of File objects for an array field
+// const documentFiles = [file1, file2];
 
-try {
-  // Using $fc for simplicity
-  const result = await apiClient.upload.$post({ body: formData });
-  console.log('Success:', result);
-} catch (err) {
-  console.error('Upload failed:', err);
+if (imageFile) {
+  // Create an object matching the 'body' schema in frourio.ts
+  const requestBody = {
+    userId: 'user-123',
+    profileImage: imageFile, // Pass the File object directly
+    // documents: documentFiles, // Pass the array of File objects for array fields
+  };
+
+  try {
+    // Using $fc for simplicity. Pass the object matching the schema to 'body'.
+    // Assuming an endpoint at /api/upload defined with format: 'formData'
+    const result = await apiClient['api/upload'].$post({ body: requestBody });
+    console.log('Upload Success:', result); // result matches the 201 response schema
+  } catch (err) {
+    console.error('Upload failed:', err);
+  }
 }
 ```
 
@@ -679,8 +691,8 @@ export const { POST } = createRoute({
 
 **Client-Side**: When `res` is omitted:
 
-- **`$fc`**: Returns the raw `Response` object directly. Throws an `Error` for non-2xx status codes.
-- **`fc`**: Returns a result object where `ok` reflects the status code, `isValid` is `true` (as no validation schema exists), `data` and `failure` are `undefined`, and `raw` contains the `Response`.
+- **`$fc`**: Returns the raw `Response` object directly. Throws an `Error` for non-2xx status codes or fetch errors.
+- **`fc`**: Returns a result object where `ok` reflects the status code, `isValid` is `true` (as no validation schema exists), `raw` contains the `Response`. If `ok: true`, `data` contains the raw `Response`. If `ok: false`, `failure` contains the raw `Response`. `reason` and `error` are populated for validation or fetch errors respectively. (See the summary table above for details).
 
 You need to handle reading the stream or processing the response manually.
 

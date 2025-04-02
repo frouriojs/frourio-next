@@ -45,7 +45,7 @@ test('generate', async () => {
     }),
   );
 
-  const out = execSync('git status', { encoding: 'utf8' });
+  const out = execSync('git status projects', { encoding: 'utf8' });
 
   expect(out).toMatch('nothing to commit, working tree clean');
 }, 20000);

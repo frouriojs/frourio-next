@@ -1,7 +1,6 @@
 import type { FrourioSpec } from '@frourio/next';
 import { z } from 'zod';
 
-// Re-use schemas or define specific ones if needed
 const UserSchema = z.object({
   id: z.number().int(),
   name: z.string(),
@@ -11,11 +10,10 @@ const UserSchema = z.object({
 const ErrorSchema = z.object({ message: z.string() });
 
 export const frourioSpec = {
-  // Define path parameter schema for this route segment ([userId])
   param: z.coerce.number().int(),
 
   put: {
-    body: UserSchema.partial().omit({ id: true }), // Allow partial updates, exclude id
+    body: UserSchema.partial().omit({ id: true }),
     res: {
       200: { body: UserSchema },
       404: { body: ErrorSchema },
@@ -24,10 +22,8 @@ export const frourioSpec = {
 
   delete: {
     res: {
-      204: {}, // No content
+      204: {},
       404: { body: ErrorSchema },
     },
   },
 } satisfies FrourioSpec;
-
-export type User = z.infer<typeof UserSchema>; // Export type if needed elsewhere

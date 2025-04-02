@@ -55,3 +55,4 @@ FrourioNext を使用して API ルートを開発する際の基本的な流れ
 *   **ビルド:** `npm run build` を実行すると、`tsc -p tsconfig.build.json` コマンドにより TypeScript コードが JavaScript にコンパイルされます。
 *   **型チェック:** `npm run typecheck` を実行すると、`tsc --noEmit` コマンドによりコードの型チェックのみが行われます。
 *   **README.md の更新:** 大きな変更や新機能を追加した場合は、`README.md` も適宜更新してください。
+*   **コメント:** ソースコードやテストコードにコメントを書かない。`README.md` にはコメントを書いて良い。

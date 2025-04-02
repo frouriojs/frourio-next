@@ -10,8 +10,6 @@ const UserSchema = z.object({
 const ErrorSchema = z.object({ message: z.string() });
 
 export const frourioSpec = {
-  // No top-level params here
-
   get: {
     query: z.object({ search: z.string().optional(), limit: z.coerce.number().int().optional() }),
     res: {
@@ -20,16 +18,16 @@ export const frourioSpec = {
     },
   },
 
-  post: { // JSON body post
+  post: {
     body: UserSchema.omit({ id: true }),
     res: {
       201: { body: UserSchema },
       400: { body: ErrorSchema },
-      422: { body: z.object({ error: z.string(), issues: z.any() }) }, // Validation error
+      422: { body: z.object({ error: z.string(), issues: z.any() }) },
     },
   },
 
-  patch: { // FormData testing
+  patch: {
     format: 'formData',
     body: z.object({
       userId: z.string(),

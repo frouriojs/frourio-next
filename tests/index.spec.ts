@@ -17,8 +17,8 @@ import * as numberRoute from '../projects/basic/app/(group1)/blog/[...slug]/rout
 import * as stringRoute from '../projects/basic/app/(group1)/blog/hoge/[[...fuga]]/route';
 import * as paramsRoute from '../projects/basic/app/[a]/[b]/[...c]/route';
 import * as baseRoute from '../projects/basic/app/route';
-import type { frourioSpec as formSpec } from '../projects/src-dir/src/app/frourio';
-import * as formReqRoute from '../projects/src-dir/src/app/route';
+import type { frourioSpec as formSpec } from '../projects/src-dir/src/app/api/frourio';
+import * as formReqRoute from '../projects/src-dir/src/app/api/route';
 import { SERVER_FILE } from '../src/constants';
 import { generate } from '../src/generate';
 import { listFrourioDirs } from '../src/listFrourioDirs';

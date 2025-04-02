@@ -34,5 +34,15 @@ export default tseslint.config(
       ],
     },
   },
+  {
+    files: ['tests/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-non-null-assertion': 'off',
+      'no-restricted-syntax': [
+        'error',
+        { selector: 'OptionalChain', message: 'Optional chaining (?.) is not allowed.' },
+      ],
+    },
+  },
   prettierConfig,
 );

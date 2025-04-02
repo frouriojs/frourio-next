@@ -1,34 +1,31 @@
 import type { FrourioClientOption } from '@frourio/next';
 import { z } from 'zod';
-import { fc_gye2fo, $fc_gye2fo } from './users/frourio.client';
 import { frourioSpec } from './frourio'
 
-export const fc_n3it2j = (option?: FrourioClientOption) => ({
-  'users': fc_gye2fo(option),
+export const fc_1rqfh40 = (option?: FrourioClientOption) => ({
   $path: $path(option),
   ...methods(option),
 });
 
-export const $fc_n3it2j = (option?: FrourioClientOption) => ({
-  'users': $fc_gye2fo(option),
+export const $fc_1rqfh40 = (option?: FrourioClientOption) => ({
   $path: {
-    get(req: Parameters<ReturnType<typeof $path>['get']>[0]): string {
-      const result = $path(option).get(req);
+    put(req: Parameters<ReturnType<typeof $path>['put']>[0]): string {
+      const result = $path(option).put(req);
 
       if (!result.isValid) throw result.reason;
 
       return result.data;
     },
-    post(req: Parameters<ReturnType<typeof $path>['post']>[0]): string {
-      const result = $path(option).post(req);
+    delete(req: Parameters<ReturnType<typeof $path>['delete']>[0]): string {
+      const result = $path(option).delete(req);
 
       if (!result.isValid) throw result.reason;
 
       return result.data;
     },
   },
-  async $get(req: Parameters<ReturnType<typeof methods>['$get']>[0]): Promise<z.infer<typeof frourioSpec.get.res[200]['body']>> {
-    const result = await methods(option).$get(req);
+  async $put(req: Parameters<ReturnType<typeof methods>['$put']>[0]): Promise<z.infer<typeof frourioSpec.put.res[200]['body']>> {
+    const result = await methods(option).$put(req);
 
     if (!result.isValid) throw result.isValid === false ? result.reason : result.error;
 
@@ -36,8 +33,8 @@ export const $fc_n3it2j = (option?: FrourioClientOption) => ({
 
     return result.data.body;
   },
-  async $post(req: Parameters<ReturnType<typeof methods>['$post']>[0]): Promise<z.infer<typeof frourioSpec.post.res[201]['body']>> {
-    const result = await methods(option).$post(req);
+  async $delete(req: Parameters<ReturnType<typeof methods>['$delete']>[0]): Promise<void> {
+    const result = await methods(option).$delete(req);
 
     if (!result.isValid) throw result.isValid === false ? result.reason : result.error;
 
@@ -47,35 +44,50 @@ export const $fc_n3it2j = (option?: FrourioClientOption) => ({
   },
 });
 
+const paramsSchema = z.object({ 'userId': frourioSpec.param });
+
 const $path = (option?: FrourioClientOption) => ({
-  get(req?: {  }): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
-    return { isValid: true, data: `${option?.baseURL ?? ''}/api/mw/admin` };
+  put(req: { params: z.infer<typeof paramsSchema> }): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
+    const parsedParams = paramsSchema.safeParse(req.params);
+
+    if (!parsedParams.success) return { isValid: false, reason: parsedParams.error };
+
+    return { isValid: true, data: `${option?.baseURL ?? ''}/api/test-client/${parsedParams.data.userId}` };
   },
-  post(req?: {  }): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
-    return { isValid: true, data: `${option?.baseURL ?? ''}/api/mw/admin` };
+  delete(req: { params: z.infer<typeof paramsSchema> }): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
+    const parsedParams = paramsSchema.safeParse(req.params);
+
+    if (!parsedParams.success) return { isValid: false, reason: parsedParams.error };
+
+    return { isValid: true, data: `${option?.baseURL ?? ''}/api/test-client/${parsedParams.data.userId}` };
   },
 });
 
 const methods = (option?: FrourioClientOption) => ({
-  async $get(req?: { init?: RequestInit }): Promise<
-    | { ok: true; isValid: true; data: { status: 200; headers?: undefined; body: z.infer<typeof frourioSpec.get.res[200]['body']> }; failure?: undefined; raw: Response; reason?: undefined; error?: undefined }
-    | { ok: false; isValid: true; data?: undefined; failure: { status: 403; headers?: undefined; body: z.infer<typeof frourioSpec.get.res[403]['body']> }; raw: Response; reason?: undefined; error?: undefined }
+  async $put(req: { params: z.infer<typeof paramsSchema>, body: z.infer<typeof frourioSpec.put.body>, init?: RequestInit }): Promise<
+    | { ok: true; isValid: true; data: { status: 200; headers?: undefined; body: z.infer<typeof frourioSpec.put.res[200]['body']> }; failure?: undefined; raw: Response; reason?: undefined; error?: undefined }
+    | { ok: false; isValid: true; data?: undefined; failure: { status: 404; headers?: undefined; body: z.infer<typeof frourioSpec.put.res[404]['body']> }; raw: Response; reason?: undefined; error?: undefined }
     | { ok: boolean; isValid: false; data?: undefined; failure?: undefined; raw: Response; reason: z.ZodError; error?: undefined }
     | { ok: boolean; isValid?: undefined; data?: undefined; failure?: undefined; raw: Response; reason?: undefined; error: unknown }
     | { ok?: undefined; isValid: false; data?: undefined; failure?: undefined; raw?: undefined; reason: z.ZodError; error?: undefined }
     | { ok?: undefined; isValid?: undefined; data?: undefined; failure?: undefined; raw?: undefined; reason?: undefined; error: unknown }
   > {
-    const url = $path(option).get(req);
+    const url = $path(option).put(req);
 
     if (url.reason) return url;
+
+    const parsedBody = frourioSpec.put.body.safeParse(req.body);
+
+    if (!parsedBody.success) return { isValid: false, reason: parsedBody.error };
 
     const result: { success: true; res: Response } | { success: false; error: unknown } = await fetch(
       url.data,
       {
-        method: 'GET',
+        method: 'PUT',
         ...option?.init,
-        ...req?.init,
-        headers: { ...option?.init?.headers, ...req?.init?.headers },
+        body: JSON.stringify(parsedBody.data),
+        ...req.init,
+        headers: { ...option?.init?.headers, 'content-type': 'application/json', ...req.init?.headers },
       }
     ).then(res => ({ success: true, res } as const)).catch(error => ({ success: false, error }));
 
@@ -87,7 +99,7 @@ const methods = (option?: FrourioClientOption) => ({
 
         if (!json.success) return { ok: true, raw: result.res, error: json.error };
 
-        const body = frourioSpec.get.res[200].body.safeParse(json.data);
+        const body = frourioSpec.put.res[200].body.safeParse(json.data);
 
         if (!body.success) return { ok: true, isValid: false, raw: result.res, reason: body.error };
 
@@ -98,19 +110,19 @@ const methods = (option?: FrourioClientOption) => ({
           raw: result.res,
         };
       }
-      case 403: {
+      case 404: {
         const json: { success: true; data: unknown } | { success: false; error: unknown } = await result.res.json().then(data => ({ success: true, data } as const)).catch(error => ({ success: false, error }));
 
         if (!json.success) return { ok: false, raw: result.res, error: json.error };
 
-        const body = frourioSpec.get.res[403].body.safeParse(json.data);
+        const body = frourioSpec.put.res[404].body.safeParse(json.data);
 
         if (!body.success) return { ok: false, isValid: false, raw: result.res, reason: body.error };
 
         return {
           ok: false,
           isValid: true,
-          failure: { status: 403, body: body.data },
+          failure: { status: 404, body: body.data },
           raw: result.res,
         };
       }
@@ -118,65 +130,52 @@ const methods = (option?: FrourioClientOption) => ({
         return { ok: result.res.ok, raw: result.res, error: new Error(`Unknown status: ${result.res.status}`) };
     }
   },
-  async $post(req: { body: z.infer<typeof frourioSpec.post.body>, init?: RequestInit }): Promise<
-    | { ok: true; isValid: true; data: { status: 201; headers?: undefined; body: z.infer<typeof frourioSpec.post.res[201]['body']> }; failure?: undefined; raw: Response; reason?: undefined; error?: undefined }
-    | { ok: false; isValid: true; data?: undefined; failure: { status: 403; headers?: undefined; body: z.infer<typeof frourioSpec.post.res[403]['body']> }; raw: Response; reason?: undefined; error?: undefined }
+  async $delete(req: { params: z.infer<typeof paramsSchema>, init?: RequestInit }): Promise<
+    | { ok: true; isValid: true; data: { status: 204; headers?: undefined; body?: undefined }; failure?: undefined; raw: Response; reason?: undefined; error?: undefined }
+    | { ok: false; isValid: true; data?: undefined; failure: { status: 404; headers?: undefined; body: z.infer<typeof frourioSpec.delete.res[404]['body']> }; raw: Response; reason?: undefined; error?: undefined }
     | { ok: boolean; isValid: false; data?: undefined; failure?: undefined; raw: Response; reason: z.ZodError; error?: undefined }
     | { ok: boolean; isValid?: undefined; data?: undefined; failure?: undefined; raw: Response; reason?: undefined; error: unknown }
     | { ok?: undefined; isValid: false; data?: undefined; failure?: undefined; raw?: undefined; reason: z.ZodError; error?: undefined }
     | { ok?: undefined; isValid?: undefined; data?: undefined; failure?: undefined; raw?: undefined; reason?: undefined; error: unknown }
   > {
-    const url = $path(option).post(req);
+    const url = $path(option).delete(req);
 
     if (url.reason) return url;
-
-    const parsedBody = frourioSpec.post.body.safeParse(req.body);
-
-    if (!parsedBody.success) return { isValid: false, reason: parsedBody.error };
 
     const result: { success: true; res: Response } | { success: false; error: unknown } = await fetch(
       url.data,
       {
-        method: 'POST',
+        method: 'DELETE',
         ...option?.init,
-        body: JSON.stringify(parsedBody.data),
         ...req.init,
-        headers: { ...option?.init?.headers, 'content-type': 'application/json', ...req.init?.headers },
+        headers: { ...option?.init?.headers, ...req.init?.headers },
       }
     ).then(res => ({ success: true, res } as const)).catch(error => ({ success: false, error }));
 
     if (!result.success) return { error: result.error };
 
     switch (result.res.status) {
-      case 201: {
-        const json: { success: true; data: unknown } | { success: false; error: unknown } = await result.res.json().then(data => ({ success: true, data } as const)).catch(error => ({ success: false, error }));
-
-        if (!json.success) return { ok: true, raw: result.res, error: json.error };
-
-        const body = frourioSpec.post.res[201].body.safeParse(json.data);
-
-        if (!body.success) return { ok: true, isValid: false, raw: result.res, reason: body.error };
-
+      case 204: {
         return {
           ok: true,
           isValid: true,
-          data: { status: 201, body: body.data },
+          data: { status: 204 },
           raw: result.res,
         };
       }
-      case 403: {
+      case 404: {
         const json: { success: true; data: unknown } | { success: false; error: unknown } = await result.res.json().then(data => ({ success: true, data } as const)).catch(error => ({ success: false, error }));
 
         if (!json.success) return { ok: false, raw: result.res, error: json.error };
 
-        const body = frourioSpec.post.res[403].body.safeParse(json.data);
+        const body = frourioSpec.delete.res[404].body.safeParse(json.data);
 
         if (!body.success) return { ok: false, isValid: false, raw: result.res, reason: body.error };
 
         return {
           ok: false,
           isValid: true,
-          failure: { status: 403, body: body.data },
+          failure: { status: 404, body: body.data },
           raw: result.res,
         };
       }

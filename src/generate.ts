@@ -204,21 +204,21 @@ const clientData = (
     ),
     "import { frourioSpec } from './frourio'",
   ];
-  const apiPath =
-    dirPath === appDir
-      ? basePath || '/'
-      : `${basePath ?? ''}${dirPath.replace(appDir, '').replace(/\/\(.+?\)/g, '')}`;
+  const isRoot = frourioDirs.every((dir) => !dirPath.startsWith(dir) || dir === dirPath);
+  const apiPath = isRoot
+    ? basePath || '/'
+    : `${basePath ?? ''}${dirPath.replace(appDir, '').replace(/\/\(.+?\)/g, '')}`;
 
   return `${imports.join(';\n')}
 
-export const ${CLIENT_NAME}${dirPath !== appDir ? `_${createHash(dirPath.replace(appDir, ''))}` : ''} = (option?: FrourioClientOption) => ({${childDirs
+export const ${CLIENT_NAME}${!isRoot ? `_${createHash(dirPath.replace(appDir, ''))}` : ''} = (option?: FrourioClientOption) => ({${childDirs
     .map((child) => `\n  '${child.import}': ${CLIENT_NAME}_${child.hash}(option),`)
     .join('')}
   $path: $path(option),
   ...methods(option),
 });
 
-export const $${CLIENT_NAME}${dirPath !== appDir ? `_${createHash(dirPath.replace(appDir, ''))}` : ''} = (option?: FrourioClientOption) => ({${childDirs
+export const $${CLIENT_NAME}${!isRoot ? `_${createHash(dirPath.replace(appDir, ''))}` : ''} = (option?: FrourioClientOption) => ({${childDirs
     .map((child) => `\n  '${child.import}': $${CLIENT_NAME}_${child.hash}(option),`)
     .join('')}
   $path: {${methods
@@ -227,7 +227,7 @@ export const $${CLIENT_NAME}${dirPath !== appDir ? `_${createHash(dirPath.replac
     ${method.name}(req: Parameters<ReturnType<typeof $path>['${method.name}']>[0]): string {
       const result = $path(option).${method.name}(req);
 
-      if (!result.isValid) throw result.error;
+      if (!result.isValid) throw result.reason;
 
       return result.data;
     },`,
@@ -241,25 +241,32 @@ export const $${CLIENT_NAME}${dirPath !== appDir ? `_${createHash(dirPath.replac
       ? 'never'
       : !method.res
         ? 'Response'
-        : `z.infer<typeof frourioSpec.${method.name}.res[${method.res
-            .filter((r) => r.status.startsWith('2'))
-            .map((r) => r.status)
-            .join(' | ')}]['body']>`
+        : [
+            ...(method.res.some((r) => r.status.startsWith('2') && r.hasBody)
+              ? [
+                  `z.infer<typeof frourioSpec.${method.name}.res[${method.res
+                    .filter((r) => r.status.startsWith('2') && r.hasBody)
+                    .map((r) => r.status)
+                    .join(' | ')}]['body']>`,
+                ]
+              : []),
+            ...(method.res.some((r) => r.status.startsWith('2') && !r.hasBody) ? ['void'] : []),
+          ].join(' | ')
   }> {
     const result = await methods(option).$${method.name}(req);
 
-    if (!result.isValid) throw result.error;
+    if (!result.isValid) throw result.isValid === false ? result.reason : result.error;
 
     ${
       method.res?.every((r) => !r.status.startsWith('2'))
-        ? 'throw new Error(`HTTP Error: ${result.data.status}`);'
+        ? 'throw new Error(`HTTP Error: ${result.failure.status}`);'
         : !method.res
-          ? `if (!result.ok) throw new Error(\`HTTP Error: \${result.data.status}\`);
+          ? `if (!result.ok) throw new Error(\`HTTP Error: \${result.failure.status}\`);
 
     return result.data;`
           : `${
               method.res.some((r) => !r.status.startsWith('2'))
-                ? `if (!result.ok) throw new Error(\`HTTP Error: \${result.data.status}\`);\n\n    `
+                ? `if (!result.ok) throw new Error(\`HTTP Error: \${result.failure.status}\`);\n\n    `
                 : ''
             }return result.data.body;`
     }
@@ -270,23 +277,23 @@ export const $${CLIENT_NAME}${dirPath !== appDir ? `_${createHash(dirPath.replac
 ${params ? `\nconst paramsSchema = ${clientParamsToText(params)};\n` : ''}
 const $path = (option?: FrourioClientOption) => ({${methods
     .map(
-      (method) => `\n  ${method.name}(req: { ${[
+      (method) => `\n  ${method.name}(req${params || method.query ? '' : '?'}: { ${[
         ...(params ? ['params: z.infer<typeof paramsSchema>'] : []),
         ...(method.query ? [`query: z.infer<typeof frourioSpec.${method.name}.query>`] : []),
       ].join(
         ',',
-      )} }): { isValid: true; data: string; error?: undefined } | { isValid: false, data?: undefined; error: z.ZodError } {
+      )} }): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
 ${
   params
     ? `    const parsedParams = paramsSchema.safeParse(req.params);
 
-    if (!parsedParams.success) return { isValid: false, error: parsedParams.error };\n\n`
+    if (!parsedParams.success) return { isValid: false, reason: parsedParams.error };\n\n`
     : ''
 }${
         method.query
           ? `    const parsedQuery = frourioSpec.${method.name}.query.safeParse(req.query);
 
-    if (!parsedQuery.success) return { isValid: false, error: parsedQuery.error };
+    if (!parsedQuery.success) return { isValid: false, reason: parsedQuery.error };
 
     const searchParams = new URLSearchParams();
 
@@ -318,7 +325,9 @@ ${
 
 const methods = (option?: FrourioClientOption) => ({${methods
     .map((method) => {
-      return `\n  async $${method.name}(req: { ${[
+      return `\n  async $${method.name}(req${
+        params || method.hasHeaders || method.query || method.body ? '' : '?'
+      }: { ${[
         ...(params ? ['params: z.infer<typeof paramsSchema>'] : []),
         ...(method.hasHeaders
           ? [`headers: z.infer<typeof frourioSpec.${method.name}.headers>`]
@@ -328,7 +337,9 @@ const methods = (option?: FrourioClientOption) => ({${methods
         'init?: RequestInit',
       ].join(', ')} }): Promise<${
         !method.res
-          ? '\n    | { ok: boolean; isValid: true; data: Response; error?: undefined }'
+          ? `
+    | { ok: true; isValid: true; data: Response; failure?: undefined; raw: Response; reason?: undefined; error?: undefined }
+    | { ok: false; isValid: true; data?: undefined; failure: Response; raw: Response; reason?: undefined; error?: undefined }`
           : `${
               method.res.some((r) => r.status.startsWith('2'))
                 ? `\n    | { ok: true; isValid: true; data: ${method.res
@@ -345,11 +356,13 @@ const methods = (option?: FrourioClientOption) => ({${methods
                             : '?: undefined'
                         } }`,
                     )
-                    .join(' | ')}; error?: undefined }`
+                    .join(
+                      ' | ',
+                    )}; failure?: undefined; raw: Response; reason?: undefined; error?: undefined }`
                 : ''
             }${
               method.res.some((r) => !r.status.startsWith('2'))
-                ? `\n    | { ok: false; isValid: true; data: ${method.res
+                ? `\n    | { ok: false; isValid: true; data?: undefined; failure: ${method.res
                     .filter((r) => !r.status.startsWith('2'))
                     .map(
                       (r) =>
@@ -363,29 +376,29 @@ const methods = (option?: FrourioClientOption) => ({${methods
                             : '?: undefined'
                         } }`,
                     )
-                    .join(' | ')}; error?: undefined }`
+                    .join(' | ')}; raw: Response; reason?: undefined; error?: undefined }`
                 : ''
             }`
       }
-    | { ok: boolean; isValid: false; data: Response; error: z.ZodError }
-    | { ok: boolean; isValid?: undefined; data: Response; error: unknown }
-    | { ok?: undefined; isValid: false; data?: undefined; error: z.ZodError }
-    | { ok?: undefined; isValid?: undefined; data?: undefined; error: unknown }
+    | { ok: boolean; isValid: false; data?: undefined; failure?: undefined; raw: Response; reason: z.ZodError; error?: undefined }
+    | { ok: boolean; isValid?: undefined; data?: undefined; failure?: undefined; raw: Response; reason?: undefined; error: unknown }
+    | { ok?: undefined; isValid: false; data?: undefined; failure?: undefined; raw?: undefined; reason: z.ZodError; error?: undefined }
+    | { ok?: undefined; isValid?: undefined; data?: undefined; failure?: undefined; raw?: undefined; reason?: undefined; error: unknown }
   > {
     const url = $path(option).${method.name}(req);
 
-    if (url.error) return url;
+    if (url.reason) return url;
 ${
   method.hasHeaders
     ? `\n    const parsedHeaders = frourioSpec.${method.name}.headers.safeParse(req.headers);
 
-    if (!parsedHeaders.success) return { isValid: false, error: parsedHeaders.error };\n`
+    if (!parsedHeaders.success) return { isValid: false, reason: parsedHeaders.error };\n`
     : ''
 }${
         method.body
           ? `\n    const parsedBody = frourioSpec.${method.name}.body.safeParse(req.body);
 
-    if (!parsedBody.success) return { isValid: false, error: parsedBody.error };\n`
+    if (!parsedBody.success) return { isValid: false, reason: parsedBody.error };\n`
           : ''
       }${
         method.body?.isFormData
@@ -419,10 +432,12 @@ ${
               ? '\n        body: JSON.stringify(parsedBody.data),'
               : ''
         }
-        ...req.init,
+        ...req${params || method.hasHeaders || method.query || method.body ? '' : '?'}.init,
         headers: { ...option?.init?.headers, ${
           method.body?.isFormData === false ? "'content-type': 'application/json', " : ''
-        }${method.hasHeaders ? '...parsedHeaders.data as HeadersInit, ' : ''}...req.init?.headers },
+        }${method.hasHeaders ? '...parsedHeaders.data as HeadersInit, ' : ''}...req${
+          params || method.hasHeaders || method.query || method.body ? '' : '?'
+        }.init?.headers },
       }
     ).then(res => ({ success: true, res } as const)).catch(error => ({ success: false, error }));
 
@@ -436,31 +451,32 @@ ${
                 item.hasHeaders
                   ? `\n        const headers = frourioSpec.${method.name}.res[${item.status}].headers.safeParse(result.res.headers);
 
-        if (!headers.success) return { ok: ${item.status.startsWith('2')}, data: result.res, error: headers.error };\n`
+        if (!headers.success) return { ok: ${item.status.startsWith('2')}, isValid: false, raw: result.res, reason: headers.error };\n`
                   : ''
               }${
                 item.hasBody
                   ? `\n        const json: { success: true; data: unknown } | { success: false; error: unknown } = await result.res.json().then(data => ({ success: true, data } as const)).catch(error => ({ success: false, error }));
 
-        if (!json.success) return { ok: ${item.status.startsWith('2')}, data: result.res, error: json.error };
+        if (!json.success) return { ok: ${item.status.startsWith('2')}, raw: result.res, error: json.error };
 
         const body = frourioSpec.${method.name}.res[${item.status}].body.safeParse(json.data);
 
-        if (!body.success) return { ok: ${item.status.startsWith('2')}, data: result.res, error: body.error };\n`
+        if (!body.success) return { ok: ${item.status.startsWith('2')}, isValid: false, raw: result.res, reason: body.error };\n`
                   : ''
               }
         return {
           ok: ${item.status.startsWith('2')},
           isValid: true,
-          data: { status: ${item.status}${item.hasHeaders ? ', headers: headers.data' : ''}${item.hasBody ? ', body: body.data' : ''} }
+          ${item.status.startsWith('2') ? 'data' : 'failure'}: { status: ${item.status}${item.hasHeaders ? ', headers: headers.data' : ''}${item.hasBody ? ', body: body.data' : ''} },
+          raw: result.res,
         };
       }`,
             )
             .join('')}
       default:
-        return { ok: result.res.ok, data: result.res, error: new Error(\`Unknown status: \${result.res.status}\`) };
+        return { ok: result.res.ok, raw: result.res, error: new Error(\`Unknown status: \${result.res.status}\`) };
     }`
-        : 'return { ok: result.res.ok, isValid: true, data: result.res };'
+        : 'return result.res.ok ? { ok: true, isValid: true, data: result.res, raw: result.res } : { ok: false, isValid: true, failure: result.res, raw: result.res };'
     }
   },`;
     })

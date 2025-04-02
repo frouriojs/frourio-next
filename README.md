@@ -76,7 +76,7 @@ FrourioNext revolves around defining your API structure in `frourio.ts` files an
 
 ### 1. Define API Specification (`frourio.ts`)
 
-In each API route directory (e.g., `app/api/users/[userId]/`), create a `frourio.ts` file. Use Zod to define the schemas for path parameters (`params`), query parameters (`query`), request headers (`headers`), request body (`body`), and possible responses (`res`).
+In each API route directory (e.g., `app/api/users/[userId]/`), create a `frourio.ts` file. Use Zod to define the schemas for path parameters (`param`), query parameters (`query`), request headers (`headers`), request body (`body`), and possible responses (`res`).
 
 `app/api/tasks/[taskId]/frourio.ts`:
 
@@ -94,8 +94,8 @@ const TaskSchema = z.object({
 const ErrorSchema = z.object({ message: z.string() });
 
 export const frourioSpec = {
-  // Define path parameter schema
-  params: z.object({ taskId: z.string().uuid() }),
+  // Define path parameter schema for this segment
+  param: z.string().uuid(), // Corresponds to [taskId]
 
   // Define specs for the GET method
   get: {
@@ -148,6 +148,7 @@ Running `dev` starts both the Next.js server and the `frourio-next --watch` proc
 
 - `app/api/tasks/[taskId]/frourio.server.ts`: Contains the `createRoute` helper function tailored for this specific route.
 - `app/api/tasks/[taskId]/frourio.client.ts`: Contains the type-safe client functions (`fc`, `$fc`) for this route and its children.
+- Root client files (e.g., `app/frourio.client.ts`) aggregating all defined API clients.
 
 ### 3. Implement the Route Handler (`route.ts`)
 
@@ -167,10 +168,10 @@ export const { GET, PATCH, DELETE } = createRoute({
   // GET /api/tasks/:taskId
   // 'req' contains validated { params, query, headers, body } based on frourio.ts
   get: async ({ params, query }) => {
-    console.log('Fetching task:', params.taskId); // Type-safe: params.taskId is string
+    console.log('Fetching task:', params); // Type-safe: params is string (from frourio.ts)
     console.log('Include assignee?', query.includeAssignee); // Type-safe: query.includeAssignee is boolean | undefined
 
-    const task = db.get(params.taskId);
+    const task = db.get(params); // Use the validated param directly
 
     if (!task) {
       // Type-safe: Must match one of the defined 'res' statuses and schemas in frourio.ts
@@ -183,14 +184,14 @@ export const { GET, PATCH, DELETE } = createRoute({
 
   // PATCH /api/tasks/:taskId
   patch: async ({ params, body }) => {
-    const existingTask = db.get(params.taskId);
+    const existingTask = db.get(params);
     if (!existingTask) {
       return { status: 404, body: { message: 'Task not found' } };
     }
 
     // Type-safe: 'body' matches the PATCH body schema (partial Task)
     const updatedTask = { ...existingTask, ...body };
-    db.set(params.taskId, updatedTask);
+    db.set(params, updatedTask);
 
     console.log('Updated task:', updatedTask);
     return { status: 200, body: updatedTask };
@@ -198,11 +199,11 @@ export const { GET, PATCH, DELETE } = createRoute({
 
   // DELETE /api/tasks/:taskId
   delete: async ({ params }) => {
-    if (!db.has(params.taskId)) {
+    if (!db.has(params)) {
       return { status: 404, body: { message: 'Task not found' } };
     }
-    db.delete(params.taskId);
-    console.log('Deleted task:', params.taskId);
+    db.delete(params);
+    console.log('Deleted task:', params);
     // Type-safe: Must match the 204 response schema (no body)
     return { status: 204 };
   },
@@ -226,7 +227,7 @@ FrourioNext generates `frourio.client.ts` files, which export client functions (
 `lib/apiClient.ts` (Client Initialization):
 
 ```typescript
-import { fc, $fc } from '@/app/api/frourio.client'; // Import from the root generated client
+import { fc, $fc } from '@/app/frourio.client'; // Import from the root generated client
 
 // Initialize the high-level client ($fc) - throws errors, returns parsed body
 export const apiClient = $fc({
@@ -244,13 +245,13 @@ export const apiClient = $fc({
   // }
 });
 
-// Initialize the low-level client (fc) - returns detailed response object
+// Initialize the low-level client (fc) - returns detailed result object
 export const lowLevelApiClient = fc({
   // You can use the same options as $fc
 });
 
 // The root frourio.client.ts aggregates clients from subdirectories.
-// Calling $fc() or fc() gives you access to the entire API structure defined under app/api/.
+// Calling $fc() or fc() gives you access to the entire API structure defined under app/.
 ```
 
 Now, use the initialized clients in your frontend components or server-side code:
@@ -264,6 +265,7 @@ import { useEffect, useState } from 'react';
 // Import the initialized clients
 import { apiClient, lowLevelApiClient } from '@/lib/apiClient';
 import type { Task } from '@/app/api/tasks/[taskId]/frourio'; // Import type if needed
+import { ZodError } from 'zod';
 
 interface TaskDetailsProps {
   taskId: string;
@@ -275,53 +277,67 @@ export function TaskDetails({ taskId }: TaskDetailsProps) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchTask = async () => {
+    const fetchTaskWithHighLevel = async () => {
       setIsLoading(true);
       setError(null);
       try {
         // --- Using the high-level client ($fc) ---
         // Automatically handles response parsing and throws on error.
-        const fetchedTask = await apiClient.tasks._taskId(taskId).$get({
+        const fetchedTask = await apiClient['api/tasks']['[taskId]'](taskId).$get({
           query: { includeAssignee: true },
         });
         setTask(fetchedTask);
-
-        // --- OR Using the low-level client (fc) ---
-        // Returns a detailed result object, requiring manual checking.
-        // const result = await lowLevelApiClient.tasks._taskId(taskId).$get({
-        //   query: { includeAssignee: true },
-        // });
-        //
-        // if (!result.ok) {
-        //   // Handle non-2xx status codes
-        //   const errorBody = await result.data.json().catch(() => ({ message: 'Unknown error' }));
-        //   throw new Error(`API Error ${result.data.status}: ${errorBody.message}`);
-        // }
-        // if (!result.isValid) {
-        //   // Handle response validation errors (schema mismatch)
-        //   console.error("Response validation failed:", result.error);
-        //   throw new Error('Invalid response data from server.');
-        // }
-        // // Access the validated body
-        // setTask(result.data.body);
-
       } catch (err: any) {
-        console.error('API Error:', err);
-        // Error handling for $fc client (or manual errors thrown when using fc)
-        setError(err.message || 'Failed to fetch task.');
+        console.error('API Error ($fc):', err);
+        // Error could be ZodError (validation) or Error (HTTP status)
+        if (err instanceof ZodError) {
+          setError(`Validation Error: ${err.issues[0]?.message ?? 'Invalid data'}`);
+        } else {
+          setError(err.message || 'Failed to fetch task.');
+        }
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchTask();
+    const fetchTaskWithLowLevel = async () => {
+       setIsLoading(true);
+       setError(null);
+       // --- Using the low-level client (fc) ---
+       const result = await lowLevelApiClient['api/tasks']['[taskId]'](taskId).$get({
+         query: { includeAssignee: true },
+       });
+
+       if (result.ok && result.isValid) {
+         // Success case
+         setTask(result.data.body);
+       } else if (!result.ok && result.isValid) {
+         // API Error (e.g., 404)
+         console.error('API Error (fc):', result.failure);
+         setError(`API Error ${result.failure.status}: ${result.failure.body.message}`);
+       } else if (!result.isValid) {
+         // Validation Error (request or response)
+         console.error('Validation Error (fc):', result.reason);
+         setError(`Validation Error: ${result.reason.issues[0]?.message ?? 'Invalid data'}`);
+       } else {
+         // Network or unknown error
+         console.error('Fetch Error (fc):', result.error);
+         setError(result.error?.message || 'Failed to fetch task.');
+       }
+       setIsLoading(false);
+    };
+
+    // Choose one method to call:
+    fetchTaskWithHighLevel();
+    // fetchTaskWithLowLevel();
+
   }, [taskId]);
 
   const handleToggleDone = async () => {
     if (!task) return;
     try {
       // Using $fc for simplicity
-      const updatedTask = await apiClient.tasks._taskId(taskId).$patch({
+      const updatedTask = await apiClient['api/tasks']['[taskId]'](taskId).$patch({
         body: { isDone: !task.isDone },
       });
       setTask(updatedTask);
@@ -337,7 +353,7 @@ export function TaskDetails({ taskId }: TaskDetailsProps) {
 
     try {
       // Using $fc - returns void on success (204)
-      await apiClient.tasks._taskId(taskId).$delete();
+      await apiClient['api/tasks']['[taskId]'](taskId).$delete({});
       setTask(null);
       alert('Task deleted');
     } catch (err: any) {
@@ -369,32 +385,51 @@ export function TaskDetails({ taskId }: TaskDetailsProps) {
 
 - **`$fc` (High-Level Client)**:
 
-  - Designed for ease of use.
-  - Automatically parses the JSON response body.
-  - Validates the response body against the expected Zod schema defined in `frourio.ts`.
-  - **Returns the validated response body directly** on success (e.g., the `Task` object).
+  - Designed for ease of use in typical scenarios.
+  - Automatically parses and validates the response body against the Zod schema defined in `frourio.ts`.
+  - **Returns the validated response body directly** on success (e.g., the `Task` object for a 200 OK).
   - **Throws an error** if:
     - The request fails (network error).
-    - The response status is not OK (e.g., 4xx, 5xx).
-    - The response body fails Zod validation.
-  - Ideal for most common use cases where you primarily need the response data and want automatic error handling for non-successful responses.
+    - The response status is not OK (e.g., 4xx, 5xx). Throws an `Error` with message like `HTTP Error: ${status}`.
+    - Request or response validation fails. Throws a `ZodError`.
+  - Ideal when you primarily need the success data and prefer exceptions for handling errors.
 
 - **`fc` (Low-Level Client)**:
-  - Provides more control over the response handling.
-  - **Returns a detailed result object** containing:
-    - `ok`: Boolean indicating if the status code was in the 2xx range.
-    - `isValid`: Boolean indicating if the response body passed Zod validation.
-    - `data`: The raw `Response` object (if `ok` is false or `isValid` is false) or an object containing `status`, `headers`, and the validated `body` (if `ok` and `isValid` are true).
-    - `error`: The Zod validation error (if `isValid` is false) or the fetch error.
-  - **Does not throw errors automatically** based on status code or validation failure. You need to check the `ok` and `isValid` flags manually.
-  - Useful when you need to access response headers, handle different status codes specifically, or implement custom error handling logic without relying on exceptions.
+
+  - Provides fine-grained control over request/response handling without throwing exceptions automatically (except for unexpected internal errors).
+  - **Returns a detailed result object** whose properties depend on the outcome:
+    - `ok`: Boolean indicating if the HTTP status code was in the 2xx range. `undefined` if the request wasn't sent (e.g., due to request validation failure).
+    - `isValid`: Boolean indicating if **both request and response** passed Zod validation. `undefined` if a network/fetch error occurred before validation could happen.
+    - `data`: Present only if `ok: true` and `isValid: true`. Contains `{ status: number, body: T }` where `T` is the inferred type of the **validated** response body for the specific success status code.
+    - `failure`: Present only if `ok: false` and `isValid: true`. Contains `{ status: number, body: T }` where `T` is the inferred type of the **validated** response body for the specific non-2xx status code defined in `frourio.ts`.
+    - `reason`: Present only if `isValid: false`. Contains the `ZodError` instance detailing the validation failure (either request or response validation).
+    - `error`: Present only if an unexpected error occurred (e.g., network error, JSON parsing error on a non-JSON response). Contains the `unknown` error object.
+    - `raw`: The raw `Response` object. Present in most cases, except when the request couldn't be sent at all (e.g., request validation failure, network error before sending). **Important:** The body of `raw` might have already been consumed internally during validation. Do not attempt to read `raw.body` (e.g., `raw.json()`, `raw.text()`) if `isValid` is `false`, as it will likely throw an error.
+  - Useful when you need to:
+    - Handle specific non-2xx status codes gracefully without exceptions.
+    - Distinguish between API errors (e.g., 404 Not Found) and validation errors.
+    - Access raw response details like headers.
+    - Implement custom error handling logic.
+
+  **`fc` Result Object Summary Table:**
+
+  | Scenario                      | `ok`        | `isValid`   | `data`          | `failure`       | `reason`    | `error`     | `raw`        |
+  | :---------------------------- | :---------- | :---------- | :-------------- | :-------------- | :---------- | :---------- | :----------- |
+  | **Success (2xx)**             | `true`      | `true`      | `{status,body}` | `undefined`     | `undefined` | `undefined` | `Response`   |
+  | **API Error (Non-2xx)**       | `false`     | `true`      | `undefined`     | `{status,body}` | `undefined` | `undefined` | `Response`   |
+  | **Response Validation Error** | `true`      | `false`     | `undefined`     | `undefined`     | `ZodError`  | `undefined` | `Response`   |
+  | **Request Validation Error**  | `undefined` | `false`     | `undefined`     | `undefined`     | `ZodError`  | `undefined` | `undefined`  |
+  | **Network/Fetch Error**       | `boolean`\* | `undefined` | `undefined`     | `undefined`     | `undefined` | `unknown`   | `Response`\* |
+  | **Unknown Status/Error**      | `boolean`   | `undefined` | `undefined`     | `undefined`     | `undefined` | `Error`     | `Response`   |
+
+  _\* Depends on when the error occurred relative to receiving the response._
 
 **Structure**: Both clients mirror your API directory structure:
 
-- Directory names become properties: `apiClient.users`, `lowLevelApiClient.tasks`.
-- Dynamic segments (`[param]`) become methods prefixed with `_`: `apiClient.tasks._taskId('abc')`.
+- Directory names become properties accessible via bracket notation if they contain special characters: `apiClient['api/tasks']`, `lowLevelApiClient['api/tasks']`.
+- Dynamic segments (`[param]`) become functions accessed via bracket notation: `apiClient['api/tasks']['[taskId]']('abc')`.
 - HTTP methods are called with `$`: `.$get()`, `.$post()`, `.$patch()`, `.$delete()`.
-- Request data (`query`, `body`, `headers`) is passed in an object, fully typed according to `frourio.ts`.
+- Request data (`query`, `body`, `headers`, `params`) is passed in an object, fully typed according to `frourio.ts`.
 
 ## 🧱 Middleware
 
@@ -642,98 +677,49 @@ export const { POST } = createRoute({
 });
 ```
 
-**Client-Side**: When `res` is omitted, both `fc` and `$fc` will return the raw `Response` object. You need to handle reading the stream or processing the response manually.
+**Client-Side**: When `res` is omitted:
+
+- **`$fc`**: Returns the raw `Response` object directly. Throws an `Error` for non-2xx status codes.
+- **`fc`**: Returns a result object where `ok` reflects the status code, `isValid` is `true` (as no validation schema exists), `data` and `failure` are `undefined`, and `raw` contains the `Response`.
+
+You need to handle reading the stream or processing the response manually.
 
 ```typescript
+// Using $fc
 try {
-  // Both fc and $fc return Promise<Response> when 'res' is omitted
   const response = await apiClient.chat.$post({ body: { prompt: 'Tell me a joke' } });
-  // Or: const response = (await lowLevelApiClient.chat.$post({ ... })).data;
 
   if (!response.ok) {
+    // Should not happen if $fc didn't throw
     throw new Error(`API Error: ${response.status}`);
   }
-
-  // Handle the stream (example using AI SDK reader)
-  const reader = response.body?.pipeThrough(createStreamDataTransformer()).getReader();
+  // Handle the stream
+  const reader = response.body?.getReader();
   // ... process stream ...
 } catch (err) {
-  console.error('Chat failed:', err);
+  console.error('Chat failed ($fc):', err);
+}
+
+// Using fc
+const result = await lowLevelApiClient.chat.$post({ body: { prompt: 'Tell me a joke' } });
+if (result.ok && result.raw) {
+  // Handle the stream
+  const reader = result.raw.body?.getReader();
+  // ... process stream ...
+} else if (result.raw) {
+  // Handle non-2xx status from raw response
+  console.error(`API Error (fc): ${result.raw.status}`);
+  // const errorText = await result.raw.text();
+} else {
+  console.error('Fetch Error (fc):', result.error);
 }
 ```
 
 ## 🧪 Testing
 
-Test your FrourioNext handlers like standard Next.js Route Handlers, typically by mocking `NextRequest` and calling the exported handler functions directly.
+Test your FrourioNext handlers like standard Next.js Route Handlers, typically by mocking `NextRequest` and calling the exported handler functions directly. Use libraries like `msw` to mock the `fetch` calls when testing client-side logic or components using the generated Frourio clients (`fc`, `$fc`).
 
-`tests/tasks.spec.ts` (Example using Vitest):
-
-```typescript
-import { NextRequest } from 'next/server';
-import { expect, test, describe, vi } from 'vitest';
-import { GET, PATCH } from '../app/api/tasks/[taskId]/route'; // Adjust path
-
-// Mock any external dependencies (like databases) if necessary
-vi.mock('../lib/database', () => ({
-  getTaskById: async (id: string) =>
-    id === 'task-1' ? { id: 'task-1', label: 'Mock Task', isDone: false } : null,
-  updateTask: async (id: string, data: any) => ({ id, ...data }),
-}));
-
-describe('API Route: /api/tasks/[taskId]', () => {
-  test('GET - Success', async () => {
-    const taskId = 'task-1';
-    const req = new NextRequest(`http://localhost/api/tasks/${taskId}?includeAssignee=true`);
-    // Pass route params in the second argument
-    const res = await GET(req, { params: { taskId } });
-
-    expect(res.status).toBe(200);
-    await expect(res.json()).resolves.toEqual({ id: 'task-1', label: 'Mock Task', isDone: false });
-  });
-
-  test('GET - Not Found', async () => {
-    const taskId = 'unknown-task';
-    const req = new NextRequest(`http://localhost/api/tasks/${taskId}`);
-    const res = await GET(req, { params: { taskId } });
-
-    expect(res.status).toBe(404);
-    await expect(res.json()).resolves.toEqual({ message: 'Task not found' });
-  });
-
-  test('PATCH - Success', async () => {
-    const taskId = 'task-1';
-    const payload = { label: 'Updated Mock Task' };
-    const req = new NextRequest(`http://localhost/api/tasks/${taskId}`, {
-      method: 'PATCH',
-      body: JSON.stringify(payload),
-      headers: { 'Content-Type': 'application/json' },
-    });
-    const res = await PATCH(req, { params: { taskId } });
-
-    expect(res.status).toBe(200);
-    await expect(res.json()).resolves.toEqual({ id: taskId, label: payload.label });
-  });
-
-  test('PATCH - Validation Error (Invalid Body)', async () => {
-    const taskId = 'task-1';
-    const invalidPayload = { isDone: 'not-a-boolean' }; // Invalid type
-    const req = new NextRequest(`http://localhost/api/tasks/${taskId}`, {
-      method: 'PATCH',
-      body: JSON.stringify(invalidPayload),
-      headers: { 'Content-Type': 'application/json' },
-    });
-    // Directly call PATCH exported from route.ts
-    const res = await PATCH(req, { params: { taskId } });
-
-    // createRoute handles validation and returns 422
-    expect(res.status).toBe(422);
-    const body = await res.json();
-    expect(body.error).toBe('Unprocessable Entity');
-    expect(body.issues[0].path).toEqual(['isDone']);
-    expect(body.issues[0].message).toBe('Expected boolean, received string');
-  });
-});
-```
+See `tests/client.spec.ts` for detailed examples using `msw` and `vitest` to test various scenarios for both `fc` and `$fc`.
 
 ## 📜 OpenAPI 3.1 Generation
 

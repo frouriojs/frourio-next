@@ -4,6 +4,16 @@ import { frourioSpec } from './frourio'
 
 export const fc_14jcy50 = (option?: FrourioClientOption) => ({
   $path: $path(option),
+  $build(req: Parameters<ReturnType<typeof methods>['$get']>[0] | null): [
+    key: null | Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'>,
+    fetcher: () => Promise<NonNullable<Awaited<ReturnType<ReturnType<typeof methods>['$get']>>>>,
+  ] {
+    if (req === null) return [null, () => Promise.reject(new Error('Fetcher is disabled.'))];
+
+    const { init, ...rest } = req;
+
+    return [rest, () => fc_14jcy50(option).$get(req)];
+  },
   ...methods(option),
 });
 
@@ -16,6 +26,16 @@ export const $fc_14jcy50 = (option?: FrourioClientOption) => ({
 
       return result.data;
     },
+  },
+  $build(req: Parameters<ReturnType<typeof methods>['$get']>[0] | null): [
+    key: Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'> | null,
+    fetcher: () => Promise<z.infer<typeof frourioSpec.get.res[200]['body']>>,
+  ] {
+    if (req === null) return [null, () => Promise.reject(new Error('Fetcher is disabled.'))];
+
+    const { init, ...rest } = req;
+
+    return [rest, () => $fc_14jcy50(option).$get(req)];
   },
   async $get(req: Parameters<ReturnType<typeof methods>['$get']>[0]): Promise<z.infer<typeof frourioSpec.get.res[200]['body']>> {
     const result = await methods(option).$get(req);

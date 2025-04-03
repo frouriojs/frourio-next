@@ -283,7 +283,9 @@ export function TaskDetails({ taskId }: TaskDetailsProps) {
       try {
         // --- Using the high-level client ($fc) ---
         // Automatically handles response parsing and throws on error.
-        const fetchedTask = await apiClient['api/tasks']['[taskId]'](taskId).$get({
+        // Pass path parameters via the 'params' property in the options object.
+        const fetchedTask = await apiClient['api/tasks']['[taskId]'].$get({
+          params: { taskId }, // Pass taskId here
           query: { includeAssignee: true },
         });
         setTask(fetchedTask);
@@ -304,7 +306,9 @@ export function TaskDetails({ taskId }: TaskDetailsProps) {
        setIsLoading(true);
        setError(null);
        // --- Using the low-level client (fc) ---
-       const result = await lowLevelApiClient['api/tasks']['[taskId]'](taskId).$get({
+       // Pass path parameters via the 'params' property in the options object.
+       const result = await lowLevelApiClient['api/tasks']['[taskId]'].$get({
+         params: { taskId }, // Pass taskId here
          query: { includeAssignee: true },
        });
 
@@ -337,7 +341,8 @@ export function TaskDetails({ taskId }: TaskDetailsProps) {
     if (!task) return;
     try {
       // Using $fc for simplicity
-      const updatedTask = await apiClient['api/tasks']['[taskId]'](taskId).$patch({
+      const updatedTask = await apiClient['api/tasks']['[taskId]'].$patch({
+        params: { taskId }, // Pass taskId here
         body: { isDone: !task.isDone },
       });
       setTask(updatedTask);
@@ -353,7 +358,7 @@ export function TaskDetails({ taskId }: TaskDetailsProps) {
 
     try {
       // Using $fc - returns void on success (204)
-      await apiClient['api/tasks']['[taskId]'](taskId).$delete({});
+      await apiClient['api/tasks']['[taskId]'].$delete({ params: { taskId } }); // Pass taskId here
       setTask(null);
       alert('Task deleted');
     } catch (err: any) {
@@ -429,8 +434,8 @@ export function TaskDetails({ taskId }: TaskDetailsProps) {
 **Structure**: Both clients mirror your API directory structure:
 
 - Directory names become properties accessible via bracket notation if they contain special characters: `apiClient['api/tasks']`, `lowLevelApiClient['api/tasks']`.
-- Dynamic segments (`[param]`) become functions accessed via bracket notation: `apiClient['api/tasks']['[taskId]']('abc')`.
-- HTTP methods are called with `$`: `.$get()`, `.$post()`, `.$patch()`, `.$delete()`.
+- Dynamic segments (`[param]`) are accessed via bracket notation: `apiClient['api/tasks']['[taskId]']`.
+- HTTP methods are called with `$`: `.$get()`, `.$post()`, `.$patch()`, `.$delete()`. Path parameters for dynamic segments are passed within the `params` property of the options object for these methods (e.g., `.$get({ params: { taskId: 'abc' } })`).
 - Request data (`query`, `body`, `headers`, `params`) is passed in an object, fully typed according to `frourio.ts`.
 
 ## 🧱 Middleware
@@ -527,16 +532,11 @@ export const { middleware } = createRoute({
 
 ```typescript
 import { createRoute } from './frourio.server';
-import type { AuthContext } from '../frourio'; // Import parent context
-import type { AdminContext } from './frourio'; // Import current context
-
-// Combine context types for handlers within this route
-type FullAdminContext = AuthContext & AdminContext;
 
 export const { middleware } = createRoute({
   // Implement middleware defined in app/api/admin/frourio.ts
   // Receives AuthContext from the parent middleware
-  middleware: async ({ req, next }, parentContext: AuthContext) => {
+  middleware: async ({ req, next }, parentContext) => {
     console.log('Admin Middleware: Received user:', parentContext.user?.id);
 
     // Check if user has admin role (using context from parent)
@@ -553,7 +553,7 @@ export const { middleware } = createRoute({
 
   // Define admin-specific routes here
   // Handlers receive the combined context (AuthContext & AdminContext)
-  // get: async (req, context: FullAdminContext) => {
+  // get: async (req, context) => {
   //   console.log('Admin GET handler: User:', context.user?.id, 'IsAdmin:', context.isAdmin);
   //   // ... admin logic ...
   // }

@@ -1,6 +1,7 @@
 # FrourioNext プロジェクト開発ガイドライン
 
 このドキュメントは、FrourioNext プロジェクトの開発を効率的に進めるためのルールや情報を提供します。
+コメントをソースコードとテストコードに一切記述してはならない。
 
 ## 1. プロジェクト構成の概要
 
@@ -27,17 +28,25 @@
 
 FrourioNext を使用して API ルートを開発する際の基本的な流れは以下の通りです。
 
-1.  **API 仕様定義 (`frourio.ts`):**
+*   **作業前に確認すべきファイル:**
+    *   `src/index.ts`
+    *   `tests/**spec.ts`
+    *   `projects/basic/app/frourio.ts`
+    *   `projects/basic/app/route.ts`
+    *   `projects/basic/app/frourio.server.ts`
+    *   `projects/basic/app/frourio.client.ts`
+
+*   **API 仕様定義 (`frourio.ts`):**
     *   Next.js の App Router のルーティング規則に従って、対応するディレクトリ (例: `app/api/users/[userId]/`) に `frourio.ts` ファイルを作成します。
     *   `@frourio/next` から `FrourioSpec` 型をインポートし、Zod スキーマを使ってパスパラメータ (`param`)、クエリパラメータ (`query`)、リクエストヘッダ (`headers`)、リクエストボディ (`body`)、レスポンス (`res`) の型とバリデーションルールを定義します。
     *   必要に応じてミドルウェア (`middleware`) の設定もここで行います。
 
-2.  **API 実装 (`route.ts`):**
+*   **API 実装 (`route.ts`):**
     *   `frourio.ts` と同じディレクトリに `route.ts` ファイルを作成します。
     *   後述のコード生成ステップで自動生成される `./frourio.server` から `createRoute` ヘルパー関数をインポートします。
     *   `createRoute` を使用して、`frourio.ts` で定義した HTTP メソッド (GET, POST など) に対応するハンドラ関数を実装します。ハンドラ関数は、バリデーション済みのリクエストデータ (型安全) を引数として受け取ります。
 
-3.  **コード生成 (`npm run generate` または `npm run dev`):**
+*   **コード生成 (`npm run generate` または `npm run dev`):**
     *   `frourio.ts` と `route.ts` を作成・編集した後、ターミナルで `npm run generate` コマンドを実行します (srcの内容を変更した場合には `npm run dev` でロジックが更新され、その後ファイルが生成されます)。
     *   このコマンドは内部的に `projects/dev.ts` を実行し、`frourio-next` CLI の機能によって以下のファイルを自動生成・更新します。
         *   **`.server.ts` (例: `frourio.server.ts`):** `route.ts` で使用する `createRoute` ヘルパー関数が含まれます。このヘルパーは、対応する `frourio.ts` の定義に基づいてリクエスト/レスポンスのバリデーションを自動的に行います。

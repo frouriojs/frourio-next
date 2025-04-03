@@ -3,21 +3,21 @@ import { z } from 'zod';
 import { frourioSpec } from './frourio'
 
 export const fc_1rqfh40 = (option?: FrourioClientOption) => ({
-  $path: $path(option),
+  $url: $url(option),
   ...methods(option),
 });
 
 export const $fc_1rqfh40 = (option?: FrourioClientOption) => ({
-  $path: {
-    put(req: Parameters<ReturnType<typeof $path>['put']>[0]): string {
-      const result = $path(option).put(req);
+  $url: {
+    put(req: Parameters<ReturnType<typeof $url>['put']>[0]): string {
+      const result = $url(option).put(req);
 
       if (!result.isValid) throw result.reason;
 
       return result.data;
     },
-    delete(req: Parameters<ReturnType<typeof $path>['delete']>[0]): string {
-      const result = $path(option).delete(req);
+    delete(req: Parameters<ReturnType<typeof $url>['delete']>[0]): string {
+      const result = $url(option).delete(req);
 
       if (!result.isValid) throw result.reason;
 
@@ -46,7 +46,7 @@ export const $fc_1rqfh40 = (option?: FrourioClientOption) => ({
 
 const paramsSchema = z.object({ 'userId': frourioSpec.param });
 
-const $path = (option?: FrourioClientOption) => ({
+const $url = (option?: FrourioClientOption) => ({
   put(req: { params: z.infer<typeof paramsSchema> }): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
     const parsedParams = paramsSchema.safeParse(req.params);
 
@@ -72,7 +72,7 @@ const methods = (option?: FrourioClientOption) => ({
     | { ok?: undefined; isValid: false; data?: undefined; failure?: undefined; raw?: undefined; reason: z.ZodError; error?: undefined }
     | { ok?: undefined; isValid?: undefined; data?: undefined; failure?: undefined; raw?: undefined; reason?: undefined; error: unknown }
   > {
-    const url = $path(option).put(req);
+    const url = $url(option).put(req);
 
     if (url.reason) return url;
 
@@ -139,7 +139,7 @@ const methods = (option?: FrourioClientOption) => ({
     | { ok?: undefined; isValid: false; data?: undefined; failure?: undefined; raw?: undefined; reason: z.ZodError; error?: undefined }
     | { ok?: undefined; isValid?: undefined; data?: undefined; failure?: undefined; raw?: undefined; reason?: undefined; error: unknown }
   > {
-    const url = $path(option).delete(req);
+    const url = $url(option).delete(req);
 
     if (url.reason) return url;
 

@@ -215,7 +215,7 @@ const clientData = (
 export const ${CLIENT_NAME}${!isRoot ? `_${createHash(dirPath.replace(appDir, ''))}` : ''} = (option?: FrourioClientOption) => ({${childDirs
     .map((child) => `\n  '${child.import}': ${CLIENT_NAME}_${child.hash}(option),`)
     .join('')}
-  $path: $path(option),${
+  $url: $url(option),${
     getMethod
       ? `
   $build(req: Parameters<ReturnType<typeof methods>['$get']>[0] | null): [
@@ -242,11 +242,11 @@ export const ${CLIENT_NAME}${!isRoot ? `_${createHash(dirPath.replace(appDir, ''
 export const $${CLIENT_NAME}${!isRoot ? `_${createHash(dirPath.replace(appDir, ''))}` : ''} = (option?: FrourioClientOption) => ({${childDirs
     .map((child) => `\n  '${child.import}': $${CLIENT_NAME}_${child.hash}(option),`)
     .join('')}
-  $path: {${methods
+  $url: {${methods
     .map(
       (method) => `
-    ${method.name}(req: Parameters<ReturnType<typeof $path>['${method.name}']>[0]): string {
-      const result = $path(option).${method.name}(req);
+    ${method.name}(req: Parameters<ReturnType<typeof $url>['${method.name}']>[0]): string {
+      const result = $url(option).${method.name}(req);
 
       if (!result.isValid) throw result.reason;
 
@@ -316,7 +316,7 @@ export const $${CLIENT_NAME}${!isRoot ? `_${createHash(dirPath.replace(appDir, '
     .join('')}
 });
 ${params ? `\nconst paramsSchema = ${clientParamsToText(params)};\n` : ''}
-const $path = (option?: FrourioClientOption) => ({${methods
+const $url = (option?: FrourioClientOption) => ({${methods
     .map(
       (method) => `\n  ${method.name}(req${params || method.query ? '' : '?'}: { ${[
         ...(params ? ['params: z.infer<typeof paramsSchema>'] : []),
@@ -426,7 +426,7 @@ const methods = (option?: FrourioClientOption) => ({${methods
     | { ok?: undefined; isValid: false; data?: undefined; failure?: undefined; raw?: undefined; reason: z.ZodError; error?: undefined }
     | { ok?: undefined; isValid?: undefined; data?: undefined; failure?: undefined; raw?: undefined; reason?: undefined; error: unknown }
   > {
-    const url = $path(option).${method.name}(req);
+    const url = $url(option).${method.name}(req);
 
     if (url.reason) return url;
 ${

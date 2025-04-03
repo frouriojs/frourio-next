@@ -5,17 +5,17 @@ import { frourioSpec } from './frourio'
 
 export const fc_17lcihw = (option?: FrourioClientOption) => ({
   'x/[y]': fc_13e9lnf(option),
-  $path: $path(option),
+  $url: $url(option),
   ...methods(option),
 });
 
 export const $fc_17lcihw = (option?: FrourioClientOption) => ({
   'x/[y]': $fc_13e9lnf(option),
-  $path: {
+  $url: {
   },
 });
 
-const $path = (option?: FrourioClientOption) => ({
+const $url = (option?: FrourioClientOption) => ({
 });
 
 const methods = (option?: FrourioClientOption) => ({

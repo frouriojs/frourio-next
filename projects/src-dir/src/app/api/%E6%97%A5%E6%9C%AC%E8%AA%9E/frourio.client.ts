@@ -3,14 +3,14 @@ import { z } from 'zod';
 import { frourioSpec } from './frourio'
 
 export const fc_15e5upz = (option?: FrourioClientOption) => ({
-  $path: $path(option),
+  $url: $url(option),
   ...methods(option),
 });
 
 export const $fc_15e5upz = (option?: FrourioClientOption) => ({
-  $path: {
-    post(req: Parameters<ReturnType<typeof $path>['post']>[0]): string {
-      const result = $path(option).post(req);
+  $url: {
+    post(req: Parameters<ReturnType<typeof $url>['post']>[0]): string {
+      const result = $url(option).post(req);
 
       if (!result.isValid) throw result.reason;
 
@@ -26,7 +26,7 @@ export const $fc_15e5upz = (option?: FrourioClientOption) => ({
   },
 });
 
-const $path = (option?: FrourioClientOption) => ({
+const $url = (option?: FrourioClientOption) => ({
   post(req?: {  }): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
     return { isValid: true, data: `${option?.baseURL ?? ''}/foo/bar/api/%E6%97%A5%E6%9C%AC%E8%AA%9E` };
   },
@@ -40,7 +40,7 @@ const methods = (option?: FrourioClientOption) => ({
     | { ok?: undefined; isValid: false; data?: undefined; failure?: undefined; raw?: undefined; reason: z.ZodError; error?: undefined }
     | { ok?: undefined; isValid?: undefined; data?: undefined; failure?: undefined; raw?: undefined; reason?: undefined; error: unknown }
   > {
-    const url = $path(option).post(req);
+    const url = $url(option).post(req);
 
     if (url.reason) return url;
 

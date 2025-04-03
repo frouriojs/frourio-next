@@ -9,7 +9,7 @@ export const fc_82hx7j = (option?: FrourioClientOption) => ({
   '[pid]': fc_rket09(option),
   'blog/[...slug]': fc_er79ce(option),
   'blog/hoge/[[...fuga]]': fc_14jcy50(option),
-  $path: $path(option),
+  $url: $url(option),
   ...methods(option),
 });
 
@@ -17,11 +17,11 @@ export const $fc_82hx7j = (option?: FrourioClientOption) => ({
   '[pid]': $fc_rket09(option),
   'blog/[...slug]': $fc_er79ce(option),
   'blog/hoge/[[...fuga]]': $fc_14jcy50(option),
-  $path: {
+  $url: {
   },
 });
 
-const $path = (option?: FrourioClientOption) => ({
+const $url = (option?: FrourioClientOption) => ({
 });
 
 const methods = (option?: FrourioClientOption) => ({

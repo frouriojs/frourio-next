@@ -7,7 +7,7 @@ import { frourioSpec } from './frourio'
 export const fc_17yqnk1 = (option?: FrourioClientOption) => ({
   '[userId]': fc_1rqfh40(option),
   'stream': fc_1tp1ur6(option),
-  $path: $path(option),
+  $url: $url(option),
   $build(req: Parameters<ReturnType<typeof methods>['$get']>[0] | null): [
     key: null | Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'>,
     fetcher: () => Promise<NonNullable<Awaited<ReturnType<ReturnType<typeof methods>['$get']>>>>,
@@ -24,23 +24,23 @@ export const fc_17yqnk1 = (option?: FrourioClientOption) => ({
 export const $fc_17yqnk1 = (option?: FrourioClientOption) => ({
   '[userId]': $fc_1rqfh40(option),
   'stream': $fc_1tp1ur6(option),
-  $path: {
-    get(req: Parameters<ReturnType<typeof $path>['get']>[0]): string {
-      const result = $path(option).get(req);
+  $url: {
+    get(req: Parameters<ReturnType<typeof $url>['get']>[0]): string {
+      const result = $url(option).get(req);
 
       if (!result.isValid) throw result.reason;
 
       return result.data;
     },
-    post(req: Parameters<ReturnType<typeof $path>['post']>[0]): string {
-      const result = $path(option).post(req);
+    post(req: Parameters<ReturnType<typeof $url>['post']>[0]): string {
+      const result = $url(option).post(req);
 
       if (!result.isValid) throw result.reason;
 
       return result.data;
     },
-    patch(req: Parameters<ReturnType<typeof $path>['patch']>[0]): string {
-      const result = $path(option).patch(req);
+    patch(req: Parameters<ReturnType<typeof $url>['patch']>[0]): string {
+      const result = $url(option).patch(req);
 
       if (!result.isValid) throw result.reason;
 
@@ -86,7 +86,7 @@ export const $fc_17yqnk1 = (option?: FrourioClientOption) => ({
   },
 });
 
-const $path = (option?: FrourioClientOption) => ({
+const $url = (option?: FrourioClientOption) => ({
   get(req: { query: z.infer<typeof frourioSpec.get.query> }): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
     const parsedQuery = frourioSpec.get.query.safeParse(req.query);
 
@@ -123,7 +123,7 @@ const methods = (option?: FrourioClientOption) => ({
     | { ok?: undefined; isValid: false; data?: undefined; failure?: undefined; raw?: undefined; reason: z.ZodError; error?: undefined }
     | { ok?: undefined; isValid?: undefined; data?: undefined; failure?: undefined; raw?: undefined; reason?: undefined; error: unknown }
   > {
-    const url = $path(option).get(req);
+    const url = $url(option).get(req);
 
     if (url.reason) return url;
 
@@ -185,7 +185,7 @@ const methods = (option?: FrourioClientOption) => ({
     | { ok?: undefined; isValid: false; data?: undefined; failure?: undefined; raw?: undefined; reason: z.ZodError; error?: undefined }
     | { ok?: undefined; isValid?: undefined; data?: undefined; failure?: undefined; raw?: undefined; reason?: undefined; error: unknown }
   > {
-    const url = $path(option).post(req);
+    const url = $url(option).post(req);
 
     if (url.reason) return url;
 
@@ -268,7 +268,7 @@ const methods = (option?: FrourioClientOption) => ({
     | { ok?: undefined; isValid: false; data?: undefined; failure?: undefined; raw?: undefined; reason: z.ZodError; error?: undefined }
     | { ok?: undefined; isValid?: undefined; data?: undefined; failure?: undefined; raw?: undefined; reason?: undefined; error: unknown }
   > {
-    const url = $path(option).patch(req);
+    const url = $url(option).patch(req);
 
     if (url.reason) return url;
 

@@ -120,7 +120,8 @@ const handlers = [
       if (typeof userId !== 'string' || !userId) {
         return HttpResponse.json({ message: 'Missing userId' }, { status: 400 });
       }
-      if (!(avatar instanceof File)) {
+
+      if (!avatar || typeof avatar === 'string') {
         return HttpResponse.json({ message: 'Missing or invalid avatar file' }, { status: 400 });
       }
 

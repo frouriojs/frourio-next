@@ -1,6 +1,7 @@
 import js from '@eslint/js';
 import gitignore from 'eslint-config-flat-gitignore';
 import prettierConfig from 'eslint-config-prettier';
+import testingLibrary from 'eslint-plugin-testing-library';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
@@ -36,8 +37,12 @@ export default tseslint.config(
   },
   {
     files: ['tests/**/*.ts'],
+    plugins: {
+      'testing-library': testingLibrary,
+    },
     rules: {
       '@typescript-eslint/no-non-null-assertion': 'off',
+      'testing-library/no-unnecessary-act': 'error',
       'no-restricted-syntax': [
         'error',
         { selector: 'OptionalChain', message: 'Optional chaining (?.) is not allowed.' },

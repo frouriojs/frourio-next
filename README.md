@@ -727,11 +727,113 @@ if (result.ok && result.raw) {
 }
 ```
 
+## 🎣 Integrating with Data Fetching Libraries (useSWR, TanStack Query)
+
+The generated clients integrate smoothly with popular data fetching libraries. The `$build()` method is particularly useful here.
+
+### Using with SWR (`useSWR`)
+
+The `$fc().$build(options)` method returns a tuple `[key, fetcher]` (or `[null, fetcher]` if `options` is `null`). This tuple can be directly spread into `useSWR`.
+
+```typescript
+import useSWR from 'swr';
+import { apiClient } from '@/lib/apiClient'; // Your initialized client
+
+function UserProfile({ userId }: { userId: string | null }) {
+  // Build the key and fetcher based on userId
+  // If userId is null, buildArgs will be [null, fetcher], disabling the query
+  const buildArgs = apiClient['api/users']['[userId]'].$build(
+    userId ? { params: { userId }, headers: {} } : null
+  );
+
+  // Spread the arguments into useSWR
+  const { data: user, error, isLoading } = useSWR(...buildArgs);
+
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error loading user: {error.message}</div>;
+  if (!user) return <div>User not found or query disabled.</div>;
+
+  return <div>Welcome, {user.name}!</div>;
+}
+```
+
+**Using Global Fetcher:** If you configure a global fetcher in `SWRConfig`, you can use `$build()` just to generate the key:
+
+```typescript
+import useSWR, { SWRConfig } from 'swr';
+import { apiClient } from '@/lib/apiClient';
+
+function App() {
+  return (
+    // Configure apiClient.$get as the global fetcher
+    <SWRConfig value={{ fetcher: apiClient.$get }}>
+      <UserProfile userId="user-1" />
+    </SWRConfig>
+  );
+}
+
+function UserProfile({ userId }: { userId: string | null }) {
+  // Generate only the key
+  const [key] = apiClient['api/users']['[userId]'].$build(
+    userId ? { params: { userId }, headers: {} } : null
+  );
+
+  // Pass only the key to useSWR; the global fetcher will be used
+  const { data: user, error, isLoading } = useSWR(key);
+
+  // ... render logic ...
+}
+```
+
+See `tests/useSWR.spec.tsx` for more detailed examples, including error handling and testing with `msw`.
+
+### Using with TanStack Query (`useQuery`)
+
+Similarly, `$build()` can be used with `@tanstack/react-query`. The first element of the tuple is the `queryKey` (or part of it), and the second is the `queryFn`.
+
+```typescript
+import { useQuery, QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { apiClient } from '@/lib/apiClient';
+
+const queryClient = new QueryClient();
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <UserProfile userId="user-1" />
+    </QueryClientProvider>
+  );
+}
+
+function UserProfile({ userId }: { userId: string | null }) {
+  // Build the key and fetcher
+  const [queryKey, queryFn] = apiClient['api/users']['[userId]'].$build(
+    userId ? { params: { userId }, headers: {} } : null
+  );
+
+  // Use the generated key and fetcher
+  const { data: user, error, isLoading, status } = useQuery({
+    // Wrap queryKey in an array as recommended by TanStack Query
+    queryKey: [queryKey],
+    queryFn: queryFn,
+    // Disable the query if the key is null (i.e., userId was null)
+    enabled: !!queryKey,
+  });
+
+  if (status === 'pending') return <div>Loading...</div>; // or isLoading
+  if (status === 'error') return <div>Error loading user: {error.message}</div>;
+
+  return <div>Welcome, {user.name}!</div>;
+}
+```
+
+See `tests/useQuery.spec.tsx` for more detailed examples.
+
 ## 🧪 Testing
 
 Test your FrourioNext handlers like standard Next.js Route Handlers, typically by mocking `NextRequest` and calling the exported handler functions directly. Use libraries like `msw` to mock the `fetch` calls when testing client-side logic or components using the generated Frourio clients (`fc`, `$fc`).
 
-See `tests/client.spec.ts` for detailed examples using `msw` and `vitest` to test various scenarios for both `fc` and `$fc`.
+See `tests/client.spec.ts`, `tests/useSWR.spec.tsx`, and `tests/useQuery.spec.tsx` for detailed examples using `msw` and `vitest`.
 
 ## 📜 OpenAPI 3.1 Generation
 

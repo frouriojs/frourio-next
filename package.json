@@ -13,8 +13,8 @@
     "dev": "npm run build && npm run generate",
     "generate": "ts-node projects/dev.ts",
     "build": "tsc -p tsconfig.build.json",
-    "lint": "eslint . && prettier --check \"./**/*.ts\"",
-    "lint:fix": "eslint . --fix && prettier --write \"./**/*.ts\"",
+    "lint": "eslint . && prettier --check \"./**/*.{ts,tsx}\"",
+    "lint:fix": "eslint . --fix && prettier --write \"./**/*.{ts,tsx}\"",
     "test": "vitest run --coverage",
     "typecheck": "tsc --noEmit"
   },

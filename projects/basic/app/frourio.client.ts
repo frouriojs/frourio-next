@@ -3,6 +3,8 @@ import { z } from 'zod';
 import { fc_82hx7j, $fc_82hx7j } from './(group1)/frourio.client';
 import { fc_17lcihw, $fc_17lcihw } from './(group2)/frourio.client';
 import { fc_knqmrp, $fc_knqmrp } from './[a]/frourio.client';
+import { fc_1f8i0zm, $fc_1f8i0zm } from './api/key-collision-test/frourio.client';
+import { fc_195l5vw, $fc_195l5vw } from './api/key-collision-test-another/frourio.client';
 import { fc_sqrir7, $fc_sqrir7 } from './api/mw/frourio.client';
 import { fc_17yqnk1, $fc_17yqnk1 } from './api/test-client/frourio.client';
 import { frourioSpec } from './frourio'
@@ -11,18 +13,20 @@ export const fc = (option?: FrourioClientOption) => ({
   '(group1)': fc_82hx7j(option),
   '(group2)': fc_17lcihw(option),
   '[a]': fc_knqmrp(option),
+  'api/key-collision-test': fc_1f8i0zm(option),
+  'api/key-collision-test-another': fc_195l5vw(option),
   'api/mw': fc_sqrir7(option),
   'api/test-client': fc_17yqnk1(option),
   $url: $url(option),
   $build(req: Parameters<ReturnType<typeof methods>['$get']>[0] | null): [
-    key: null | Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'>,
+    key: { dir: string } & Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'> | null,
     fetcher: () => Promise<NonNullable<Awaited<ReturnType<ReturnType<typeof methods>['$get']>>>>,
   ] {
     if (req === null) return [null, () => Promise.reject(new Error('Fetcher is disabled.'))];
 
     const { init, ...rest } = req;
 
-    return [rest, () => fc(option).$get(req)];
+    return [{ dir: '/', ...rest }, () => fc(option).$get(req)];
   },
   ...methods(option),
 });
@@ -31,6 +35,8 @@ export const $fc = (option?: FrourioClientOption) => ({
   '(group1)': $fc_82hx7j(option),
   '(group2)': $fc_17lcihw(option),
   '[a]': $fc_knqmrp(option),
+  'api/key-collision-test': $fc_1f8i0zm(option),
+  'api/key-collision-test-another': $fc_195l5vw(option),
   'api/mw': $fc_sqrir7(option),
   'api/test-client': $fc_17yqnk1(option),
   $url: {
@@ -41,8 +47,8 @@ export const $fc = (option?: FrourioClientOption) => ({
 
       return result.data;
     },
-    post(req: Parameters<ReturnType<typeof $url>['post']>[0]): string {
-      const result = $url(option).post(req);
+    post(): string {
+      const result = $url(option).post();
 
       if (!result.isValid) throw result.reason;
 
@@ -50,14 +56,14 @@ export const $fc = (option?: FrourioClientOption) => ({
     },
   },
   $build(req: Parameters<ReturnType<typeof methods>['$get']>[0] | null): [
-    key: Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'> | null,
+    key: { dir: string } & Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'> | null,
     fetcher: () => Promise<z.infer<typeof frourioSpec.get.res[200]['body']>>,
   ] {
     if (req === null) return [null, () => Promise.reject(new Error('Fetcher is disabled.'))];
 
     const { init, ...rest } = req;
 
-    return [rest, () => $fc(option).$get(req)];
+    return [{ dir: '$/', ...rest }, () => $fc(option).$get(req)];
   },
   async $get(req: Parameters<ReturnType<typeof methods>['$get']>[0]): Promise<z.infer<typeof frourioSpec.get.res[200]['body']>> {
     const result = await methods(option).$get(req);
@@ -97,7 +103,7 @@ const $url = (option?: FrourioClientOption) => ({
 
     return { isValid: true, data: `${option?.baseURL ?? ''}/?${searchParams.toString()}` };
   },
-  post(req?: {  }): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
+  post(): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
     return { isValid: true, data: `${option?.baseURL ?? ''}/` };
   },
 });
@@ -168,7 +174,7 @@ const methods = (option?: FrourioClientOption) => ({
     | { ok?: undefined; isValid: false; data?: undefined; failure?: undefined; raw?: undefined; reason: z.ZodError; error?: undefined }
     | { ok?: undefined; isValid?: undefined; data?: undefined; failure?: undefined; raw?: undefined; reason?: undefined; error: unknown }
   > {
-    const url = $url(option).post(req);
+    const url = $url(option).post();
 
     if (url.reason) return url;
 

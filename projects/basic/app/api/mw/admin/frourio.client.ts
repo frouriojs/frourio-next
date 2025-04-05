@@ -6,17 +6,11 @@ import { frourioSpec } from './frourio'
 export const fc_n3it2j = (option?: FrourioClientOption) => ({
   'users': fc_gye2fo(option),
   $url: $url(option),
-  $build(req: Parameters<ReturnType<typeof methods>['$get']>[0] | null): [
-    key: null | Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'>,
+  $build(req?: { init?: RequestInit }): [
+    key: { dir: string },
     fetcher: () => Promise<NonNullable<Awaited<ReturnType<ReturnType<typeof methods>['$get']>>>>,
   ] {
-    if (req === null) return [null, () => Promise.reject(new Error('Fetcher is disabled.'))];
-
-    if (req === undefined) return [{}, () => fc_n3it2j(option).$get(req)];
-
-    const { init, ...rest } = req;
-
-    return [rest, () => fc_n3it2j(option).$get(req)];
+    return [{ dir: '/api/mw/admin' }, () => fc_n3it2j(option).$get(req)];
   },
   ...methods(option),
 });
@@ -24,32 +18,26 @@ export const fc_n3it2j = (option?: FrourioClientOption) => ({
 export const $fc_n3it2j = (option?: FrourioClientOption) => ({
   'users': $fc_gye2fo(option),
   $url: {
-    get(req: Parameters<ReturnType<typeof $url>['get']>[0]): string {
-      const result = $url(option).get(req);
+    get(): string {
+      const result = $url(option).get();
 
       if (!result.isValid) throw result.reason;
 
       return result.data;
     },
-    post(req: Parameters<ReturnType<typeof $url>['post']>[0]): string {
-      const result = $url(option).post(req);
+    post(): string {
+      const result = $url(option).post();
 
       if (!result.isValid) throw result.reason;
 
       return result.data;
     },
   },
-  $build(req: Parameters<ReturnType<typeof methods>['$get']>[0] | null): [
-    key: Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'> | null,
+  $build(req?: { init?: RequestInit }): [
+    key: { dir: string },
     fetcher: () => Promise<z.infer<typeof frourioSpec.get.res[200]['body']>>,
   ] {
-    if (req === null) return [null, () => Promise.reject(new Error('Fetcher is disabled.'))];
-
-    if (req === undefined) return [{}, () => $fc_n3it2j(option).$get(req)];
-
-    const { init, ...rest } = req;
-
-    return [rest, () => $fc_n3it2j(option).$get(req)];
+    return [{ dir: '$/api/mw/admin' }, () => $fc_n3it2j(option).$get(req)];
   },
   async $get(req: Parameters<ReturnType<typeof methods>['$get']>[0]): Promise<z.infer<typeof frourioSpec.get.res[200]['body']>> {
     const result = await methods(option).$get(req);
@@ -72,10 +60,10 @@ export const $fc_n3it2j = (option?: FrourioClientOption) => ({
 });
 
 const $url = (option?: FrourioClientOption) => ({
-  get(req?: {  }): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
+  get(): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
     return { isValid: true, data: `${option?.baseURL ?? ''}/api/mw/admin` };
   },
-  post(req?: {  }): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
+  post(): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
     return { isValid: true, data: `${option?.baseURL ?? ''}/api/mw/admin` };
   },
 });
@@ -89,7 +77,7 @@ const methods = (option?: FrourioClientOption) => ({
     | { ok?: undefined; isValid: false; data?: undefined; failure?: undefined; raw?: undefined; reason: z.ZodError; error?: undefined }
     | { ok?: undefined; isValid?: undefined; data?: undefined; failure?: undefined; raw?: undefined; reason?: undefined; error: unknown }
   > {
-    const url = $url(option).get(req);
+    const url = $url(option).get();
 
     if (url.reason) return url;
 
@@ -151,7 +139,7 @@ const methods = (option?: FrourioClientOption) => ({
     | { ok?: undefined; isValid: false; data?: undefined; failure?: undefined; raw?: undefined; reason: z.ZodError; error?: undefined }
     | { ok?: undefined; isValid?: undefined; data?: undefined; failure?: undefined; raw?: undefined; reason?: undefined; error: unknown }
   > {
-    const url = $url(option).post(req);
+    const url = $url(option).post();
 
     if (url.reason) return url;
 

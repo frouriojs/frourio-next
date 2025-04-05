@@ -9,14 +9,14 @@ export const fc_17yqnk1 = (option?: FrourioClientOption) => ({
   'stream': fc_1tp1ur6(option),
   $url: $url(option),
   $build(req: Parameters<ReturnType<typeof methods>['$get']>[0] | null): [
-    key: null | Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'>,
+    key: { dir: string } & Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'> | null,
     fetcher: () => Promise<NonNullable<Awaited<ReturnType<ReturnType<typeof methods>['$get']>>>>,
   ] {
     if (req === null) return [null, () => Promise.reject(new Error('Fetcher is disabled.'))];
 
     const { init, ...rest } = req;
 
-    return [rest, () => fc_17yqnk1(option).$get(req)];
+    return [{ dir: '/api/test-client', ...rest }, () => fc_17yqnk1(option).$get(req)];
   },
   ...methods(option),
 });
@@ -32,15 +32,15 @@ export const $fc_17yqnk1 = (option?: FrourioClientOption) => ({
 
       return result.data;
     },
-    post(req: Parameters<ReturnType<typeof $url>['post']>[0]): string {
-      const result = $url(option).post(req);
+    post(): string {
+      const result = $url(option).post();
 
       if (!result.isValid) throw result.reason;
 
       return result.data;
     },
-    patch(req: Parameters<ReturnType<typeof $url>['patch']>[0]): string {
-      const result = $url(option).patch(req);
+    patch(): string {
+      const result = $url(option).patch();
 
       if (!result.isValid) throw result.reason;
 
@@ -48,14 +48,14 @@ export const $fc_17yqnk1 = (option?: FrourioClientOption) => ({
     },
   },
   $build(req: Parameters<ReturnType<typeof methods>['$get']>[0] | null): [
-    key: Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'> | null,
+    key: { dir: string } & Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'> | null,
     fetcher: () => Promise<z.infer<typeof frourioSpec.get.res[200]['body']>>,
   ] {
     if (req === null) return [null, () => Promise.reject(new Error('Fetcher is disabled.'))];
 
     const { init, ...rest } = req;
 
-    return [rest, () => $fc_17yqnk1(option).$get(req)];
+    return [{ dir: '$/api/test-client', ...rest }, () => $fc_17yqnk1(option).$get(req)];
   },
   async $get(req: Parameters<ReturnType<typeof methods>['$get']>[0]): Promise<z.infer<typeof frourioSpec.get.res[200]['body']>> {
     const result = await methods(option).$get(req);
@@ -106,10 +106,10 @@ const $url = (option?: FrourioClientOption) => ({
 
     return { isValid: true, data: `${option?.baseURL ?? ''}/api/test-client?${searchParams.toString()}` };
   },
-  post(req?: {  }): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
+  post(): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
     return { isValid: true, data: `${option?.baseURL ?? ''}/api/test-client` };
   },
-  patch(req?: {  }): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
+  patch(): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
     return { isValid: true, data: `${option?.baseURL ?? ''}/api/test-client` };
   },
 });
@@ -185,7 +185,7 @@ const methods = (option?: FrourioClientOption) => ({
     | { ok?: undefined; isValid: false; data?: undefined; failure?: undefined; raw?: undefined; reason: z.ZodError; error?: undefined }
     | { ok?: undefined; isValid?: undefined; data?: undefined; failure?: undefined; raw?: undefined; reason?: undefined; error: unknown }
   > {
-    const url = $url(option).post(req);
+    const url = $url(option).post();
 
     if (url.reason) return url;
 
@@ -268,7 +268,7 @@ const methods = (option?: FrourioClientOption) => ({
     | { ok?: undefined; isValid: false; data?: undefined; failure?: undefined; raw?: undefined; reason: z.ZodError; error?: undefined }
     | { ok?: undefined; isValid?: undefined; data?: undefined; failure?: undefined; raw?: undefined; reason?: undefined; error: unknown }
   > {
-    const url = $url(option).patch(req);
+    const url = $url(option).patch();
 
     if (url.reason) return url;
 

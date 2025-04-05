@@ -4,42 +4,30 @@ import { frourioSpec } from './frourio'
 
 export const fc_76vmqd = (option?: FrourioClientOption) => ({
   $url: $url(option),
-  $build(req: Parameters<ReturnType<typeof methods>['$get']>[0] | null): [
-    key: null | Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'>,
+  $build(req?: { init?: RequestInit }): [
+    key: { dir: string },
     fetcher: () => Promise<NonNullable<Awaited<ReturnType<ReturnType<typeof methods>['$get']>>>>,
   ] {
-    if (req === null) return [null, () => Promise.reject(new Error('Fetcher is disabled.'))];
-
-    if (req === undefined) return [{}, () => fc_76vmqd(option).$get(req)];
-
-    const { init, ...rest } = req;
-
-    return [rest, () => fc_76vmqd(option).$get(req)];
+    return [{ dir: '/api/mw/public' }, () => fc_76vmqd(option).$get(req)];
   },
   ...methods(option),
 });
 
 export const $fc_76vmqd = (option?: FrourioClientOption) => ({
   $url: {
-    get(req: Parameters<ReturnType<typeof $url>['get']>[0]): string {
-      const result = $url(option).get(req);
+    get(): string {
+      const result = $url(option).get();
 
       if (!result.isValid) throw result.reason;
 
       return result.data;
     },
   },
-  $build(req: Parameters<ReturnType<typeof methods>['$get']>[0] | null): [
-    key: Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'> | null,
+  $build(req?: { init?: RequestInit }): [
+    key: { dir: string },
     fetcher: () => Promise<z.infer<typeof frourioSpec.get.res[200]['body']>>,
   ] {
-    if (req === null) return [null, () => Promise.reject(new Error('Fetcher is disabled.'))];
-
-    if (req === undefined) return [{}, () => $fc_76vmqd(option).$get(req)];
-
-    const { init, ...rest } = req;
-
-    return [rest, () => $fc_76vmqd(option).$get(req)];
+    return [{ dir: '$/api/mw/public' }, () => $fc_76vmqd(option).$get(req)];
   },
   async $get(req: Parameters<ReturnType<typeof methods>['$get']>[0]): Promise<z.infer<typeof frourioSpec.get.res[200]['body']>> {
     const result = await methods(option).$get(req);
@@ -51,7 +39,7 @@ export const $fc_76vmqd = (option?: FrourioClientOption) => ({
 });
 
 const $url = (option?: FrourioClientOption) => ({
-  get(req?: {  }): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
+  get(): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
     return { isValid: true, data: `${option?.baseURL ?? ''}/api/mw/public` };
   },
 });
@@ -64,7 +52,7 @@ const methods = (option?: FrourioClientOption) => ({
     | { ok?: undefined; isValid: false; data?: undefined; failure?: undefined; raw?: undefined; reason: z.ZodError; error?: undefined }
     | { ok?: undefined; isValid?: undefined; data?: undefined; failure?: undefined; raw?: undefined; reason?: undefined; error: unknown }
   > {
-    const url = $url(option).get(req);
+    const url = $url(option).get();
 
     if (url.reason) return url;
 

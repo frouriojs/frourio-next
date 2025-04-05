@@ -184,13 +184,15 @@ const clientData = (
   basePath: string | undefined,
 ) => {
   const childDirs = frourioDirs
-    .filter((dir) => dir.startsWith(dirPath) && dir !== dirPath)
+    .filter((dir) => dir.startsWith(`${dirPath}/`))
     .map((dir) => ({
       import: dir.replace(`${dirPath}/`, ''),
       hash: createHash(dir.replace(appDir, '')),
     }))
     .filter((dir, _, arr) =>
-      arr.every((other) => !dir.import.startsWith(other.import) || dir.import === other.import),
+      arr.every(
+        (other) => !dir.import.startsWith(`${other.import}/`) || dir.import === other.import,
+      ),
     );
   const imports: string[] = [
     "import type { FrourioClientOption } from '@frourio/next'",
@@ -204,11 +206,13 @@ const clientData = (
     ),
     "import { frourioSpec } from './frourio'",
   ];
-  const isRoot = frourioDirs.every((dir) => !dirPath.startsWith(dir) || dir === dirPath);
+  const isRoot = frourioDirs.every((dir) => !dirPath.startsWith(`${dir}/`));
   const apiPath = isRoot
     ? basePath || '/'
     : `${basePath ?? ''}${dirPath.replace(appDir, '').replace(/\/\(.+?\)/g, '')}`;
   const getMethod = methods.find((m) => m.name === 'get');
+  const hasMethodReqKeys = (method: ServerMethod) =>
+    !!(params || method.hasHeaders || method.query);
 
   return `${imports.join(';\n')}
 
@@ -217,22 +221,24 @@ export const ${CLIENT_NAME}${!isRoot ? `_${createHash(dirPath.replace(appDir, ''
     .join('')}
   $url: $url(option),${
     getMethod
-      ? `
+      ? hasMethodReqKeys(getMethod)
+        ? `
   $build(req: Parameters<ReturnType<typeof methods>['$get']>[0] | null): [
-    key: null | Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'>,
+    key: { dir: string } & Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'> | null,
     fetcher: () => Promise<NonNullable<Awaited<ReturnType<ReturnType<typeof methods>['$get']>>>>,
   ] {
-    if (req === null) return [null, () => Promise.reject(new Error('Fetcher is disabled.'))];${
-      params || getMethod.hasHeaders || getMethod.query || getMethod.body
-        ? ''
-        : `
-
-    if (req === undefined) return [{}, () => ${CLIENT_NAME}${!isRoot ? `_${createHash(dirPath.replace(appDir, ''))}` : ''}(option).$get(req)];`
-    }
+    if (req === null) return [null, () => Promise.reject(new Error('Fetcher is disabled.'))];
 
     const { init, ...rest } = req;
 
-    return [rest, () => ${CLIENT_NAME}${!isRoot ? `_${createHash(dirPath.replace(appDir, ''))}` : ''}(option).$get(req)];
+    return [{ dir: '${dirPath.replace(appDir, '') || '/'}', ...rest }, () => ${CLIENT_NAME}${!isRoot ? `_${createHash(dirPath.replace(appDir, ''))}` : ''}(option).$get(req)];
+  },`
+        : `
+  $build(req?: { init?: RequestInit }): [
+    key: { dir: string },
+    fetcher: () => Promise<NonNullable<Awaited<ReturnType<ReturnType<typeof methods>['$get']>>>>,
+  ] {
+    return [{ dir: '${dirPath.replace(appDir, '') || '/'}' }, () => ${CLIENT_NAME}${!isRoot ? `_${createHash(dirPath.replace(appDir, ''))}` : ''}(option).$get(req)];
   },`
       : ''
   }
@@ -245,8 +251,8 @@ export const $${CLIENT_NAME}${!isRoot ? `_${createHash(dirPath.replace(appDir, '
   $url: {${methods
     .map(
       (method) => `
-    ${method.name}(req: Parameters<ReturnType<typeof $url>['${method.name}']>[0]): string {
-      const result = $url(option).${method.name}(req);
+    ${method.name}(${hasMethodReqKeys(method) ? `req: Parameters<ReturnType<typeof $url>['${method.name}']>[0]` : ''}): string {
+      const result = $url(option).${method.name}(${hasMethodReqKeys(method) ? 'req' : ''});
 
       if (!result.isValid) throw result.reason;
 
@@ -273,22 +279,24 @@ export const $${CLIENT_NAME}${!isRoot ? `_${createHash(dirPath.replace(appDir, '
             ].join(' | ');
       const builder =
         method.name === 'get'
-          ? `
+          ? hasMethodReqKeys(method)
+            ? `
   $build(req: Parameters<ReturnType<typeof methods>['$get']>[0] | null): [
-    key: Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'> | null,
+    key: { dir: string } & Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'> | null,
     fetcher: () => Promise<${resType}>,
   ] {
-    if (req === null) return [null, () => Promise.reject(new Error('Fetcher is disabled.'))];${
-      params || method.hasHeaders || method.query || method.body
-        ? ''
-        : `
-
-    if (req === undefined) return [{}, () => $${CLIENT_NAME}${!isRoot ? `_${createHash(dirPath.replace(appDir, ''))}` : ''}(option).$get(req)];`
-    }
+    if (req === null) return [null, () => Promise.reject(new Error('Fetcher is disabled.'))];
 
     const { init, ...rest } = req;
 
-    return [rest, () => $${CLIENT_NAME}${!isRoot ? `_${createHash(dirPath.replace(appDir, ''))}` : ''}(option).$get(req)];
+    return [{ dir: '$${dirPath.replace(appDir, '') || '/'}', ...rest }, () => $${CLIENT_NAME}${!isRoot ? `_${createHash(dirPath.replace(appDir, ''))}` : ''}(option).$get(req)];
+  },`
+            : `
+  $build(req?: { init?: RequestInit }): [
+    key: { dir: string },
+    fetcher: () => Promise<${resType}>,
+  ] {
+    return [{ dir: '$${dirPath.replace(appDir, '') || '/'}' }, () => $${CLIENT_NAME}${!isRoot ? `_${createHash(dirPath.replace(appDir, ''))}` : ''}(option).$get(req)];
   },`
           : '';
 
@@ -318,12 +326,14 @@ export const $${CLIENT_NAME}${!isRoot ? `_${createHash(dirPath.replace(appDir, '
 ${params ? `\nconst paramsSchema = ${clientParamsToText(params)};\n` : ''}
 const $url = (option?: FrourioClientOption) => ({${methods
     .map(
-      (method) => `\n  ${method.name}(req${params || method.query ? '' : '?'}: { ${[
-        ...(params ? ['params: z.infer<typeof paramsSchema>'] : []),
-        ...(method.query ? [`query: z.infer<typeof frourioSpec.${method.name}.query>`] : []),
-      ].join(
-        ',',
-      )} }): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
+      (method) => `\n  ${method.name}(${
+        params || method.query
+          ? `req: { ${[
+              ...(params ? ['params: z.infer<typeof paramsSchema>'] : []),
+              ...(method.query ? [`query: z.infer<typeof frourioSpec.${method.name}.query>`] : []),
+            ].join(',')} }`
+          : ''
+      }): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
 ${
   params
     ? `    const parsedParams = paramsSchema.safeParse(req.params);
@@ -426,7 +436,7 @@ const methods = (option?: FrourioClientOption) => ({${methods
     | { ok?: undefined; isValid: false; data?: undefined; failure?: undefined; raw?: undefined; reason: z.ZodError; error?: undefined }
     | { ok?: undefined; isValid?: undefined; data?: undefined; failure?: undefined; raw?: undefined; reason?: undefined; error: unknown }
   > {
-    const url = $url(option).${method.name}(req);
+    const url = $url(option).${method.name}(${hasMethodReqKeys(method) ? 'req' : ''});
 
     if (url.reason) return url;
 ${

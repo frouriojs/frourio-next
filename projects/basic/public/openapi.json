@@ -475,6 +475,58 @@
         }
       }
     },
+    "/api/key-collision-test": {
+      "get": {
+        "parameters": [
+          {
+            "name": "common",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/cerl29"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/key-collision-test-another": {
+      "get": {
+        "parameters": [
+          {
+            "name": "common",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/14z0wtt"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/mw": {
       "get": {
         "responses": {
@@ -521,7 +573,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/cerl29"
+                "$ref": "#/components/schemas/14523qw"
               }
             }
           }
@@ -1168,6 +1220,50 @@
           "value"
         ]
       },
+      "bfnk40": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "$ref": "#/components/schemas/cerl29"
+          }
+        },
+        "required": [
+          "body"
+        ]
+      },
+      "cerl29": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "3jeohw": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "$ref": "#/components/schemas/14z0wtt"
+          }
+        },
+        "required": [
+          "body"
+        ]
+      },
+      "14z0wtt": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
       "xc3q4t": {
         "type": "object",
         "properties": {
@@ -1251,7 +1347,7 @@
           "message"
         ]
       },
-      "cerl29": {
+      "14523qw": {
         "type": "object",
         "properties": {
           "data": {

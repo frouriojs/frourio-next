@@ -9,8 +9,8 @@ export const fc_1tp1ur6 = (option?: FrourioClientOption) => ({
 
 export const $fc_1tp1ur6 = (option?: FrourioClientOption) => ({
   $url: {
-    post(req: Parameters<ReturnType<typeof $url>['post']>[0]): string {
-      const result = $url(option).post(req);
+    post(): string {
+      const result = $url(option).post();
 
       if (!result.isValid) throw result.reason;
 
@@ -29,7 +29,7 @@ export const $fc_1tp1ur6 = (option?: FrourioClientOption) => ({
 });
 
 const $url = (option?: FrourioClientOption) => ({
-  post(req?: {  }): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
+  post(): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
     return { isValid: true, data: `${option?.baseURL ?? ''}/api/test-client/stream` };
   },
 });
@@ -43,7 +43,7 @@ const methods = (option?: FrourioClientOption) => ({
     | { ok?: undefined; isValid: false; data?: undefined; failure?: undefined; raw?: undefined; reason: z.ZodError; error?: undefined }
     | { ok?: undefined; isValid?: undefined; data?: undefined; failure?: undefined; raw?: undefined; reason?: undefined; error: unknown }
   > {
-    const url = $url(option).post(req);
+    const url = $url(option).post();
 
     if (url.reason) return url;
 

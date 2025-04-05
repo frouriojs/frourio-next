@@ -1,9 +1,8 @@
 import type { FrourioClientOption } from '@frourio/next';
 import { z } from 'zod';
-import { frourioSpec as ancestorSpec0 } from '../../frourio';
 import { frourioSpec } from './frourio'
 
-export const fc_1yzfjrp = (option?: FrourioClientOption) => ({
+export const fc_195l5vw = (option?: FrourioClientOption) => ({
   $url: $url(option),
   $build(req: Parameters<ReturnType<typeof methods>['$get']>[0] | null): [
     key: { dir: string } & Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'> | null,
@@ -13,12 +12,12 @@ export const fc_1yzfjrp = (option?: FrourioClientOption) => ({
 
     const { init, ...rest } = req;
 
-    return [{ dir: '/[a]/[b]/d', ...rest }, () => fc_1yzfjrp(option).$get(req)];
+    return [{ dir: '/api/key-collision-test-another', ...rest }, () => fc_195l5vw(option).$get(req)];
   },
   ...methods(option),
 });
 
-export const $fc_1yzfjrp = (option?: FrourioClientOption) => ({
+export const $fc_195l5vw = (option?: FrourioClientOption) => ({
   $url: {
     get(req: Parameters<ReturnType<typeof $url>['get']>[0]): string {
       const result = $url(option).get(req);
@@ -36,7 +35,7 @@ export const $fc_1yzfjrp = (option?: FrourioClientOption) => ({
 
     const { init, ...rest } = req;
 
-    return [{ dir: '$/[a]/[b]/d', ...rest }, () => $fc_1yzfjrp(option).$get(req)];
+    return [{ dir: '$/api/key-collision-test-another', ...rest }, () => $fc_195l5vw(option).$get(req)];
   },
   async $get(req: Parameters<ReturnType<typeof methods>['$get']>[0]): Promise<z.infer<typeof frourioSpec.get.res[200]['body']>> {
     const result = await methods(option).$get(req);
@@ -47,20 +46,30 @@ export const $fc_1yzfjrp = (option?: FrourioClientOption) => ({
   },
 });
 
-const paramsSchema = z.object({ 'a': ancestorSpec0.param, 'b': z.string() });
-
 const $url = (option?: FrourioClientOption) => ({
-  get(req: { params: z.infer<typeof paramsSchema> }): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
-    const parsedParams = paramsSchema.safeParse(req.params);
+  get(req: { query: z.infer<typeof frourioSpec.get.query> }): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
+    const parsedQuery = frourioSpec.get.query.safeParse(req.query);
 
-    if (!parsedParams.success) return { isValid: false, reason: parsedParams.error };
+    if (!parsedQuery.success) return { isValid: false, reason: parsedQuery.error };
 
-    return { isValid: true, data: `${option?.baseURL ?? ''}/${parsedParams.data.a}/${parsedParams.data.b}/d` };
+    const searchParams = new URLSearchParams();
+
+    Object.entries(parsedQuery.data).forEach(([key, value]) => {
+      if (value === undefined) return;
+
+      if (Array.isArray(value)) {
+        value.forEach(item => searchParams.append(key, item.toString()));
+      } else {
+        searchParams.append(key, value.toString());
+      }
+    });
+
+    return { isValid: true, data: `${option?.baseURL ?? ''}/api/key-collision-test-another?${searchParams.toString()}` };
   },
 });
 
 const methods = (option?: FrourioClientOption) => ({
-  async $get(req: { params: z.infer<typeof paramsSchema>, init?: RequestInit }): Promise<
+  async $get(req: { query: z.infer<typeof frourioSpec.get.query>, init?: RequestInit }): Promise<
     | { ok: true; isValid: true; data: { status: 200; headers?: undefined; body: z.infer<typeof frourioSpec.get.res[200]['body']> }; failure?: undefined; raw: Response; reason?: undefined; error?: undefined }
     | { ok: boolean; isValid: false; data?: undefined; failure?: undefined; raw: Response; reason: z.ZodError; error?: undefined }
     | { ok: boolean; isValid?: undefined; data?: undefined; failure?: undefined; raw: Response; reason?: undefined; error: unknown }

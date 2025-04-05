@@ -6,7 +6,7 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { files: ['**/*.ts'] },
+  { files: ['**/*.{ts,tsx}'] },
   gitignore({ files: ['./.gitignore', './.prettierignore'] }),
   js.configs.recommended,
   tseslint.configs.recommended,
@@ -36,7 +36,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['tests/**/*.ts'],
+    files: ['tests/**/*.{ts,tsx}'],
     plugins: {
       'testing-library': testingLibrary,
     },

@@ -301,7 +301,9 @@ export const $${CLIENT_NAME}${!isRoot ? `_${createHash(dirPath.replace(appDir, '
           : '';
 
       return `${builder}
-  async $${method.name}(req: Parameters<ReturnType<typeof methods>['$${method.name}']>[0]): Promise<${resType}> {
+  async $${method.name}(req${
+    hasMethodReqKeys(method) || method.body ? '' : '?'
+  }: Parameters<ReturnType<typeof methods>['$${method.name}']>[0]): Promise<${resType}> {
     const result = await methods(option).$${method.name}(req);
 
     if (!result.isValid) throw result.isValid === false ? result.reason : result.error;

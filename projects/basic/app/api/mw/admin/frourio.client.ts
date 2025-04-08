@@ -39,7 +39,7 @@ export const $fc_n3it2j = (option?: FrourioClientOption) => ({
   ] {
     return [{ dir: '$/api/mw/admin' }, () => $fc_n3it2j(option).$get(req)];
   },
-  async $get(req: Parameters<ReturnType<typeof methods>['$get']>[0]): Promise<z.infer<typeof frourioSpec.get.res[200]['body']>> {
+  async $get(req?: Parameters<ReturnType<typeof methods>['$get']>[0]): Promise<z.infer<typeof frourioSpec.get.res[200]['body']>> {
     const result = await methods(option).$get(req);
 
     if (!result.isValid) throw result.isValid === false ? result.reason : result.error;

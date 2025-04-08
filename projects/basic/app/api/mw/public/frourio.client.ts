@@ -29,7 +29,7 @@ export const $fc_76vmqd = (option?: FrourioClientOption) => ({
   ] {
     return [{ dir: '$/api/mw/public' }, () => $fc_76vmqd(option).$get(req)];
   },
-  async $get(req: Parameters<ReturnType<typeof methods>['$get']>[0]): Promise<z.infer<typeof frourioSpec.get.res[200]['body']>> {
+  async $get(req?: Parameters<ReturnType<typeof methods>['$get']>[0]): Promise<z.infer<typeof frourioSpec.get.res[200]['body']>> {
     const result = await methods(option).$get(req);
 
     if (!result.isValid) throw result.isValid === false ? result.reason : result.error;

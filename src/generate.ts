@@ -1,4 +1,5 @@
-import { writeFile } from 'fs/promises';
+import { existsSync } from 'fs';
+import { readFile, writeFile } from 'fs/promises';
 import path from 'path';
 import ts from 'typescript';
 import { CLIENT_FILE, CLIENT_NAME, FROURIO_FILE, SERVER_FILE } from './constants';
@@ -168,10 +169,14 @@ export const generate = async ({ appDir, basePath }: Config): Promise<void> => {
     .filter((d) => d !== undefined);
 
   await Promise.all(
-    data.flatMap((d) => [
-      writeFile(d.server.filePath, d.server.text),
-      writeFile(d.client.filePath, d.client.text),
-    ]),
+    data
+      .flatMap((d) => [d.server, d.client])
+      .map(async (d) => {
+        const needsUpdate =
+          !existsSync(d.filePath) || (await readFile(d.filePath, 'utf8').then((t) => t !== d.text));
+
+        return needsUpdate && writeFile(d.filePath, d.text);
+      }),
   );
 };
 

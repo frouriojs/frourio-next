@@ -21,7 +21,7 @@ import * as paramsRoute from '../projects/basic/app/[a]/[b]/[...c]/route';
 import * as baseRoute from '../projects/basic/app/route';
 import type { frourioSpec as formSpec } from '../projects/src-dir/src/app/api/frourio';
 import * as formReqRoute from '../projects/src-dir/src/app/api/route';
-import { SERVER_FILE } from '../src/constants';
+import { CLIENT_FILE, SERVER_FILE } from '../src/constants';
 import { generate } from '../src/generate';
 import { listFrourioDirs } from '../src/listFrourioDirs';
 import { generateOpenapi } from '../src/openapi/generateOpenapi';
@@ -41,7 +41,11 @@ test('generate', async () => {
 
       const frourioDirs = listFrourioDirs(config.appDir);
 
-      await Promise.all(frourioDirs.map((dir) => unlink(path.join(dir, SERVER_FILE))));
+      await Promise.all(
+        frourioDirs.map((dir) =>
+          Promise.all([unlink(path.join(dir, SERVER_FILE)), unlink(path.join(dir, CLIENT_FILE))]),
+        ),
+      );
       await generate(config);
 
       generateOpenapi(config);

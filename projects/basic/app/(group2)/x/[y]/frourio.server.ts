@@ -1,4 +1,3 @@
-import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { middleware as ancestorMiddleweare } from '../../route';
@@ -15,9 +14,9 @@ type SpecType = typeof frourioSpec;
 
 type Middleware = (
   args: {
-    req: NextRequest,
+    req: Request,
     params: ParamsType,
-    next: (req: NextRequest) => Promise<Response>,
+    next: (req: Request) => Promise<Response>,
   },
 ) => Promise<Response>;
 
@@ -33,15 +32,15 @@ type Controller = {
 
 type ResHandler = {
   middleware: (next: (
-    args: { req: NextRequest, params: ParamsType },
-  ) => Promise<Response>) => (originalReq: NextRequest, option: {params: Promise<ParamsType>}) => Promise<Response>;
-  GET: (req: NextRequest, option: { params: Promise<ParamsType> }) => Promise<Response>;
+    args: { req: Request, params: ParamsType },
+  ) => Promise<Response>) => (originalReq: Request, option: {params: Promise<ParamsType> }) => Promise<Response>;
+  GET: (req: Request, option: { params: Promise<ParamsType> }) => Promise<Response>;
 };
 
 export const createRoute = (controller: Controller): ResHandler => {
   const middleware = (next: (
-    args: { req: NextRequest, params: ParamsType },
-  ) => Promise<Response>) => async (originalReq: NextRequest, option: { params: Promise<ParamsType> }): Promise<Response> => {
+    args: { req: Request, params: ParamsType },
+  ) => Promise<Response>) => async (originalReq: Request, option: { params: Promise<ParamsType> }): Promise<Response> => {
     const params = paramsSchema.safeParse(await option.params);
 
     if (params.error) return createReqErr(params.error);
@@ -59,14 +58,15 @@ export const createRoute = (controller: Controller): ResHandler => {
       },
       },
     )
-    })(originalReq, option)
+    })(originalReq)
   };
 
   return {
     middleware,
     GET: middleware(async ({ req, params }) => {
+      const { searchParams } = new URL(req.url);
       const query = frourioSpec.get.query.safeParse({
-        'message': req.nextUrl.searchParams.get('message') ?? undefined,
+        'message': searchParams.get('message') ?? undefined,
       });
 
       if (query.error) return createReqErr(query.error);

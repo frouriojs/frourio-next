@@ -1,4 +1,3 @@
-import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import type { z } from 'zod';
 import { middleware as ancestorMiddleweare } from '../route';
@@ -28,14 +27,14 @@ type Controller = {
 };
 
 type ResHandler = {
-  GET: (req: NextRequest, option: {}) => Promise<Response>;
+  GET: (req: Request) => Promise<Response>;
 };
 
 export const createRoute = (controller: Controller): ResHandler => {
   const middleware = (next: (
-    args: { req: NextRequest },
+    args: { req: Request },
     ctx: ContextType,
-  ) => Promise<Response>) => async (originalReq: NextRequest, option: {}): Promise<Response> => {
+  ) => Promise<Response>) => async (originalReq: Request): Promise<Response> => {
 
     return ancestorMiddleweare(async (ancestorArgs, ancestorContext) => {
       const ancestorCtx = ancestorContextSchema.safeParse(ancestorContext);
@@ -45,7 +44,7 @@ export const createRoute = (controller: Controller): ResHandler => {
 
       return await next({ req: ancestorArgs.req }, { ...ancestorCtx.data, })
       
-    })(originalReq, option)
+    })(originalReq)
   };
 
   return {

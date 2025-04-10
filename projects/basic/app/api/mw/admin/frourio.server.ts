@@ -1,4 +1,3 @@
-import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import type { z } from 'zod';
 import { middleware as ancestorMiddleweare } from '../route';
@@ -16,8 +15,8 @@ export type ContextType = z.infer<typeof contextSchema>;
 
 type Middleware = (
   args: {
-    req: NextRequest,
-    next: (req: NextRequest, ctx: z.infer<typeof frourioSpec.middleware.context>) => Promise<Response>,
+    req: Request,
+    next: (req: Request, ctx: z.infer<typeof frourioSpec.middleware.context>) => Promise<Response>,
   },
   ctx: AncestorContextType,
 ) => Promise<Response>;
@@ -57,18 +56,18 @@ type Controller = {
 
 type ResHandler = {
   middleware: (next: (
-    args: { req: NextRequest },
+    args: { req: Request },
     ctx: ContextType,
-  ) => Promise<Response>) => (originalReq: NextRequest, option: {}) => Promise<Response>;
-  GET: (req: NextRequest, option: {}) => Promise<Response>;
-  POST: (req: NextRequest, option: {}) => Promise<Response>;
+  ) => Promise<Response>) => (originalReq: Request, option?: {}) => Promise<Response>;
+  GET: (req: Request) => Promise<Response>;
+  POST: (req: Request) => Promise<Response>;
 };
 
 export const createRoute = (controller: Controller): ResHandler => {
   const middleware = (next: (
-    args: { req: NextRequest },
+    args: { req: Request },
     ctx: ContextType,
-  ) => Promise<Response>) => async (originalReq: NextRequest, option: {}): Promise<Response> => {
+  ) => Promise<Response>) => async (originalReq: Request): Promise<Response> => {
 
     return ancestorMiddleweare(async (ancestorArgs, ancestorContext) => {
       const ancestorCtx = ancestorContextSchema.safeParse(ancestorContext);
@@ -87,7 +86,7 @@ export const createRoute = (controller: Controller): ResHandler => {
       },
       ancestorCtx.data,
     )
-    })(originalReq, option)
+    })(originalReq)
   };
 
   return {

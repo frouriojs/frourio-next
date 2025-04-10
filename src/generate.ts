@@ -554,7 +554,6 @@ const serverData = (
   methods: ServerMethod[],
 ) => {
   const imports: string[] = [
-    "import type { NextRequest } from 'next/server'",
     "import { NextResponse } from 'next/server'",
     `import ${params ? '' : 'type '}{ z } from 'zod'`,
     params?.ancestorFrourio &&
@@ -589,15 +588,14 @@ const serverData = (
     middleware.current &&
       `type Middleware = (
   args: {
-    req: NextRequest,${params ? '\n    params: ParamsType,' : ''}
-    next: (req: NextRequest${middleware.current.hasCtx ? ', ctx: z.infer<typeof frourioSpec.middleware.context>' : ''}) => Promise<Response>,
+    req: Request,${params ? '\n    params: ParamsType,' : ''}
+    next: (req: Request${middleware.current.hasCtx ? ', ctx: z.infer<typeof frourioSpec.middleware.context>' : ''}) => Promise<Response>,
   },${middleware.ancestorCtx ? '\n  ctx: AncestorContextType,' : ''}
 ) => Promise<Response>`,
-    `type Controller = {${middleware.current ? '\n  middleware: Middleware;' : ''}
-${methods
-  .map(
-    (m) =>
-      `  ${m.name}: (
+    `type Controller = {${middleware.current ? '\n  middleware: Middleware;' : ''}${methods
+      .map(
+        (m) =>
+          `\n  ${m.name}: (
     req: {${params ? '\n      params: ParamsType;' : ''}${
       m.hasHeaders ? `\n      headers: z.infer<SpecType['${m.name}']['headers']>;` : ''
     }${m.query ? `\n      query: z.infer<SpecType['${m.name}']['query']>;` : ''}${
@@ -620,29 +618,28 @@ ${methods
           .join('\n')}\n  `
       : 'Response'
   }>;`,
-  )
-  .join('\n')}
+      )
+      .join('')}
 }`,
     `type ResHandler = {${
       middleware.current
         ? `\n  middleware: (next: (
-    args: { req: NextRequest${params ? ', params: ParamsType' : ''} },${middleware.ancestorCtx || middleware.current.hasCtx ? '\n    ctx: ContextType,' : ''}
-  ) => Promise<Response>) => (originalReq: NextRequest, option: {${params ? `params: Promise<ParamsType>` : ''}}) => Promise<Response>;`
+    args: { req: Request${params ? ', params: ParamsType' : ''} },${middleware.ancestorCtx || middleware.current.hasCtx ? '\n    ctx: ContextType,' : ''}
+  ) => Promise<Response>) => (originalReq: Request, option${params ? ': {params: Promise<ParamsType> }' : '?: {}'}) => Promise<Response>;`
         : ''
-    }
-${methods
-  .map(
-    (m) =>
-      `  ${m.name.toUpperCase()}: (req: NextRequest, option: {${params ? ' params: Promise<ParamsType> ' : ''}}) => Promise<Response>;`,
-  )
-  .join('\n')}
+    }${methods
+      .map(
+        (m) =>
+          `\n  ${m.name.toUpperCase()}: (req: Request${params ? ', option: { params: Promise<ParamsType> }' : ''}) => Promise<Response>;`,
+      )
+      .join('')}
 }`,
     `export const createRoute = (controller: Controller): ResHandler => {
 ${
   middleware.ancestor || middleware.current || params
     ? `  const middleware = (next: (
-    args: { req: NextRequest${params ? ', params: ParamsType' : ''} },${middleware.ancestorCtx || middleware.current?.hasCtx ? '\n    ctx: ContextType,' : ''}
-  ) => Promise<Response>) => async (originalReq: NextRequest, option: {${params ? ' params: Promise<ParamsType> ' : ''}}): Promise<Response> => {
+    args: { req: Request${params ? ', params: ParamsType' : ''} },${middleware.ancestorCtx || middleware.current?.hasCtx ? '\n    ctx: ContextType,' : ''}
+  ) => Promise<Response>) => async (originalReq: Request${params ? ', option: { params: Promise<ParamsType> }' : ''}): Promise<Response> => {
 ${
   params
     ? `    const params = paramsSchema.safeParse(await option.params);
@@ -688,7 +685,7 @@ ${
           : ''
       })
       ${middleware.current ? `},\n      },${middleware.ancestorCtx ? '\n      ancestorCtx.data,' : ''}\n    )` : ''}
-    ${middleware.ancestor ? '})(originalReq, option)' : ''}
+    ${middleware.ancestor ? `})(originalReq${params?.ancestorFrourio ? ', option' : ''})` : ''}
   };
 
 `
@@ -706,7 +703,7 @@ ${methods
         `frourioSpec.${m.name}.query.safeParse({
 ${m.query
   .map((p) => {
-    const fn = `req.nextUrl.searchParams.get${p.isArray ? 'All' : ''}('${p.name}')${p.isArray ? '' : ' ?? undefined'}`;
+    const fn = `searchParams.get${p.isArray ? 'All' : ''}('${p.name}')${p.isArray ? '' : ' ?? undefined'}`;
     const wrapped = `${p.typeName === 'string' ? '' : `queryTo${p.typeName === 'number' ? 'Num' : 'Bool'}${p.isArray ? 'Arr' : ''}(`}${fn}${p.typeName === 'string' ? '' : ')'}`;
 
     return `        '${p.name}': ${p.isArray && p.isOptional ? `${fn}.length > 0 ? ${wrapped} : undefined` : wrapped},`;
@@ -746,7 +743,9 @@ ${m.body.data
             middleware.ancestorCtx || middleware.current?.hasCtx ? ', ctx' : ''
           }`
         : 'async (req'
-    }) => {${m.body?.isFormData ? '\n      const formData = await req.formData();' : ''}${requests
+    }) => {${m.body?.isFormData ? '\n      const formData = await req.formData();' : ''}${
+      m.query ? '\n      const { searchParams } = new URL(req.url);' : ''
+    }${requests
       .map(
         (r) =>
           `\n      const ${r[0]} = ${r[1]};\n\n      if (${r[0]}.error) return createReqErr(${r[0]}.error);\n`,

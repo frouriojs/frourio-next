@@ -4,7 +4,6 @@ import assert from 'assert';
 import { execSync } from 'child_process';
 import fs from 'fs';
 import { unlink } from 'fs/promises';
-import { NextRequest } from 'next/server';
 import path from 'path';
 import { expect, test } from 'vitest';
 import type { z } from 'zod';
@@ -58,23 +57,22 @@ test('generate', async () => {
 }, 30000);
 
 test('base handler', async () => {
-  const res1 = await baseRoute.GET(new NextRequest('http://example.com/'), {});
+  const res1 = await baseRoute.GET(new Request('http://example.com/'));
 
   expect(res1.status).toBe(422);
 
   const val = 'foo';
-  const res2 = await baseRoute.GET(new NextRequest(`http://example.com/?aa=${val}`), {});
+  const res2 = await baseRoute.GET(new Request(`http://example.com/?aa=${val}`));
 
   await expect(res2.json()).resolves.toEqual({ bb: val });
 
-  const res3 = await baseRoute.POST(new NextRequest('http://example.com/'), {});
+  const res3 = await baseRoute.POST(new Request('http://example.com/'));
 
   expect(res3.status).toBe(422);
 
   const body = { bb: 3 };
   const res4 = await baseRoute.POST(
-    new NextRequest('http://example.com/', { method: 'POST', body: JSON.stringify(body) }),
-    {},
+    new Request('http://example.com/', { method: 'POST', body: JSON.stringify(body) }),
   );
 
   await expect(res4.json()).resolves.toEqual([body.bb]);
@@ -83,7 +81,7 @@ test('base handler', async () => {
 });
 
 test('params handler', async () => {
-  const res = await paramsRoute.POST(new NextRequest('http://example.com/aaa/bbb/ccc'), {
+  const res = await paramsRoute.POST(new Request('http://example.com/aaa/bbb/ccc'), {
     params: Promise.resolve({ a: 111, b: 'bbb', c: ['ccc'] }),
   });
 
@@ -91,13 +89,13 @@ test('params handler', async () => {
 });
 
 test('response string or number', async () => {
-  const res1 = await stringRoute.GET(new NextRequest('http://example.com/blog/hoge/aaa'), {
+  const res1 = await stringRoute.GET(new Request('http://example.com/blog/hoge/aaa'), {
     params: Promise.resolve({ fuga: ['aaa'] }),
   });
 
   await expect(res1.text()).resolves.toEqual('aaa');
 
-  const res2 = await numberRoute.GET(new NextRequest('http://example.com/blog/123/456'), {
+  const res2 = await numberRoute.GET(new Request('http://example.com/blog/123/456'), {
     params: Promise.resolve({ slug: [123, 456] }),
   });
 
@@ -146,7 +144,7 @@ test('query', async () => {
         }
       });
 
-      const res = await queryRoute.GET(new NextRequest(`http://example.com/111?${query}`), {
+      const res = await queryRoute.GET(new Request(`http://example.com/111?${query}`), {
         params: Promise.resolve({ pid: '111' }),
       });
 
@@ -199,7 +197,7 @@ test('query', async () => {
         }
       });
 
-      const res = await queryRoute.GET(new NextRequest(`http://example.com/111?${query}`), {
+      const res = await queryRoute.GET(new Request(`http://example.com/111?${query}`), {
         params: Promise.resolve({ pid: '111' }),
       });
 
@@ -259,8 +257,7 @@ test('formData request', async () => {
       });
 
       const res = await formReqRoute.POST(
-        new NextRequest('http://example.com/', { method: 'POST', body: formData }),
-        {},
+        new Request('http://example.com/', { method: 'POST', body: formData }),
       );
 
       await expect(res.json()).resolves.toEqual({
@@ -332,8 +329,7 @@ test('formData request', async () => {
       });
 
       const res = await formReqRoute.POST(
-        new NextRequest('http://example.com/', { method: 'POST', body: formData }),
-        {},
+        new Request('http://example.com/', { method: 'POST', body: formData }),
       );
 
       expect(res.status).toBe(422);

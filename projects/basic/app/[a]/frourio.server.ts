@@ -1,4 +1,3 @@
-import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { frourioSpec } from './frourio';
@@ -28,9 +27,9 @@ export type ContextType = z.infer<typeof contextSchema>;
 
 type Middleware = (
   args: {
-    req: NextRequest,
+    req: Request,
     params: ParamsType,
-    next: (req: NextRequest, ctx: z.infer<typeof frourioSpec.middleware.context>) => Promise<Response>,
+    next: (req: Request, ctx: z.infer<typeof frourioSpec.middleware.context>) => Promise<Response>,
   },
 ) => Promise<Response>;
 
@@ -51,17 +50,17 @@ type Controller = {
 
 type ResHandler = {
   middleware: (next: (
-    args: { req: NextRequest, params: ParamsType },
+    args: { req: Request, params: ParamsType },
     ctx: ContextType,
-  ) => Promise<Response>) => (originalReq: NextRequest, option: {params: Promise<ParamsType>}) => Promise<Response>;
-  GET: (req: NextRequest, option: { params: Promise<ParamsType> }) => Promise<Response>;
+  ) => Promise<Response>) => (originalReq: Request, option: {params: Promise<ParamsType> }) => Promise<Response>;
+  GET: (req: Request, option: { params: Promise<ParamsType> }) => Promise<Response>;
 };
 
 export const createRoute = (controller: Controller): ResHandler => {
   const middleware = (next: (
-    args: { req: NextRequest, params: ParamsType },
+    args: { req: Request, params: ParamsType },
     ctx: ContextType,
-  ) => Promise<Response>) => async (originalReq: NextRequest, option: { params: Promise<ParamsType> }): Promise<Response> => {
+  ) => Promise<Response>) => async (originalReq: Request, option: { params: Promise<ParamsType> }): Promise<Response> => {
     const params = paramsSchema.safeParse(await option.params);
 
     if (params.error) return createReqErr(params.error);

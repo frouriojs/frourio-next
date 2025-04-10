@@ -1,4 +1,3 @@
-import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { frourioSpec } from './frourio';
@@ -54,14 +53,14 @@ type Controller = {
 };
 
 type ResHandler = {
-  PUT: (req: NextRequest, option: { params: Promise<ParamsType> }) => Promise<Response>;
-  DELETE: (req: NextRequest, option: { params: Promise<ParamsType> }) => Promise<Response>;
+  PUT: (req: Request, option: { params: Promise<ParamsType> }) => Promise<Response>;
+  DELETE: (req: Request, option: { params: Promise<ParamsType> }) => Promise<Response>;
 };
 
 export const createRoute = (controller: Controller): ResHandler => {
   const middleware = (next: (
-    args: { req: NextRequest, params: ParamsType },
-  ) => Promise<Response>) => async (originalReq: NextRequest, option: { params: Promise<ParamsType> }): Promise<Response> => {
+    args: { req: Request, params: ParamsType },
+  ) => Promise<Response>) => async (originalReq: Request, option: { params: Promise<ParamsType> }): Promise<Response> => {
     const params = paramsSchema.safeParse(await option.params);
 
     if (params.error) return createReqErr(params.error);

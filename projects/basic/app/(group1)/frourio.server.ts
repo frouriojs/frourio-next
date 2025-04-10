@@ -1,4 +1,3 @@
-import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import type { z } from 'zod';
 import { frourioSpec } from './frourio';
@@ -14,29 +13,27 @@ export type ContextType = z.infer<typeof contextSchema>;
 
 type Middleware = (
   args: {
-    req: NextRequest,
-    next: (req: NextRequest, ctx: z.infer<typeof frourioSpec.middleware.context>) => Promise<Response>,
+    req: Request,
+    next: (req: Request, ctx: z.infer<typeof frourioSpec.middleware.context>) => Promise<Response>,
   },
 ) => Promise<Response>;
 
 type Controller = {
   middleware: Middleware;
-
 };
 
 type ResHandler = {
   middleware: (next: (
-    args: { req: NextRequest },
+    args: { req: Request },
     ctx: ContextType,
-  ) => Promise<Response>) => (originalReq: NextRequest, option: {}) => Promise<Response>;
-
+  ) => Promise<Response>) => (originalReq: Request, option?: {}) => Promise<Response>;
 };
 
 export const createRoute = (controller: Controller): ResHandler => {
   const middleware = (next: (
-    args: { req: NextRequest },
+    args: { req: Request },
     ctx: ContextType,
-  ) => Promise<Response>) => async (originalReq: NextRequest, option: {}): Promise<Response> => {
+  ) => Promise<Response>) => async (originalReq: Request): Promise<Response> => {
 
     
     return await controller.middleware(

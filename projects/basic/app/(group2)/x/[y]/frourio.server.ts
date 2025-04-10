@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { middleware as ancestorMiddleweare } from '../../route';
+import { middleware as ancestorMiddleware } from '../../route';
 import { frourioSpec } from './frourio';
 import type { GET, middleware } from './route';
 
@@ -45,7 +45,7 @@ export const createRoute = (controller: Controller): ResHandler => {
 
     if (params.error) return createReqErr(params.error);
 
-    return ancestorMiddleweare(async (ancestorArgs) => {
+    return ancestorMiddleware(async (ancestorArgs) => {
 
     return await controller.middleware(
       {

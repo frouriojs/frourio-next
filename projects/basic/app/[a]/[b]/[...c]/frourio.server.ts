@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { paramsSchema as ancestorParamsSchema } from '../../frourio.server';
-import { middleware as ancestorMiddleweare } from '../../route';
+import { middleware as ancestorMiddleware } from '../../route';
 import { contextSchema as ancestorContextSchema, type ContextType as AncestorContextType } from '../../frourio.server';
 import { frourioSpec } from './frourio';
 import type { POST, middleware } from './route';
@@ -59,7 +59,7 @@ export const createRoute = (controller: Controller): ResHandler => {
 
     if (params.error) return createReqErr(params.error);
 
-    return ancestorMiddleweare(async (ancestorArgs, ancestorContext) => {
+    return ancestorMiddleware(async (ancestorArgs, ancestorContext) => {
       const ancestorCtx = ancestorContextSchema.safeParse(ancestorContext);
 
       if (ancestorCtx.error) return createReqErr(ancestorCtx.error);

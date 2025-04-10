@@ -559,7 +559,7 @@ const serverData = (
     params?.ancestorFrourio &&
       `import { paramsSchema as ancestorParamsSchema } from '${params.ancestorFrourio}'`,
     middleware.ancestor &&
-      `import { middleware as ancestorMiddleweare } from '${middleware.ancestor}/route'`,
+      `import { middleware as ancestorMiddleware } from '${middleware.ancestor}/route'`,
     middleware.ancestorCtx &&
       `import { contextSchema as ancestorContextSchema${middleware.current ? ', type ContextType as AncestorContextType' : ''} } from '${middleware.ancestorCtx}/${SERVER_FILE.replace('.ts', '')}'`,
     "import { frourioSpec } from './frourio'",
@@ -649,7 +649,7 @@ ${
 }
     ${
       middleware.ancestor
-        ? `return ancestorMiddleweare(async (ancestorArgs${middleware.ancestorCtx ? ', ancestorContext' : ''}) => {
+        ? `return ancestorMiddleware(async (ancestorArgs${middleware.ancestorCtx ? ', ancestorContext' : ''}) => {
 ${
   middleware.ancestorCtx
     ? `      const ancestorCtx = ancestorContextSchema.safeParse(ancestorContext);

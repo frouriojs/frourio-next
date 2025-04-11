@@ -23,7 +23,7 @@ export default defineConfig({
           ...testBase,
           coverage: {
             ...coverageBase,
-            thresholds: { statements: 98, branches: 94, functions: 100, lines: 98 },
+            thresholds: { statements: 98, branches: 95, functions: 100, lines: 98 },
           },
         }
       : { ...testBase, coverage: coverageBase, include: [includeFile] },

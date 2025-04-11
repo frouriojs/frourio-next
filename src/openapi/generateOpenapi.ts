@@ -168,10 +168,10 @@ type AllParams = [${hasParamsDirs.map((_, i) => `z.infer<typeof paramsSchema${i}
         ? schema.allOf.map(
             (one) =>
               paramsSchema?.definitions?.[
-                (one as TJS.Definition).$ref!.split('/').at(-1)!
+                (one as TJS.Definition).$ref!.replace('#/definitions/', '')
               ] as TJS.Definition,
           )
-        : [paramsSchema?.definitions?.[schema.$ref!.split('/').at(-1)!] as TJS.Definition];
+        : [paramsSchema?.definitions?.[schema.$ref!.replace('#/definitions/', '')] as TJS.Definition];
 
       paramsDefs.forEach((def) => {
         parameters.push(
@@ -201,7 +201,7 @@ type AllParams = [${hasParamsDirs.map((_, i) => `z.infer<typeof paramsSchema${i}
 
       if (props.query) {
         const def = methodsSchema?.definitions?.[
-          props.query.$ref!.split('/').at(-1)!
+          props.query.$ref!.replace('#/definitions/', '')
         ] as TJS.Definition;
 
         if (def.properties) {
@@ -219,7 +219,7 @@ type AllParams = [${hasParamsDirs.map((_, i) => `z.infer<typeof paramsSchema${i}
       const reqFormat = props.format?.const as string;
       const headersDef =
         props.headers &&
-        (methodsSchema?.definitions?.[props.headers.$ref!.split('/').at(-1)!] as TJS.Definition);
+        (methodsSchema?.definitions?.[props.headers.$ref!.replace('#/definitions/', '')] as TJS.Definition);
 
       if (headersDef?.properties) {
         methodParameters.push(
@@ -238,7 +238,9 @@ type AllParams = [${hasParamsDirs.map((_, i) => `z.infer<typeof paramsSchema${i}
 
       const resDef =
         props.res &&
-        (methodsSchema?.definitions?.[props.res.$ref!.split('/').at(-1)!] as TJS.Definition);
+        (methodsSchema?.definitions?.[
+          props.res.$ref!.replace('#/definitions/', '')
+        ] as TJS.Definition);
 
       return {
         ...dict,
@@ -251,28 +253,24 @@ type AllParams = [${hasParamsDirs.map((_, i) => `z.infer<typeof paramsSchema${i}
           responses: resDef?.properties
             ? Object.entries(resDef.properties).reduce((dict, [status, statusObj]) => {
                 const statusDef = methodsSchema?.definitions?.[
-                  (statusObj as TJS.Definition).$ref!.split('/').at(-1)!
+                  (statusObj as TJS.Definition).$ref!.replace('#/definitions/', '')
                 ] as TJS.Definition;
-
-                const resContentType =
-                  (((
-                    (statusDef.properties as Record<string, TJS.Definition>)?.headers?.properties?.[
-                      'content-type'
-                    ] as TJS.Definition
-                  )?.const as string) ??
-                  (statusDef.properties as Record<string, TJS.Definition>)?.format?.const ===
-                    'formData')
-                    ? 'multipart/form-data'
-                    : 'application/json';
 
                 const headersDef = (statusDef.properties as Record<string, TJS.Definition>)?.headers
                   ?.$ref
                   ? (methodsSchema?.definitions?.[
                       (statusDef.properties as Record<string, TJS.Definition>).headers
-                        .$ref!.split('/')
-                        .at(-1)!
+                        .$ref!.replace('#/definitions/', '')
                     ] as TJS.Definition)
                   : (statusDef.properties as Record<string, TJS.Definition>)?.headers;
+
+                const resContentType =
+                  ((headersDef?.properties?.['content-type'] as TJS.Definition)
+                    ?.const as string) ??
+                  ((statusDef.properties as Record<string, TJS.Definition>)?.format?.const ===
+                    'formData'
+                    ? 'multipart/form-data'
+                    : 'application/json');
 
                 return {
                   ...dict,

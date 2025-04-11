@@ -280,7 +280,7 @@
           "200": {
             "description": "",
             "content": {
-              "application/json": {
+              "application/json;charset=UTF-8": {
                 "schema": {
                   "$ref": "#/components/schemas/mirbd2"
                 }
@@ -289,7 +289,8 @@
             "headers": {
               "content-type": {
                 "schema": {
-                  "type": "string"
+                  "type": "string",
+                  "const": "application/json;charset=UTF-8"
                 },
                 "required": true
               }
@@ -1102,14 +1103,14 @@
           "query"
         ]
       },
-      "46dtwk": {
+      "l7sqyw": {
         "type": "object",
         "properties": {
           "body": {
             "$ref": "#/components/schemas/mirbd2"
           },
           "headers": {
-            "$ref": "#/components/schemas/x5u6ln"
+            "$ref": "#/components/schemas/5622tv"
           }
         },
         "required": [
@@ -1128,11 +1129,12 @@
           "value"
         ]
       },
-      "x5u6ln": {
+      "5622tv": {
         "type": "object",
         "properties": {
           "content-type": {
-            "type": "string"
+            "type": "string",
+            "const": "application/json;charset=UTF-8"
           }
         },
         "required": [

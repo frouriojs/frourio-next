@@ -5,7 +5,7 @@ export const { GET } = createRoute({
     return {
       status: 200,
       body: { value: 'ok' },
-      headers: { 'content-type': 'application/jsonn;charset=UTF-8' },
+      headers: { 'content-type': 'application/json;charset=UTF-8' },
     };
   },
 });

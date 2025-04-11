@@ -1,5 +1,5 @@
-import { streamText } from 'ai';
 import { openai } from '@ai-sdk/openai';
+import { streamText } from 'ai';
 import { createRoute } from './frourio.server';
 
 export const { GET, middleware } = createRoute({
@@ -12,7 +12,7 @@ export const { GET, middleware } = createRoute({
       system: 'You are a helpful assistant.',
       messages: [{ role: 'user', content: query.message }],
     });
-  
+
     return result.toDataStreamResponse();
   },
 });

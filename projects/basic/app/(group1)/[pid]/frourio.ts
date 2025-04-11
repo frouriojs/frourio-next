@@ -23,9 +23,9 @@ const query = z.object({
   optionalBool: z.boolean().optional(),
   boolArray: z.array(z.boolean()),
   optionalBoolArray: z.array(z.boolean()).optional(),
-  symbolIds: z.custom<SymbolId[]>(val => z.array(z.string()).safeParse(val).success),
-  optionalZodIds: z.custom<ZodId[]>(val => z.array(z.number()).safeParse(val).success).optional(),
-  maybeIds: z.custom<MaybeId[]>(val => z.array(z.number()).safeParse(val).success),
+  symbolIds: z.custom<SymbolId[]>((val) => z.array(z.string()).safeParse(val).success),
+  optionalZodIds: z.custom<ZodId[]>((val) => z.array(z.number()).safeParse(val).success).optional(),
+  maybeIds: z.custom<MaybeId[]>((val) => z.array(z.number()).safeParse(val).success),
 });
 
 export const frourioSpec = {

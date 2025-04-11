@@ -1,3 +1,4 @@
 dist
-projects/*/**
+projects/**/frourio.client.ts
+projects/**/frourio.server.ts
 $*.ts

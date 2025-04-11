@@ -589,9 +589,9 @@ const serverData = (
       `type Middleware = (
   args: {
     req: Request,${params ? '\n    params: ParamsType,' : ''}
-    next: (req: Request${middleware.current.hasCtx ? ', ctx: z.infer<typeof frourioSpec.middleware.context>' : ''}) => Promise<Response>,
+    next: (req: Request${middleware.current.hasCtx ? ', ctx: z.infer<typeof frourioSpec.middleware.context>' : ''}) => Promise<NextResponse>,
   },${middleware.ancestorCtx ? '\n  ctx: AncestorContextType,' : ''}
-) => Promise<Response>`,
+) => Promise<NextResponse>`,
     `type Controller = {${middleware.current ? '\n  middleware: Middleware;' : ''}${methods
       .map(
         (m) =>
@@ -625,12 +625,12 @@ const serverData = (
       middleware.current
         ? `\n  middleware: (next: (
     args: { req: Request${params ? ', params: ParamsType' : ''} },${middleware.ancestorCtx || middleware.current.hasCtx ? '\n    ctx: ContextType,' : ''}
-  ) => Promise<Response>) => (originalReq: Request, option${params ? ': {params: Promise<ParamsType> }' : '?: {}'}) => Promise<Response>;`
+  ) => Promise<NextResponse>) => (originalReq: Request, option${params ? ': {params: Promise<ParamsType> }' : '?: {}'}) => Promise<NextResponse>;`
         : ''
     }${methods
       .map(
         (m) =>
-          `\n  ${m.name.toUpperCase()}: (req: Request${params ? ', option: { params: Promise<ParamsType> }' : ''}) => Promise<Response>;`,
+          `\n  ${m.name.toUpperCase()}: (req: Request${params ? ', option: { params: Promise<ParamsType> }' : ''}) => Promise<NextResponse>;`,
       )
       .join('')}
 }`,
@@ -639,7 +639,7 @@ ${
   middleware.ancestor || middleware.current || params
     ? `  const middleware = (next: (
     args: { req: Request${params ? ', params: ParamsType' : ''} },${middleware.ancestorCtx || middleware.current?.hasCtx ? '\n    ctx: ContextType,' : ''}
-  ) => Promise<Response>) => async (originalReq: Request${params ? ', option: { params: Promise<ParamsType> }' : ''}): Promise<Response> => {
+  ) => Promise<NextResponse>) => async (originalReq: Request${params ? ', option: { params: Promise<ParamsType> }' : ''}): Promise<NextResponse> => {
 ${
   params
     ? `    const params = paramsSchema.safeParse(await option.params);
@@ -770,7 +770,7 @@ ${m.res
       )
       .join('')}
           return ${
-            r.hasBody ? 'createResponse(body.data' : `new Response(null`
+            r.hasBody ? 'createResponse(body.data' : `new NextResponse(null`
           }, { status: ${r.status}${r.hasHeaders ? ', headers: headers.data' : ''} });
         }`;
   })
@@ -778,7 +778,7 @@ ${m.res
         default:
           throw new Error(res${m.res.length <= 1 ? '.status' : ''} satisfies never);
       }`
-          : 'return res;'
+          : 'return new NextResponse(res.body, res);'
       }
     }${params || middleware.ancestor || middleware.current ? ')' : ''},`;
   })
@@ -786,7 +786,7 @@ ${m.res
   };
 }`,
     methods.some((m) => m.res?.some((r) => r.hasBody)) &&
-      `const createResponse = (body: unknown, init: ResponseInit): Response => {
+      `const createResponse = (body: unknown, init: ResponseInit): NextResponse => {
   if (
     ArrayBuffer.isView(body) ||
     body === undefined ||

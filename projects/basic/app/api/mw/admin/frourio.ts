@@ -20,7 +20,12 @@ export const frourioSpec = {
   post: {
     body: z.object({ data: z.string() }),
     res: {
-      201: { body: z.object({ received: z.string(), context: AuthContextSchema.merge(AdminContextSchema) }) },
+      201: {
+        body: z.object({
+          received: z.string(),
+          context: AuthContextSchema.merge(AdminContextSchema),
+        }),
+      },
       403: { body: z.object({ message: z.string() }) },
     },
   },

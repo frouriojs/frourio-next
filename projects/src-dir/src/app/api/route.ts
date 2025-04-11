@@ -7,9 +7,9 @@ export const { POST } = createRoute({
       body: {
         ...body,
         file: body.file.name,
-        fileArr: body.fileArr.map(f => f.name),
+        fileArr: body.fileArr.map((f) => f.name),
         optionalFile: body.optionalFile?.name,
-        optionalFileArr: body.optionalFileArr?.map(f => f.name),
+        optionalFileArr: body.optionalFileArr?.map((f) => f.name),
       },
     };
   },

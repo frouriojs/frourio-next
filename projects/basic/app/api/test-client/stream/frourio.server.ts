@@ -16,7 +16,7 @@ type Controller = {
 };
 
 type ResHandler = {
-  POST: (req: Request) => Promise<Response>;
+  POST: (req: Request) => Promise<NextResponse>;
 };
 
 export const createRoute = (controller: Controller): ResHandler => {
@@ -28,7 +28,7 @@ export const createRoute = (controller: Controller): ResHandler => {
 
       const res = await controller.post({ body: body.data });
 
-      return res;
+      return new NextResponse(res.body, res);
     },
   };
 };

@@ -21,7 +21,7 @@ type Controller = {
 };
 
 type ResHandler = {
-  GET: (req: Request) => Promise<Response>;
+  GET: (req: Request) => Promise<NextResponse>;
 };
 
 export const createRoute = (controller: Controller): ResHandler => {
@@ -51,7 +51,7 @@ export const createRoute = (controller: Controller): ResHandler => {
   };
 };
 
-const createResponse = (body: unknown, init: ResponseInit): Response => {
+const createResponse = (body: unknown, init: ResponseInit): NextResponse => {
   if (
     ArrayBuffer.isView(body) ||
     body === undefined ||

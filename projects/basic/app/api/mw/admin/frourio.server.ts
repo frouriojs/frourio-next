@@ -16,10 +16,10 @@ export type ContextType = z.infer<typeof contextSchema>;
 type Middleware = (
   args: {
     req: Request,
-    next: (req: Request, ctx: z.infer<typeof frourioSpec.middleware.context>) => Promise<Response>,
+    next: (req: Request, ctx: z.infer<typeof frourioSpec.middleware.context>) => Promise<NextResponse>,
   },
   ctx: AncestorContextType,
-) => Promise<Response>;
+) => Promise<NextResponse>;
 
 type Controller = {
   middleware: Middleware;
@@ -58,16 +58,16 @@ type ResHandler = {
   middleware: (next: (
     args: { req: Request },
     ctx: ContextType,
-  ) => Promise<Response>) => (originalReq: Request, option?: {}) => Promise<Response>;
-  GET: (req: Request) => Promise<Response>;
-  POST: (req: Request) => Promise<Response>;
+  ) => Promise<NextResponse>) => (originalReq: Request, option?: {}) => Promise<NextResponse>;
+  GET: (req: Request) => Promise<NextResponse>;
+  POST: (req: Request) => Promise<NextResponse>;
 };
 
 export const createRoute = (controller: Controller): ResHandler => {
   const middleware = (next: (
     args: { req: Request },
     ctx: ContextType,
-  ) => Promise<Response>) => async (originalReq: Request): Promise<Response> => {
+  ) => Promise<NextResponse>) => async (originalReq: Request): Promise<NextResponse> => {
 
     return ancestorMiddleware(async (ancestorArgs, ancestorContext) => {
       const ancestorCtx = ancestorContextSchema.safeParse(ancestorContext);
@@ -142,7 +142,7 @@ export const createRoute = (controller: Controller): ResHandler => {
   };
 };
 
-const createResponse = (body: unknown, init: ResponseInit): Response => {
+const createResponse = (body: unknown, init: ResponseInit): NextResponse => {
   if (
     ArrayBuffer.isView(body) ||
     body === undefined ||

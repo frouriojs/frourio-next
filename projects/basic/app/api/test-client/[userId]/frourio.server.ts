@@ -53,14 +53,14 @@ type Controller = {
 };
 
 type ResHandler = {
-  PUT: (req: Request, option: { params: Promise<ParamsType> }) => Promise<Response>;
-  DELETE: (req: Request, option: { params: Promise<ParamsType> }) => Promise<Response>;
+  PUT: (req: Request, option: { params: Promise<ParamsType> }) => Promise<NextResponse>;
+  DELETE: (req: Request, option: { params: Promise<ParamsType> }) => Promise<NextResponse>;
 };
 
 export const createRoute = (controller: Controller): ResHandler => {
   const middleware = (next: (
     args: { req: Request, params: ParamsType },
-  ) => Promise<Response>) => async (originalReq: Request, option: { params: Promise<ParamsType> }): Promise<Response> => {
+  ) => Promise<NextResponse>) => async (originalReq: Request, option: { params: Promise<ParamsType> }): Promise<NextResponse> => {
     const params = paramsSchema.safeParse(await option.params);
 
     if (params.error) return createReqErr(params.error);
@@ -105,7 +105,7 @@ export const createRoute = (controller: Controller): ResHandler => {
 
       switch (res.status) {
         case 204: {
-          return new Response(null, { status: 204 });
+          return new NextResponse(null, { status: 204 });
         }
         case 404: {
           const body = frourioSpec.delete.res[404].body.safeParse(res.body);
@@ -121,7 +121,7 @@ export const createRoute = (controller: Controller): ResHandler => {
   };
 };
 
-const createResponse = (body: unknown, init: ResponseInit): Response => {
+const createResponse = (body: unknown, init: ResponseInit): NextResponse => {
   if (
     ArrayBuffer.isView(body) ||
     body === undefined ||

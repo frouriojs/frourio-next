@@ -36,8 +36,8 @@ type Controller = {
 };
 
 type ResHandler = {
-  GET: (req: Request) => Promise<Response>;
-  POST: (req: Request) => Promise<Response>;
+  GET: (req: Request) => Promise<NextResponse>;
+  POST: (req: Request) => Promise<NextResponse>;
 };
 
 export const createRoute = (controller: Controller): ResHandler => {
@@ -65,7 +65,7 @@ export const createRoute = (controller: Controller): ResHandler => {
           return createResponse(body.data, { status: 200 });
         }
         case 404: {
-          return new Response(null, { status: 404 });
+          return new NextResponse(null, { status: 404 });
         }
         default:
           throw new Error(res satisfies never);
@@ -97,7 +97,7 @@ export const createRoute = (controller: Controller): ResHandler => {
   };
 };
 
-const createResponse = (body: unknown, init: ResponseInit): Response => {
+const createResponse = (body: unknown, init: ResponseInit): NextResponse => {
   if (
     ArrayBuffer.isView(body) ||
     body === undefined ||

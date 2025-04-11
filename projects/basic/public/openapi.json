@@ -285,6 +285,14 @@
                   "$ref": "#/components/schemas/mirbd2"
                 }
               }
+            },
+            "headers": {
+              "content-type": {
+                "schema": {
+                  "type": "string"
+                },
+                "required": true
+              }
             }
           }
         }
@@ -1094,15 +1102,19 @@
           "query"
         ]
       },
-      "6s5r15": {
+      "46dtwk": {
         "type": "object",
         "properties": {
           "body": {
             "$ref": "#/components/schemas/mirbd2"
+          },
+          "headers": {
+            "$ref": "#/components/schemas/x5u6ln"
           }
         },
         "required": [
-          "body"
+          "body",
+          "headers"
         ]
       },
       "mirbd2": {
@@ -1114,6 +1126,17 @@
         },
         "required": [
           "value"
+        ]
+      },
+      "x5u6ln": {
+        "type": "object",
+        "properties": {
+          "content-type": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "content-type"
         ]
       },
       "1k3jnnh": {

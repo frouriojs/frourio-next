@@ -1,4 +1,5 @@
 import { randomUUID } from 'crypto';
+import { NextRequest } from 'next/server';
 import { describe, expect, test, vi } from 'vitest';
 import * as adminMwRoute from '../projects/basic/app/api/mw/admin/route';
 import * as usersMwRoute from '../projects/basic/app/api/mw/admin/users/route';
@@ -23,7 +24,7 @@ describe('Root Middleware (/api/mw)', () => {
   test('GET /api/mw - User Authorization header', async () => {
     const userId = 'user-123';
     const traceId = randomUUID();
-    const req = new Request(`${baseUrl}/api/mw`, {
+    const req = new NextRequest(`${baseUrl}/api/mw`, {
       headers: {
         Authorization: `Bearer ${userId}`,
         'X-Trace-Id': traceId,
@@ -61,7 +62,7 @@ describe('Nested Middleware (/api/mw/admin)', () => {
   const traceId = randomUUID();
 
   test('GET /api/mw/admin - Admin User', async () => {
-    const req = new Request(`${baseUrl}/api/mw/admin`, {
+    const req = new NextRequest(`${baseUrl}/api/mw/admin`, {
       headers: {
         Authorization: `Bearer ${adminUserId}`,
         'X-Trace-Id': traceId,

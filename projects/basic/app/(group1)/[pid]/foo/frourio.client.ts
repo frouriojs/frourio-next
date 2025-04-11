@@ -60,7 +60,7 @@ const $url = (option?: FrourioClientOption) => ({
 
 const methods = (option?: FrourioClientOption) => ({
   async $get(req: { params: z.infer<typeof paramsSchema>, init?: RequestInit }): Promise<
-    | { ok: true; isValid: true; data: { status: 200; headers?: undefined; body: z.infer<typeof frourioSpec.get.res[200]['body']> }; failure?: undefined; raw: Response; reason?: undefined; error?: undefined }
+    | { ok: true; isValid: true; data: { status: 200; headers: z.infer<typeof frourioSpec.get.res[200]['headers']>; body: z.infer<typeof frourioSpec.get.res[200]['body']> }; failure?: undefined; raw: Response; reason?: undefined; error?: undefined }
     | { ok: boolean; isValid: false; data?: undefined; failure?: undefined; raw: Response; reason: z.ZodError; error?: undefined }
     | { ok: boolean; isValid?: undefined; data?: undefined; failure?: undefined; raw: Response; reason?: undefined; error: unknown }
     | { ok?: undefined; isValid: false; data?: undefined; failure?: undefined; raw?: undefined; reason: z.ZodError; error?: undefined }
@@ -85,6 +85,10 @@ const methods = (option?: FrourioClientOption) => ({
 
     switch (result.res.status) {
       case 200: {
+        const headers = frourioSpec.get.res[200].headers.safeParse(result.res.headers);
+
+        if (!headers.success) return { ok: true, isValid: false, raw: result.res, reason: headers.error };
+
         const json: { success: true; data: unknown } | { success: false; error: unknown } = await result.res.json().then(data => ({ success: true, data } as const)).catch(error => ({ success: false, error }));
 
         if (!json.success) return { ok: true, raw: result.res, error: json.error };
@@ -96,7 +100,7 @@ const methods = (option?: FrourioClientOption) => ({
         return {
           ok: true,
           isValid: true,
-          data: { status: 200, body: body.data },
+          data: { status: 200, headers: headers.data, body: body.data },
           raw: result.res,
         };
       }

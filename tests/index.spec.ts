@@ -4,6 +4,7 @@ import assert from 'assert';
 import { execSync } from 'child_process';
 import fs from 'fs';
 import { unlink } from 'fs/promises';
+import { NextRequest } from 'next/server';
 import path from 'path';
 import { expect, test } from 'vitest';
 import type { z } from 'zod';
@@ -66,7 +67,7 @@ test('base handler', async () => {
 
   await expect(res2.json()).resolves.toEqual({ bb: val });
 
-  const res3 = await baseRoute.POST(new Request('http://example.com/'));
+  const res3 = await baseRoute.POST(new NextRequest('http://example.com/'));
 
   expect(res3.status).toBe(422);
 
@@ -81,7 +82,7 @@ test('base handler', async () => {
 });
 
 test('params handler', async () => {
-  const res = await paramsRoute.POST(new Request('http://example.com/aaa/bbb/ccc'), {
+  const res = await paramsRoute.POST(new NextRequest('http://example.com/aaa/bbb/ccc'), {
     params: Promise.resolve({ a: 111, b: 'bbb', c: ['ccc'] }),
   });
 
@@ -144,7 +145,7 @@ test('query', async () => {
         }
       });
 
-      const res = await queryRoute.GET(new Request(`http://example.com/111?${query}`), {
+      const res = await queryRoute.GET(new NextRequest(`http://example.com/111?${query}`), {
         params: Promise.resolve({ pid: '111' }),
       });
 

@@ -27,6 +27,7 @@ type Controller = {
   ) => Promise<
     | {
         status: 200;
+        headers: z.infer<SpecType['get']['res'][200]['headers']>;
         body: z.infer<SpecType['get']['res'][200]['body']>;
       }
   >;
@@ -65,11 +66,15 @@ export const createRoute = (controller: Controller): ResHandler => {
 
       switch (res.status) {
         case 200: {
+          const headers = frourioSpec.get.res[200].headers.safeParse(res.headers);
+
+          if (headers.error) return createResErr();
+
           const body = frourioSpec.get.res[200].body.safeParse(res.body);
 
           if (body.error) return createResErr();
 
-          return createResponse(body.data, { status: 200 });
+          return createResponse(body.data, { status: 200, headers: headers.data });
         }
         default:
           throw new Error(res.status satisfies never);

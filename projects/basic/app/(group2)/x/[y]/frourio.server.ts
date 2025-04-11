@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { middleware as ancestorMiddleware } from '../../route';
 import { frourioSpec } from './frourio';
@@ -14,7 +14,7 @@ type SpecType = typeof frourioSpec;
 
 type Middleware = (
   args: {
-    req: Request,
+    req: NextRequest,
     params: ParamsType,
     next: () => Promise<NextResponse>,
   },
@@ -27,26 +27,28 @@ type Controller = {
       params: ParamsType;
       query: z.infer<SpecType['get']['query']>;
     },
-  ) => Promise<Response>;
+  ) => Promise<NextResponse | Response>;
 };
 
+type MethodHandler = (req: NextRequest | Request, option: { params: Promise<ParamsType> }) => Promise<NextResponse>;;
+
 type ResHandler = {
-  middleware: (next: (
-    args: { req: Request, params: ParamsType },
-  ) => Promise<NextResponse>) => (req: Request, option: {params: Promise<ParamsType> }) => Promise<NextResponse>;
-  GET: (req: Request, option: { params: Promise<ParamsType> }) => Promise<NextResponse>;
+  middleware: (
+    next: (args: { req: NextRequest, params: ParamsType }) => Promise<NextResponse>,
+  ) => (req: NextRequest, option: { params: Promise<ParamsType> }) => Promise<NextResponse>;
+  GET: MethodHandler
 };
 
 export const createRoute = (controller: Controller): ResHandler => {
   const middleware = (next: (
-    args: { req: Request, params: ParamsType },
-  ) => Promise<NextResponse>) => async (req: Request, option: { params: Promise<ParamsType> }): Promise<NextResponse> => {
+    args: { req: NextRequest, params: ParamsType },
+  ) => Promise<NextResponse>): MethodHandler => async (originalReq, option) => {
+    const req = originalReq instanceof NextRequest ? originalReq : new NextRequest(originalReq);
     const params = paramsSchema.safeParse(await option.params);
 
     if (params.error) return createReqErr(params.error);
 
-    return ancestorMiddleware(async (ancestorArgs) => {
-
+    return ancestorMiddleware(async () => {
     return await controller.middleware(
       {
         req,
@@ -64,16 +66,15 @@ export const createRoute = (controller: Controller): ResHandler => {
   return {
     middleware,
     GET: middleware(async ({ req, params }) => {
-      const { searchParams } = new URL(req.url);
       const query = frourioSpec.get.query.safeParse({
-        'message': searchParams.get('message') ?? undefined,
+        'message': req.nextUrl.searchParams.get('message') ?? undefined,
       });
 
       if (query.error) return createReqErr(query.error);
 
       const res = await controller.get({ query: query.data, params });
 
-      return new NextResponse(res.body, res);
+      return res instanceof NextResponse ? res : new NextResponse(res.body, res);
     }),
   };
 };

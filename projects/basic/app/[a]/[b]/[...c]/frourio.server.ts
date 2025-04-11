@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { paramsSchema as ancestorParamsSchema } from '../../frourio.server';
 import { middleware as ancestorMiddleware } from '../../route';
@@ -20,7 +20,7 @@ export type ContextType = z.infer<typeof contextSchema>;
 
 type Middleware = (
   args: {
-    req: Request,
+    req: NextRequest,
     params: ParamsType,
     next: (ctx: z.infer<typeof frourioSpec.middleware.context>) => Promise<NextResponse>,
   },
@@ -42,27 +42,30 @@ type Controller = {
   >;
 };
 
+type MethodHandler = (req: NextRequest | Request, option: { params: Promise<ParamsType> }) => Promise<NextResponse>;;
+
 type ResHandler = {
-  middleware: (next: (
-    args: { req: Request, params: ParamsType },
-    ctx: ContextType,
-  ) => Promise<NextResponse>) => (req: Request, option: {params: Promise<ParamsType> }) => Promise<NextResponse>;
-  POST: (req: Request, option: { params: Promise<ParamsType> }) => Promise<NextResponse>;
+  middleware: (
+    next: (args: { req: NextRequest, params: ParamsType }, ctx: ContextType) => Promise<NextResponse>,
+  ) => (req: NextRequest, option: { params: Promise<ParamsType> }) => Promise<NextResponse>;
+  POST: MethodHandler
 };
 
 export const createRoute = (controller: Controller): ResHandler => {
   const middleware = (next: (
-    args: { req: Request, params: ParamsType },
+    args: { req: NextRequest, params: ParamsType },
     ctx: ContextType,
-  ) => Promise<NextResponse>) => async (req: Request, option: { params: Promise<ParamsType> }): Promise<NextResponse> => {
+  ) => Promise<NextResponse>): MethodHandler => async (originalReq, option) => {
+    const req = originalReq instanceof NextRequest ? originalReq : new NextRequest(originalReq);
     const params = paramsSchema.safeParse(await option.params);
 
     if (params.error) return createReqErr(params.error);
 
-    return ancestorMiddleware(async (ancestorArgs, ancestorContext) => {
+    return ancestorMiddleware(async (_, ancestorContext) => {
       const ancestorCtx = ancestorContextSchema.safeParse(ancestorContext);
 
       if (ancestorCtx.error) return createReqErr(ancestorCtx.error);
+
     return await controller.middleware(
       {
         req,

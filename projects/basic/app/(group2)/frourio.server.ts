@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import type { z } from 'zod';
 import { frourioSpec } from './frourio';
 import type { middleware } from './route';
@@ -9,7 +9,7 @@ type SpecType = typeof frourioSpec;
 
 type Middleware = (
   args: {
-    req: Request,
+    req: NextRequest,
     next: () => Promise<NextResponse>,
   },
 ) => Promise<NextResponse>;
@@ -18,18 +18,19 @@ type Controller = {
   middleware: Middleware;
 };
 
+type MethodHandler = (req: NextRequest | Request) => Promise<NextResponse>;;
+
 type ResHandler = {
-  middleware: (next: (
-    args: { req: Request },
-  ) => Promise<NextResponse>) => (req: Request, option?: {}) => Promise<NextResponse>;
+  middleware: (
+    next: (args: { req: NextRequest }) => Promise<NextResponse>,
+  ) => (req: NextRequest, option?: {}) => Promise<NextResponse>;
 };
 
 export const createRoute = (controller: Controller): ResHandler => {
   const middleware = (next: (
-    args: { req: Request },
-  ) => Promise<NextResponse>) => async (req: Request): Promise<NextResponse> => {
-
-    
+    args: { req: NextRequest },
+  ) => Promise<NextResponse>): MethodHandler => async (originalReq) => {
+    const req = originalReq instanceof NextRequest ? originalReq : new NextRequest(originalReq);
     return await controller.middleware(
       {
         req,

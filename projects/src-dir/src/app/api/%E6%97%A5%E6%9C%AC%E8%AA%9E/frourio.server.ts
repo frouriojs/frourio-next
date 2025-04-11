@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import type { z } from 'zod';
 import { frourioSpec } from './frourio';
 import type { POST } from './route';
@@ -20,8 +20,10 @@ type Controller = {
   >;
 };
 
+type MethodHandler = (req: NextRequest | Request) => Promise<NextResponse>;;
+
 type ResHandler = {
-  POST: (req: Request) => Promise<NextResponse>;
+  POST: MethodHandler
 };
 
 export const createRoute = (controller: Controller): ResHandler => {

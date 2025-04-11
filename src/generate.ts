@@ -554,7 +554,7 @@ const serverData = (
   methods: ServerMethod[],
 ) => {
   const imports: string[] = [
-    "import { NextResponse } from 'next/server'",
+    "import { NextRequest, NextResponse } from 'next/server'",
     `import ${params ? '' : 'type '}{ z } from 'zod'`,
     params?.ancestorFrourio &&
       `import { paramsSchema as ancestorParamsSchema } from '${params.ancestorFrourio}'`,
@@ -588,7 +588,7 @@ const serverData = (
     middleware.current &&
       `type Middleware = (
   args: {
-    req: Request,${params ? '\n    params: ParamsType,' : ''}
+    req: NextRequest,${params ? '\n    params: ParamsType,' : ''}
     next: (${middleware.current.hasCtx ? 'ctx: z.infer<typeof frourioSpec.middleware.context>' : ''}) => Promise<NextResponse>,
   },${middleware.ancestorCtx ? '\n  ctx: AncestorContextType,' : ''}
 ) => Promise<NextResponse>`,
@@ -616,52 +616,45 @@ const serverData = (
       }`,
           )
           .join('\n')}\n  `
-      : 'Response'
+      : 'NextResponse | Response'
   }>;`,
       )
       .join('')}
 }`,
+    `type MethodHandler = (req: NextRequest | Request${params ? ', option: { params: Promise<ParamsType> }' : ''}) => Promise<NextResponse>;`,
     `type ResHandler = {${
       middleware.current
-        ? `\n  middleware: (next: (
-    args: { req: Request${params ? ', params: ParamsType' : ''} },${middleware.ancestorCtx || middleware.current.hasCtx ? '\n    ctx: ContextType,' : ''}
-  ) => Promise<NextResponse>) => (req: Request, option${params ? ': {params: Promise<ParamsType> }' : '?: {}'}) => Promise<NextResponse>;`
+        ? `\n  middleware: (
+    next: (args: { req: NextRequest${params ? ', params: ParamsType' : ''} }${middleware.ancestorCtx || middleware.current.hasCtx ? ', ctx: ContextType' : ''}) => Promise<NextResponse>,
+  ) => (req: NextRequest, option${params ? ': { params: Promise<ParamsType> }' : '?: {}'}) => Promise<NextResponse>;`
         : ''
-    }${methods
-      .map(
-        (m) =>
-          `\n  ${m.name.toUpperCase()}: (req: Request${params ? ', option: { params: Promise<ParamsType> }' : ''}) => Promise<NextResponse>;`,
-      )
-      .join('')}
+    }${methods.map((m) => `\n  ${m.name.toUpperCase()}: MethodHandler`).join('')}
 }`,
     `export const createRoute = (controller: Controller): ResHandler => {
 ${
   middleware.ancestor || middleware.current || params
     ? `  const middleware = (next: (
-    args: { req: Request${params ? ', params: ParamsType' : ''} },${middleware.ancestorCtx || middleware.current?.hasCtx ? '\n    ctx: ContextType,' : ''}
-  ) => Promise<NextResponse>) => async (req: Request${params ? ', option: { params: Promise<ParamsType> }' : ''}): Promise<NextResponse> => {
-${
-  params
-    ? `    const params = paramsSchema.safeParse(await option.params);
+    args: { req: NextRequest${params ? ', params: ParamsType' : ''} },${middleware.ancestorCtx || middleware.current?.hasCtx ? '\n    ctx: ContextType,' : ''}
+  ) => Promise<NextResponse>): MethodHandler => async (originalReq${params ? ', option' : ''}) => {
+    const req = originalReq instanceof NextRequest ? originalReq : new NextRequest(originalReq);${
+      params
+        ? `\n    const params = paramsSchema.safeParse(await option.params);
 
     if (params.error) return createReqErr(params.error);\n`
-    : ''
-}
-    ${
-      middleware.ancestor
-        ? `return ancestorMiddleware(async (ancestorArgs${middleware.ancestorCtx ? ', ancestorContext' : ''}) => {
-${
-  middleware.ancestorCtx
-    ? `      const ancestorCtx = ancestorContextSchema.safeParse(ancestorContext);
-
-      if (ancestorCtx.error) return createReqErr(ancestorCtx.error);`
-    : ''
-}`
         : ''
-    }
-    ${
+    }${
+      middleware.ancestor
+        ? `\n    return ancestorMiddleware(async (${middleware.ancestorCtx ? '_, ancestorContext' : ''}) => {${
+            middleware.ancestorCtx
+              ? `\n      const ancestorCtx = ancestorContextSchema.safeParse(ancestorContext);
+
+      if (ancestorCtx.error) return createReqErr(ancestorCtx.error);\n`
+              : ''
+          }`
+        : ''
+    }${
       middleware.current
-        ? `return await controller.middleware(
+        ? `\n    return await controller.middleware(
       {
         req,${params ? '\n        params: params.data,' : ''}
         next: async (${middleware.current.hasCtx ? ' context' : ''}) => {
@@ -701,7 +694,7 @@ ${methods
         `frourioSpec.${m.name}.query.safeParse({
 ${m.query
   .map((p) => {
-    const fn = `searchParams.get${p.isArray ? 'All' : ''}('${p.name}')${p.isArray ? '' : ' ?? undefined'}`;
+    const fn = `req.nextUrl.searchParams.get${p.isArray ? 'All' : ''}('${p.name}')${p.isArray ? '' : ' ?? undefined'}`;
     const wrapped = `${p.typeName === 'string' ? '' : `queryTo${p.typeName === 'number' ? 'Num' : 'Bool'}${p.isArray ? 'Arr' : ''}(`}${fn}${p.typeName === 'string' ? '' : ')'}`;
 
     return `        '${p.name}': ${p.isArray && p.isOptional ? `${fn}.length > 0 ? ${wrapped} : undefined` : wrapped},`;
@@ -737,13 +730,11 @@ ${m.body.data
 
     return `    ${m.name.toUpperCase()}: ${
       params || middleware.ancestor || middleware.current
-        ? `middleware(async ({ req${params ? ', params' : ''} }${
-            middleware.ancestorCtx || middleware.current?.hasCtx ? ', ctx' : ''
-          }`
-        : 'async (req'
-    }) => {${m.body?.isFormData ? '\n      const formData = await req.formData();' : ''}${
-      m.query ? '\n      const { searchParams } = new URL(req.url);' : ''
-    }${requests
+        ? `middleware(async ({ req${params ? ', params' : ''} }${middleware.ancestorCtx || middleware.current?.hasCtx ? ', ctx' : ''}) => {`
+        : m.query
+          ? 'async (originalReq) => {\n      const req = originalReq instanceof NextRequest ? originalReq : new NextRequest(originalReq);'
+          : 'async (req) => {'
+    }${m.body?.isFormData ? '\n      const formData = await req.formData();' : ''}${requests
       .map(
         (r) =>
           `\n      const ${r[0]} = ${r[1]};\n\n      if (${r[0]}.error) return createReqErr(${r[0]}.error);\n`,
@@ -776,7 +767,7 @@ ${m.res
         default:
           throw new Error(res${m.res.length <= 1 ? '.status' : ''} satisfies never);
       }`
-          : 'return new NextResponse(res.body, res);'
+          : 'return res instanceof NextResponse ? res : new NextResponse(res.body, res);'
       }
     }${params || middleware.ancestor || middleware.current ? ')' : ''},`;
   })

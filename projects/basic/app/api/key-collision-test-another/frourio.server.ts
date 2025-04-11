@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import type { z } from 'zod';
 import { frourioSpec } from './frourio';
 import type { GET } from './route';
@@ -20,16 +20,18 @@ type Controller = {
   >;
 };
 
+type MethodHandler = (req: NextRequest | Request) => Promise<NextResponse>;;
+
 type ResHandler = {
-  GET: (req: Request) => Promise<NextResponse>;
+  GET: MethodHandler
 };
 
 export const createRoute = (controller: Controller): ResHandler => {
   return {
-    GET: async (req) => {
-      const { searchParams } = new URL(req.url);
+    GET: async (originalReq) => {
+      const req = originalReq instanceof NextRequest ? originalReq : new NextRequest(originalReq);
       const query = frourioSpec.get.query.safeParse({
-        'common': searchParams.get('common') ?? undefined,
+        'common': req.nextUrl.searchParams.get('common') ?? undefined,
       });
 
       if (query.error) return createReqErr(query.error);

@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import type { z } from 'zod';
 import { frourioSpec } from './frourio';
 import type { POST } from './route';
@@ -12,11 +12,13 @@ type Controller = {
     req: {
       body: z.infer<SpecType['post']['body']>;
     },
-  ) => Promise<Response>;
+  ) => Promise<NextResponse | Response>;
 };
 
+type MethodHandler = (req: NextRequest | Request) => Promise<NextResponse>;;
+
 type ResHandler = {
-  POST: (req: Request) => Promise<NextResponse>;
+  POST: MethodHandler
 };
 
 export const createRoute = (controller: Controller): ResHandler => {
@@ -28,7 +30,7 @@ export const createRoute = (controller: Controller): ResHandler => {
 
       const res = await controller.post({ body: body.data });
 
-      return new NextResponse(res.body, res);
+      return res instanceof NextResponse ? res : new NextResponse(res.body, res);
     },
   };
 };

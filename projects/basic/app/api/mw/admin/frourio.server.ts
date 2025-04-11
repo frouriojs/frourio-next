@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import type { z } from 'zod';
 import { middleware as ancestorMiddleware } from '../route';
 import { contextSchema as ancestorContextSchema, type ContextType as AncestorContextType } from '../frourio.server';
@@ -15,7 +15,7 @@ export type ContextType = z.infer<typeof contextSchema>;
 
 type Middleware = (
   args: {
-    req: Request,
+    req: NextRequest,
     next: (ctx: z.infer<typeof frourioSpec.middleware.context>) => Promise<NextResponse>,
   },
   ctx: AncestorContextType,
@@ -54,25 +54,27 @@ type Controller = {
   >;
 };
 
+type MethodHandler = (req: NextRequest | Request) => Promise<NextResponse>;;
+
 type ResHandler = {
-  middleware: (next: (
-    args: { req: Request },
-    ctx: ContextType,
-  ) => Promise<NextResponse>) => (req: Request, option?: {}) => Promise<NextResponse>;
-  GET: (req: Request) => Promise<NextResponse>;
-  POST: (req: Request) => Promise<NextResponse>;
+  middleware: (
+    next: (args: { req: NextRequest }, ctx: ContextType) => Promise<NextResponse>,
+  ) => (req: NextRequest, option?: {}) => Promise<NextResponse>;
+  GET: MethodHandler
+  POST: MethodHandler
 };
 
 export const createRoute = (controller: Controller): ResHandler => {
   const middleware = (next: (
-    args: { req: Request },
+    args: { req: NextRequest },
     ctx: ContextType,
-  ) => Promise<NextResponse>) => async (req: Request): Promise<NextResponse> => {
-
-    return ancestorMiddleware(async (ancestorArgs, ancestorContext) => {
+  ) => Promise<NextResponse>): MethodHandler => async (originalReq) => {
+    const req = originalReq instanceof NextRequest ? originalReq : new NextRequest(originalReq);
+    return ancestorMiddleware(async (_, ancestorContext) => {
       const ancestorCtx = ancestorContextSchema.safeParse(ancestorContext);
 
       if (ancestorCtx.error) return createReqErr(ancestorCtx.error);
+
     return await controller.middleware(
       {
         req,

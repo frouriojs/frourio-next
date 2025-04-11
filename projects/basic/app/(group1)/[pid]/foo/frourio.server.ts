@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { paramsSchema as ancestorParamsSchema } from '../frourio.server';
 import { middleware as ancestorMiddleware } from '../../route';
@@ -32,24 +32,27 @@ type Controller = {
   >;
 };
 
+type MethodHandler = (req: NextRequest | Request, option: { params: Promise<ParamsType> }) => Promise<NextResponse>;;
+
 type ResHandler = {
-  GET: (req: Request, option: { params: Promise<ParamsType> }) => Promise<NextResponse>;
+  GET: MethodHandler
 };
 
 export const createRoute = (controller: Controller): ResHandler => {
   const middleware = (next: (
-    args: { req: Request, params: ParamsType },
+    args: { req: NextRequest, params: ParamsType },
     ctx: ContextType,
-  ) => Promise<NextResponse>) => async (req: Request, option: { params: Promise<ParamsType> }): Promise<NextResponse> => {
+  ) => Promise<NextResponse>): MethodHandler => async (originalReq, option) => {
+    const req = originalReq instanceof NextRequest ? originalReq : new NextRequest(originalReq);
     const params = paramsSchema.safeParse(await option.params);
 
     if (params.error) return createReqErr(params.error);
 
-    return ancestorMiddleware(async (ancestorArgs, ancestorContext) => {
+    return ancestorMiddleware(async (_, ancestorContext) => {
       const ancestorCtx = ancestorContextSchema.safeParse(ancestorContext);
 
       if (ancestorCtx.error) return createReqErr(ancestorCtx.error);
-    
+
 
       return await next({ req, params: params.data }, { ...ancestorCtx.data, })
       

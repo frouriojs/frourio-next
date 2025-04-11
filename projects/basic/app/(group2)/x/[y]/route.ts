@@ -3,8 +3,8 @@ import { streamText } from 'ai';
 import { createRoute } from './frourio.server';
 
 export const { GET, middleware } = createRoute({
-  middleware: async ({ req, next }) => {
-    return next(req);
+  middleware: async ({ next }) => {
+    return next();
   },
   get: async ({ query }) => {
     const result = streamText({

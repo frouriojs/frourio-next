@@ -25,14 +25,13 @@ export const { middleware, GET, POST } = createRoute({
       }
     }
 
-    return next(req, { isAdmin, permissions });
+    return next({ isAdmin, permissions });
   },
   get: async (req, context) => {
     console.log('GET Handler (/api/mw/admin): Received full context:', context);
 
     return { status: 200, body: context };
   },
-
   post: async ({ body }, context) => {
     console.log('POST Handler (/api/mw/admin): Received full context:', context);
     console.log('POST Handler (/api/mw/admin): Received body:', body);

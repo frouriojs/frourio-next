@@ -16,7 +16,7 @@ type ContextType = z.infer<typeof contextSchema>;
 type Middleware = (
   args: {
     req: Request,
-    next: (req: Request) => Promise<NextResponse>,
+    next: () => Promise<NextResponse>,
   },
   ctx: AncestorContextType,
 ) => Promise<NextResponse>;
@@ -44,7 +44,7 @@ type ResHandler = {
   middleware: (next: (
     args: { req: Request },
     ctx: ContextType,
-  ) => Promise<NextResponse>) => (originalReq: Request, option?: {}) => Promise<NextResponse>;
+  ) => Promise<NextResponse>) => (req: Request, option?: {}) => Promise<NextResponse>;
   GET: (req: Request) => Promise<NextResponse>;
 };
 
@@ -52,7 +52,7 @@ export const createRoute = (controller: Controller): ResHandler => {
   const middleware = (next: (
     args: { req: Request },
     ctx: ContextType,
-  ) => Promise<NextResponse>) => async (originalReq: Request): Promise<NextResponse> => {
+  ) => Promise<NextResponse>) => async (req: Request): Promise<NextResponse> => {
 
     return ancestorMiddleware(async (ancestorArgs, ancestorContext) => {
       const ancestorCtx = ancestorContextSchema.safeParse(ancestorContext);
@@ -60,8 +60,8 @@ export const createRoute = (controller: Controller): ResHandler => {
       if (ancestorCtx.error) return createReqErr(ancestorCtx.error);
     return await controller.middleware(
       {
-        req: ancestorArgs.req,
-        next: async (req) => {
+        req,
+        next: async () => {
 
 
       return await next({ req }, { ...ancestorCtx.data, })
@@ -69,7 +69,7 @@ export const createRoute = (controller: Controller): ResHandler => {
       },
       ancestorCtx.data,
     )
-    })(originalReq)
+    })(req)
   };
 
   return {

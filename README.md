@@ -493,7 +493,7 @@ export type AdminContext = z.infer<typeof AdminContextSchema>;
 
 ### 2. Implement Middleware in `route.ts`
 
-Implement the middleware logic within the `createRoute` call. The `middleware` function receives the request (`req`), a `next` function, and the context (`parentContext`) passed from parent middleware. It calls `next(req, newContext)` to proceed, passing the context defined in its corresponding `frourio.ts`.
+Implement the middleware logic within the `createRoute` call. The `middleware` function receives the request (`req`), a `next` function, and the context (`parentContext`) passed from parent middleware. It calls `next(newContext)` to proceed, passing the context defined in its corresponding `frourio.ts`.
 
 `app/api/route.ts` (Root middleware implementation):
 
@@ -520,7 +520,7 @@ export const { middleware } = createRoute({
     console.log('Root Middleware: User authenticated:', user?.id);
 
     // Pass the AuthContext to the next handler/middleware
-    return next(req, { user }); // Must match AuthContextSchema
+    return next({ user }); // Must match AuthContextSchema
   },
 
   // You can also define routes here that directly use AuthContext
@@ -548,7 +548,7 @@ export const { middleware } = createRoute({
     }
 
     // Pass the AdminContext to the next handler/middleware
-    return next(req, { isAdmin }); // Must match AdminContextSchema
+    return next({ isAdmin }); // Must match AdminContextSchema
   },
 
   // Define admin-specific routes here

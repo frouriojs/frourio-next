@@ -10,7 +10,7 @@ type SpecType = typeof frourioSpec;
 type Middleware = (
   args: {
     req: Request,
-    next: (req: Request) => Promise<NextResponse>,
+    next: () => Promise<NextResponse>,
   },
 ) => Promise<NextResponse>;
 
@@ -21,19 +21,19 @@ type Controller = {
 type ResHandler = {
   middleware: (next: (
     args: { req: Request },
-  ) => Promise<NextResponse>) => (originalReq: Request, option?: {}) => Promise<NextResponse>;
+  ) => Promise<NextResponse>) => (req: Request, option?: {}) => Promise<NextResponse>;
 };
 
 export const createRoute = (controller: Controller): ResHandler => {
   const middleware = (next: (
     args: { req: Request },
-  ) => Promise<NextResponse>) => async (originalReq: Request): Promise<NextResponse> => {
+  ) => Promise<NextResponse>) => async (req: Request): Promise<NextResponse> => {
 
     
     return await controller.middleware(
       {
-        req: originalReq,
-        next: async (req) => {
+        req,
+        next: async () => {
 
 
       return await next({ req })

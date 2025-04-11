@@ -29,7 +29,7 @@ type Middleware = (
   args: {
     req: Request,
     params: ParamsType,
-    next: (req: Request, ctx: z.infer<typeof frourioSpec.middleware.context>) => Promise<NextResponse>,
+    next: (ctx: z.infer<typeof frourioSpec.middleware.context>) => Promise<NextResponse>,
   },
 ) => Promise<NextResponse>;
 
@@ -52,7 +52,7 @@ type ResHandler = {
   middleware: (next: (
     args: { req: Request, params: ParamsType },
     ctx: ContextType,
-  ) => Promise<NextResponse>) => (originalReq: Request, option: {params: Promise<ParamsType> }) => Promise<NextResponse>;
+  ) => Promise<NextResponse>) => (req: Request, option: {params: Promise<ParamsType> }) => Promise<NextResponse>;
   GET: (req: Request, option: { params: Promise<ParamsType> }) => Promise<NextResponse>;
 };
 
@@ -60,7 +60,7 @@ export const createRoute = (controller: Controller): ResHandler => {
   const middleware = (next: (
     args: { req: Request, params: ParamsType },
     ctx: ContextType,
-  ) => Promise<NextResponse>) => async (originalReq: Request, option: { params: Promise<ParamsType> }): Promise<NextResponse> => {
+  ) => Promise<NextResponse>) => async (req: Request, option: { params: Promise<ParamsType> }): Promise<NextResponse> => {
     const params = paramsSchema.safeParse(await option.params);
 
     if (params.error) return createReqErr(params.error);
@@ -68,9 +68,9 @@ export const createRoute = (controller: Controller): ResHandler => {
     
     return await controller.middleware(
       {
-        req: originalReq,
+        req,
         params: params.data,
-        next: async (req, context) => {
+        next: async ( context) => {
       const ctx = frourioSpec.middleware.context.safeParse(context);
 
       if (ctx.error) return createReqErr(ctx.error);

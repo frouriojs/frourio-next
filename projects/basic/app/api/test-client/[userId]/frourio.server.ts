@@ -60,7 +60,7 @@ type ResHandler = {
 export const createRoute = (controller: Controller): ResHandler => {
   const middleware = (next: (
     args: { req: Request, params: ParamsType },
-  ) => Promise<NextResponse>) => async (originalReq: Request, option: { params: Promise<ParamsType> }): Promise<NextResponse> => {
+  ) => Promise<NextResponse>) => async (req: Request, option: { params: Promise<ParamsType> }): Promise<NextResponse> => {
     const params = paramsSchema.safeParse(await option.params);
 
     if (params.error) return createReqErr(params.error);
@@ -68,7 +68,7 @@ export const createRoute = (controller: Controller): ResHandler => {
     
     
 
-      return await next({ req: originalReq, params: params.data })
+      return await next({ req, params: params.data })
       
     
   };

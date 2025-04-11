@@ -34,7 +34,7 @@ export const createRoute = (controller: Controller): ResHandler => {
   const middleware = (next: (
     args: { req: Request },
     ctx: ContextType,
-  ) => Promise<NextResponse>) => async (originalReq: Request): Promise<NextResponse> => {
+  ) => Promise<NextResponse>) => async (req: Request): Promise<NextResponse> => {
 
     return ancestorMiddleware(async (ancestorArgs, ancestorContext) => {
       const ancestorCtx = ancestorContextSchema.safeParse(ancestorContext);
@@ -42,9 +42,9 @@ export const createRoute = (controller: Controller): ResHandler => {
       if (ancestorCtx.error) return createReqErr(ancestorCtx.error);
     
 
-      return await next({ req: ancestorArgs.req }, { ...ancestorCtx.data, })
+      return await next({ req }, { ...ancestorCtx.data, })
       
-    })(originalReq)
+    })(req)
   };
 
   return {

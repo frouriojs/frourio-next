@@ -11,7 +11,7 @@ export const { middleware, GET } = createRoute({
 
     console.log(`Root Middleware (/api/mw): userId=${userId}, traceId=${traceId}`);
 
-    return next(req, { userId, traceId });
+    return next({ userId, traceId });
   },
   get: async (req, context) => {
     console.log('GET Handler (/api/mw): Received context:', context);

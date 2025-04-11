@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createRoute } from './frourio.server';
 
 export const { middleware, GET } = createRoute({
-  middleware: async ({ req, next }, parentContext) => {
+  middleware: async ({ next }, parentContext) => {
     console.log('Users Middleware (/api/mw/admin/users): Received parent context:', parentContext);
 
     if (!parentContext.isAdmin) {
@@ -14,7 +14,7 @@ export const { middleware, GET } = createRoute({
       );
     }
 
-    return next(req);
+    return next();
   },
   get: async ({ query }, context) => {
     console.log('GET Handler (/api/mw/admin/users): Received full context:', context);

@@ -14,7 +14,7 @@ export type ContextType = z.infer<typeof contextSchema>;
 type Middleware = (
   args: {
     req: Request,
-    next: (req: Request, ctx: z.infer<typeof frourioSpec.middleware.context>) => Promise<NextResponse>,
+    next: (ctx: z.infer<typeof frourioSpec.middleware.context>) => Promise<NextResponse>,
   },
 ) => Promise<NextResponse>;
 
@@ -26,20 +26,20 @@ type ResHandler = {
   middleware: (next: (
     args: { req: Request },
     ctx: ContextType,
-  ) => Promise<NextResponse>) => (originalReq: Request, option?: {}) => Promise<NextResponse>;
+  ) => Promise<NextResponse>) => (req: Request, option?: {}) => Promise<NextResponse>;
 };
 
 export const createRoute = (controller: Controller): ResHandler => {
   const middleware = (next: (
     args: { req: Request },
     ctx: ContextType,
-  ) => Promise<NextResponse>) => async (originalReq: Request): Promise<NextResponse> => {
+  ) => Promise<NextResponse>) => async (req: Request): Promise<NextResponse> => {
 
     
     return await controller.middleware(
       {
-        req: originalReq,
-        next: async (req, context) => {
+        req,
+        next: async ( context) => {
       const ctx = frourioSpec.middleware.context.safeParse(context);
 
       if (ctx.error) return createReqErr(ctx.error);

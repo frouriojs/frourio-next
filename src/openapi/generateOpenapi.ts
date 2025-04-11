@@ -171,7 +171,11 @@ type AllParams = [${hasParamsDirs.map((_, i) => `z.infer<typeof paramsSchema${i}
                 (one as TJS.Definition).$ref!.replace('#/definitions/', '')
               ] as TJS.Definition,
           )
-        : [paramsSchema?.definitions?.[schema.$ref!.replace('#/definitions/', '')] as TJS.Definition];
+        : [
+            paramsSchema?.definitions?.[
+              schema.$ref!.replace('#/definitions/', '')
+            ] as TJS.Definition,
+          ];
 
       paramsDefs.forEach((def) => {
         parameters.push(
@@ -219,7 +223,9 @@ type AllParams = [${hasParamsDirs.map((_, i) => `z.infer<typeof paramsSchema${i}
       const reqFormat = props.format?.const as string;
       const headersDef =
         props.headers &&
-        (methodsSchema?.definitions?.[props.headers.$ref!.replace('#/definitions/', '')] as TJS.Definition);
+        (methodsSchema?.definitions?.[
+          props.headers.$ref!.replace('#/definitions/', '')
+        ] as TJS.Definition);
 
       if (headersDef?.properties) {
         methodParameters.push(
@@ -259,16 +265,16 @@ type AllParams = [${hasParamsDirs.map((_, i) => `z.infer<typeof paramsSchema${i}
                 const headersDef = (statusDef.properties as Record<string, TJS.Definition>)?.headers
                   ?.$ref
                   ? (methodsSchema?.definitions?.[
-                      (statusDef.properties as Record<string, TJS.Definition>).headers
-                        .$ref!.replace('#/definitions/', '')
+                      (
+                        statusDef.properties as Record<string, TJS.Definition>
+                      ).headers.$ref!.replace('#/definitions/', '')
                     ] as TJS.Definition)
                   : (statusDef.properties as Record<string, TJS.Definition>)?.headers;
 
                 const resContentType =
-                  ((headersDef?.properties?.['content-type'] as TJS.Definition)
-                    ?.const as string) ??
+                  ((headersDef?.properties?.['content-type'] as TJS.Definition)?.const as string) ??
                   ((statusDef.properties as Record<string, TJS.Definition>)?.format?.const ===
-                    'formData'
+                  'formData'
                     ? 'multipart/form-data'
                     : 'application/json');
 

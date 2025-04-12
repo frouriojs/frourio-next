@@ -5,7 +5,7 @@ export const frourioSpec = {
   get: {
     res: {
       200: {
-        body: z.object({ value: z.string() }),
+        body: z.string(),
         headers: z.object({ 'content-type': z.literal('application/json;charset=UTF-8') }),
       },
     },

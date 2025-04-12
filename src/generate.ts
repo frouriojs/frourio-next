@@ -32,7 +32,7 @@ type ServerMethod = {
     | { isFormData: true; data: PropOption[] | null }
     | { isFormData: false; data?: undefined }
     | null;
-  res: { status: string; hasHeaders: boolean; hasBody: boolean }[] | undefined;
+  res: { status: string; hasHeaders: boolean; body: { isString: boolean } | null }[] | undefined;
 };
 
 export const generate = async ({ appDir, basePath }: Config): Promise<void> => {
@@ -112,11 +112,28 @@ export const generate = async ({ appDir, basePath }: Config): Promise<void> => {
                     if (!statusType) return null;
 
                     const statusProps = statusType.getProperties();
+                    const resBodySymbol = statusProps.find((p) => p.getName() === 'body');
+                    const resBodyZodType = resBodySymbol
+                      ? inferZodType(checker, resBodySymbol)
+                      : null;
+                    const resBodyType =
+                      resBodyZodType?.valueDeclaration &&
+                      checker.getTypeOfSymbolAtLocation(
+                        resBodyZodType,
+                        resBodyZodType.valueDeclaration,
+                      );
 
                     return {
                       status: s.getName(),
                       hasHeaders: statusProps.some((p) => p.getName() === 'headers'),
-                      hasBody: statusProps.some((p) => p.getName() === 'body'),
+                      body: resBodyType
+                        ? {
+                            isString: checker.isTypeAssignableTo(
+                              resBodyType,
+                              checker.getStringType(),
+                            ),
+                          }
+                        : null,
                     };
                   })
                   .filter((s) => s !== null),
@@ -272,15 +289,15 @@ export const $${CLIENT_NAME}${!isRoot ? `_${createHash(dirPath.replace(appDir, '
         : !method.res
           ? 'Response'
           : [
-              ...(method.res.some((r) => r.status.startsWith('2') && r.hasBody)
+              ...(method.res.some((r) => r.status.startsWith('2') && r.body)
                 ? [
                     `z.infer<typeof frourioSpec.${method.name}.res[${method.res
-                      .filter((r) => r.status.startsWith('2') && r.hasBody)
+                      .filter((r) => r.status.startsWith('2') && r.body)
                       .map((r) => r.status)
                       .join(' | ')}]['body']>`,
                   ]
                 : []),
-              ...(method.res.some((r) => r.status.startsWith('2') && !r.hasBody) ? ['void'] : []),
+              ...(method.res.some((r) => r.status.startsWith('2') && !r.body) ? ['void'] : []),
             ].join(' | ');
       const builder =
         method.name === 'get'
@@ -409,7 +426,7 @@ const methods = (option?: FrourioClientOption) => ({${methods
                             ? `: z.infer<typeof frourioSpec.${method.name}.res[${r.status}]['headers']>`
                             : '?: undefined'
                         }; body${
-                          r.hasBody
+                          r.body
                             ? `: z.infer<typeof frourioSpec.${method.name}.res[${r.status}]['body']>`
                             : '?: undefined'
                         } }`,
@@ -429,7 +446,7 @@ const methods = (option?: FrourioClientOption) => ({${methods
                             ? `: z.infer<typeof frourioSpec.${method.name}.res[${r.status}]['headers']>`
                             : '?: undefined'
                         }; body${
-                          r.hasBody
+                          r.body
                             ? `: z.infer<typeof frourioSpec.${method.name}.res[${r.status}]['body']>`
                             : '?: undefined'
                         } }`,
@@ -513,12 +530,14 @@ ${
         if (!headers.success) return { ok: ${item.status.startsWith('2')}, isValid: false, raw: result.res, reason: headers.error };\n`
                   : ''
               }${
-                item.hasBody
-                  ? `\n        const json: { success: true; data: unknown } | { success: false; error: unknown } = await result.res.json().then(data => ({ success: true, data } as const)).catch(error => ({ success: false, error }));
+                item.body
+                  ? `\n        const resBody: { success: true; data: unknown } | { success: false; error: unknown } = await result.res.${
+                      item.body.isString ? 'text' : 'json'
+                    }().then(data => ({ success: true, data } as const)).catch(error => ({ success: false, error }));
 
-        if (!json.success) return { ok: ${item.status.startsWith('2')}, raw: result.res, error: json.error };
+        if (!resBody.success) return { ok: ${item.status.startsWith('2')}, raw: result.res, error: resBody.error };
 
-        const body = frourioSpec.${method.name}.res[${item.status}].body.safeParse(json.data);
+        const body = frourioSpec.${method.name}.res[${item.status}].body.safeParse(resBody.data);
 
         if (!body.success) return { ok: ${item.status.startsWith('2')}, isValid: false, raw: result.res, reason: body.error };\n`
                   : ''
@@ -526,7 +545,7 @@ ${
         return {
           ok: ${item.status.startsWith('2')},
           isValid: true,
-          ${item.status.startsWith('2') ? 'data' : 'failure'}: { status: ${item.status}${item.hasHeaders ? ', headers: headers.data' : ''}${item.hasBody ? ', body: body.data' : ''} },
+          ${item.status.startsWith('2') ? 'data' : 'failure'}: { status: ${item.status}${item.hasHeaders ? ', headers: headers.data' : ''}${item.body ? ', body: body.data' : ''} },
           raw: result.res,
         };
       }`,
@@ -612,7 +631,7 @@ const serverData = (
           r.hasHeaders
             ? `\n        headers: z.infer<SpecType['${m.name}']['res'][${r.status}]['headers']>;`
             : ''
-        }${r.hasBody ? `\n        body: z.infer<SpecType['${m.name}']['res'][${r.status}]['body']>;` : ''}
+        }${r.body ? `\n        body: z.infer<SpecType['${m.name}']['res'][${r.status}]['body']>;` : ''}
       }`,
           )
           .join('\n')}\n  `
@@ -750,7 +769,7 @@ ${m.body.data
           ? `switch (res.status) {
 ${m.res
   .map((r) => {
-    const resTypes = [r.hasHeaders && 'headers', r.hasBody && 'body'].filter((r) => !!r);
+    const resTypes = [r.hasHeaders && 'headers', r.body && 'body'].filter((r) => !!r);
 
     return `        case ${r.status}: {${resTypes
       .map(
@@ -759,7 +778,7 @@ ${m.res
       )
       .join('')}
           return ${
-            r.hasBody ? 'createResponse(body.data' : `new NextResponse(null`
+            r.body ? 'createResponse(body.data' : `new NextResponse(null`
           }, { status: ${r.status}${r.hasHeaders ? ', headers: headers.data' : ''} });
         }`;
   })
@@ -774,7 +793,7 @@ ${m.res
   .join('\n')}
   };
 }`,
-    methods.some((m) => m.res?.some((r) => r.hasBody)) &&
+    methods.some((m) => m.res?.some((r) => r.body)) &&
       `const createResponse = (body: unknown, init: ResponseInit): NextResponse => {
   if (
     ArrayBuffer.isView(body) ||

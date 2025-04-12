@@ -282,7 +282,7 @@
             "content": {
               "application/json;charset=UTF-8": {
                 "schema": {
-                  "$ref": "#/components/schemas/mirbd2"
+                  "type": "string"
                 }
               }
             },
@@ -1103,11 +1103,11 @@
           "query"
         ]
       },
-      "l7sqyw": {
+      "zaozq4": {
         "type": "object",
         "properties": {
           "body": {
-            "$ref": "#/components/schemas/mirbd2"
+            "type": "string"
           },
           "headers": {
             "$ref": "#/components/schemas/5622tv"
@@ -1116,17 +1116,6 @@
         "required": [
           "body",
           "headers"
-        ]
-      },
-      "mirbd2": {
-        "type": "object",
-        "properties": {
-          "value": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "value"
         ]
       },
       "5622tv": {

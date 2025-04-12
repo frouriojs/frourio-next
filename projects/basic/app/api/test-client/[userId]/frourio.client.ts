@@ -96,11 +96,11 @@ const methods = (option?: FrourioClientOption) => ({
 
     switch (result.res.status) {
       case 200: {
-        const json: { success: true; data: unknown } | { success: false; error: unknown } = await result.res.json().then(data => ({ success: true, data } as const)).catch(error => ({ success: false, error }));
+        const resBody: { success: true; data: unknown } | { success: false; error: unknown } = await result.res.json().then(data => ({ success: true, data } as const)).catch(error => ({ success: false, error }));
 
-        if (!json.success) return { ok: true, raw: result.res, error: json.error };
+        if (!resBody.success) return { ok: true, raw: result.res, error: resBody.error };
 
-        const body = frourioSpec.put.res[200].body.safeParse(json.data);
+        const body = frourioSpec.put.res[200].body.safeParse(resBody.data);
 
         if (!body.success) return { ok: true, isValid: false, raw: result.res, reason: body.error };
 
@@ -112,11 +112,11 @@ const methods = (option?: FrourioClientOption) => ({
         };
       }
       case 404: {
-        const json: { success: true; data: unknown } | { success: false; error: unknown } = await result.res.json().then(data => ({ success: true, data } as const)).catch(error => ({ success: false, error }));
+        const resBody: { success: true; data: unknown } | { success: false; error: unknown } = await result.res.json().then(data => ({ success: true, data } as const)).catch(error => ({ success: false, error }));
 
-        if (!json.success) return { ok: false, raw: result.res, error: json.error };
+        if (!resBody.success) return { ok: false, raw: result.res, error: resBody.error };
 
-        const body = frourioSpec.put.res[404].body.safeParse(json.data);
+        const body = frourioSpec.put.res[404].body.safeParse(resBody.data);
 
         if (!body.success) return { ok: false, isValid: false, raw: result.res, reason: body.error };
 
@@ -166,11 +166,11 @@ const methods = (option?: FrourioClientOption) => ({
         };
       }
       case 404: {
-        const json: { success: true; data: unknown } | { success: false; error: unknown } = await result.res.json().then(data => ({ success: true, data } as const)).catch(error => ({ success: false, error }));
+        const resBody: { success: true; data: unknown } | { success: false; error: unknown } = await result.res.json().then(data => ({ success: true, data } as const)).catch(error => ({ success: false, error }));
 
-        if (!json.success) return { ok: false, raw: result.res, error: json.error };
+        if (!resBody.success) return { ok: false, raw: result.res, error: resBody.error };
 
-        const body = frourioSpec.delete.res[404].body.safeParse(json.data);
+        const body = frourioSpec.delete.res[404].body.safeParse(resBody.data);
 
         if (!body.success) return { ok: false, isValid: false, raw: result.res, reason: body.error };
 

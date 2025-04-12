@@ -95,11 +95,11 @@ const methods = (option?: FrourioClientOption) => ({
 
     switch (result.res.status) {
       case 200: {
-        const json: { success: true; data: unknown } | { success: false; error: unknown } = await result.res.json().then(data => ({ success: true, data } as const)).catch(error => ({ success: false, error }));
+        const resBody: { success: true; data: unknown } | { success: false; error: unknown } = await result.res.json().then(data => ({ success: true, data } as const)).catch(error => ({ success: false, error }));
 
-        if (!json.success) return { ok: true, raw: result.res, error: json.error };
+        if (!resBody.success) return { ok: true, raw: result.res, error: resBody.error };
 
-        const body = frourioSpec.get.res[200].body.safeParse(json.data);
+        const body = frourioSpec.get.res[200].body.safeParse(resBody.data);
 
         if (!body.success) return { ok: true, isValid: false, raw: result.res, reason: body.error };
 

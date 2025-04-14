@@ -24,7 +24,8 @@
     "url": "git+https://github.com/frouriojs/frourio-next.git"
   },
   "files": [
-    "dist"
+    "dist",
+    "llms-full.txt"
   ],
   "keywords": [
     "typescript",

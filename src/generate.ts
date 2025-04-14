@@ -228,10 +228,11 @@ const clientData = (
     ),
     "import { frourioSpec } from './frourio'",
   ];
+  const apiPath =
+    dirPath === appDir
+      ? basePath || '/'
+      : `${basePath ?? ''}${dirPath.replace(appDir, '').replace(/\/\(.+?\)/g, '')}`;
   const isRoot = frourioDirs.every((dir) => !dirPath.startsWith(`${dir}/`));
-  const apiPath = isRoot
-    ? basePath || '/'
-    : `${basePath ?? ''}${dirPath.replace(appDir, '').replace(/\/\(.+?\)/g, '')}`;
   const getMethod = methods.find((m) => m.name === 'get');
   const hasMethodReqKeys = (method: ServerMethod) =>
     !!(params || method.hasHeaders || method.query);

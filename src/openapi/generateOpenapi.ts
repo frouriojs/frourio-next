@@ -130,16 +130,20 @@ type AllParams = [${hasParamsDirs.map((_, i) => `z.infer<typeof paramsSchema${i}
 
   writeFileSync(typeFilePath, typeFile, 'utf8');
 
-  const configFileName = ts.findConfigFile(params.appDir, ts.sys.fileExists);
+  const configDir = process.cwd();
+  const configFileName = ts.findConfigFile(configDir, ts.sys.fileExists);
   const compilerOptions = configFileName
     ? ts.parseJsonConfigFileContent(
         ts.readConfigFile(configFileName, ts.sys.readFile).config,
         ts.sys,
-        params.appDir,
+        configDir,
       )
     : undefined;
 
-  const program = TJS.getProgramFromFiles([typeFilePath], compilerOptions?.options);
+  const program = TJS.getProgramFromFiles([typeFilePath], {
+    ...compilerOptions?.options,
+    incremental: false,
+  });
   const methodsSchema = TJS.generateSchema(program, 'AllMethods', { required: true });
   const paramsSchema = TJS.generateSchema(program, 'AllParams', { required: true });
   const doc: OpenAPIV3_1.Document = {

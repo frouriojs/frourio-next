@@ -222,7 +222,7 @@ export const { GET, PATCH, DELETE } = createRoute({
 
 ### 4. Initialize and Use the Type-Safe Client
 
-FrourioNext generates `frourio.client.ts` files, which export client functions (`fc` and `$fc`). It's best practice to initialize a central client instance.
+FrourioNext generates `frourio.client.ts` files only for endpoints that define HTTP methods (GET, POST, etc.), which export client functions (`fc` and `$fc`). It's best practice to initialize a central client instance. Endpoints that only define middleware will not have client code generated.
 
 `lib/apiClient.ts` (Client Initialization):
 
@@ -852,10 +852,11 @@ Generate OpenAPI documentation from your `frourio.ts` files using the `frourio-n
 
 ### CLI Options (`frourio-next-openapi`)
 
-| Option     | Alias | Type     | Description                                          |
-| :--------- | :---- | :------- | :--------------------------------------------------- |
-| `--output` | `-o`  | `string` | **Required.** Output path for the OpenAPI JSON file. |
-| `--watch`  | `-w`  |          | Enable watch mode.                                   |
+| Option     | Alias | Type     | Description                                                                                              |
+| :--------- | :---- | :------- | :------------------------------------------------------------------------------------------------------- |
+| `--output` | `-o`  | `string` | Output path for the OpenAPI JSON file (e.g., `./public/openapi.json`).                                   |
+| `--watch`  | `-w`  |          | Enable watch mode.                                                                                       |
+| `--root`   | `-r`  | `string` | Generate OpenAPI for endpoints only within the specified appDir subdirectory (e.g., `./src/app/api/v1`). |
 
 _(Based on `src/openapi/cli.ts`)_
 

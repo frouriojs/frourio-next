@@ -295,7 +295,7 @@ export const { middleware, GET, POST } = createRoute({
 
 ## 8. Type-Safe Client (`frourio.client.ts`)
 
-Generated functions (`fc`, `$fc`) for type-safe API calls.
+Generated functions (`fc`, `$fc`) for type-safe API calls. Client code (`frourio.client.ts`) is generated only for endpoints that define HTTP methods (GET, POST, etc.). Endpoints that only define middleware will not have client code generated.
 
 **Initialization (`lib/apiClient.ts`):**
 
@@ -513,8 +513,9 @@ npm run dev:openapi
 ```
 
 **CLI Options (`frourio-next-openapi`):**
-- `--output`, `-o` (string, **Required**): Output path (e.g., `./public/openapi.json`).
+- `--output`, `-o` (string): Output path (e.g., `./public/openapi.json`).
 - `--watch`, `-w`: Enable watch mode.
+- `--root`, `-r` (string): Generate OpenAPI for endpoints only within the specified appDir subdirectory (e.g., `./src/app/api/v1`).
 
 ## 14. Core CLI Options (`frourio-next`)
 

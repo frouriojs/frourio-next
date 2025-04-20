@@ -9,7 +9,7 @@ import { createHash } from '../createHash';
 import { listFrourioDirs } from '../listFrourioDirs';
 import type { OpenapiConfig } from './getOpenapiConfig';
 
-export const generateOpenapi = ({ appDir, basePath, output }: OpenapiConfig) => {
+export const generateOpenapi = ({ appDir, basePath, output, root }: OpenapiConfig) => {
   if (!appDir) return;
 
   const existingDoc: OpenAPIV3_1.Document | undefined = existsSync(output)
@@ -23,13 +23,20 @@ export const generateOpenapi = ({ appDir, basePath, output }: OpenapiConfig) => 
     paths: {},
     components: {},
   };
+  const text = toOpenAPI({ appDir, template, root: root ?? appDir });
 
-  writeFileSync(output, toOpenAPI({ appDir, template }), 'utf8');
-  console.log(`${output} was built successfully.`);
+  if (existsSync(output) && readFileSync(output, 'utf8') === text) return;
+
+  writeFileSync(output, text);
+  console.log(`${output} was generated successfully.`);
 };
 
-const toOpenAPI = (params: { appDir: string; template: OpenAPIV3_1.Document }): string => {
-  const frourioDirs = listFrourioDirs(path.resolve(params.appDir));
+const toOpenAPI = (params: {
+  appDir: string;
+  template: OpenAPIV3_1.Document;
+  root: string;
+}): string => {
+  const frourioDirs = listFrourioDirs(path.resolve(params.root));
   const hasParamsDirs = frourioDirs.filter((f) => f.includes('['));
   const typeFile = `import type { FrourioSpec } from '@frourio/next'
 import type { z } from 'zod'
@@ -126,7 +133,7 @@ type ToSpecType<T extends FrourioSpec> = {
 type AllMethods = [${frourioDirs.map((_, i) => `ToSpecType<typeof frourioSpec${i}>`).join(', ')}]
 type AllParams = [${hasParamsDirs.map((_, i) => `z.infer<typeof paramsSchema${i}>`).join(', ')}]`;
 
-  const typeFilePath = path.posix.join(params.appDir, `@openapi-${Date.now()}.ts`);
+  const typeFilePath = path.posix.join(params.root, `@openapi-${Date.now()}.ts`);
 
   writeFileSync(typeFilePath, typeFile, 'utf8');
 

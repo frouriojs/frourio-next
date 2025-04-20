@@ -35,7 +35,7 @@ test('generate', async () => {
 
   await Promise.all(
     projectDirs.map(async (dir) => {
-      const config = await getOpenapiConfig(undefined, dir);
+      const config = await getOpenapiConfig({ output: undefined, root: undefined, dir });
 
       assert(config.appDir);
 

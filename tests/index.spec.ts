@@ -2,7 +2,7 @@
 
 import assert from 'assert';
 import { execSync } from 'child_process';
-import fs from 'fs';
+import fs, { existsSync } from 'fs';
 import { unlink } from 'fs/promises';
 import { NextRequest } from 'next/server';
 import path from 'path';
@@ -41,11 +41,12 @@ test('generate', async () => {
 
       const frourioDirs = listFrourioDirs(config.appDir);
 
-      await Promise.all(
-        frourioDirs.map((dir) =>
-          Promise.all([unlink(path.join(dir, SERVER_FILE)), unlink(path.join(dir, CLIENT_FILE))]),
+      await Promise.all([
+        ...frourioDirs.map((dir) => unlink(path.join(dir, SERVER_FILE))),
+        ...frourioDirs.map(
+          (dir) => existsSync(path.join(dir, CLIENT_FILE)) && unlink(path.join(dir, CLIENT_FILE)),
         ),
-      );
+      ]);
       await generate(config);
 
       generateOpenapi(config);

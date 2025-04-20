@@ -45,7 +45,7 @@ export const generate = async ({ appDir, basePath }: Config): Promise<void> => {
   const { program, checker } = initTSC(frourioDirs);
   const hasParamDict: Record<string, boolean> = {};
   const middlewareDict: Record<string, { hasCtx: boolean } | undefined> = {};
-  const data = frourioDirs
+  const specs = frourioDirs
     .map((dirPath) => {
       const source = program.getSourceFile(path.posix.join(dirPath, FROURIO_FILE));
       const spec = source?.forEachChild((node) => {
@@ -143,69 +143,69 @@ export const generate = async ({ appDir, basePath }: Config): Promise<void> => {
         };
       });
 
-      const ancestorMiddleware = frourioDirs.findLast(
-        (dir) => dir !== dirPath && dirPath.includes(dir) && middlewareDict[dir],
-      );
-
-      const ancestorMiddlewareCtx = frourioDirs.findLast(
-        (dir) => dir !== dirPath && dirPath.includes(dir) && middlewareDict[dir]?.hasCtx,
-      );
-
-      return (
-        spec && {
-          server: {
-            filePath: path.posix.join(dirPath, SERVER_FILE),
-            text: serverData(
-              pathToParams(frourioDirs, dirPath, spec.param),
-              {
-                ancestor: ancestorMiddleware
-                  ? path.posix.relative(dirPath, ancestorMiddleware)
-                  : undefined,
-                ancestorCtx: ancestorMiddlewareCtx
-                  ? path.posix.relative(dirPath, ancestorMiddlewareCtx)
-                  : undefined,
-                current: middlewareDict[dirPath],
-              },
-              spec.methods,
-            ),
-          },
-          client: {
-            filePath: path.posix.join(dirPath, CLIENT_FILE),
-            text: clientData(
-              appDir,
-              dirPath,
-              frourioDirs,
-              pathToClientParams(hasParamDict, dirPath, spec.param),
-              spec.methods,
-              basePath,
-            ),
-          },
-        }
-      );
+      return spec && { dirPath, spec };
     })
     .filter((d) => d !== undefined);
 
-  await Promise.all(
-    data
-      .flatMap((d) => [d.server, d.client])
-      .map(async (d) => {
-        const needsUpdate =
-          !existsSync(d.filePath) || (await readFile(d.filePath, 'utf8').then((t) => t !== d.text));
+  const serverTexts = specs.map(({ dirPath, spec }) => {
+    const ancestorMiddleware = frourioDirs.findLast(
+      (dir) => dir !== dirPath && dirPath.includes(dir) && middlewareDict[dir],
+    );
+    const ancestorMiddlewareCtx = frourioDirs.findLast(
+      (dir) => dir !== dirPath && dirPath.includes(dir) && middlewareDict[dir]?.hasCtx,
+    );
 
-        return needsUpdate && writeFile(d.filePath, d.text);
-      }),
+    return {
+      filePath: path.posix.join(dirPath, SERVER_FILE),
+      text: serverData(
+        pathToParams(frourioDirs, dirPath, spec.param),
+        {
+          ancestor: ancestorMiddleware
+            ? path.posix.relative(dirPath, ancestorMiddleware)
+            : undefined,
+          ancestorCtx: ancestorMiddlewareCtx
+            ? path.posix.relative(dirPath, ancestorMiddlewareCtx)
+            : undefined,
+          current: middlewareDict[dirPath],
+        },
+        spec.methods,
+      ),
+    };
+  });
+
+  const clientSpecs = specs.filter(({ spec }) => spec.methods.length > 0);
+  const frourioClientDirs = clientSpecs.map(({ dirPath }) => dirPath);
+  const clientTexts = clientSpecs.map(({ dirPath, spec }) => ({
+    filePath: path.posix.join(dirPath, CLIENT_FILE),
+    text: clientData(
+      appDir,
+      dirPath,
+      frourioClientDirs,
+      pathToClientParams(hasParamDict, dirPath, spec.param),
+      spec.methods,
+      basePath,
+    ),
+  }));
+
+  await Promise.all(
+    [...serverTexts, ...clientTexts].map(async (d) => {
+      const needsUpdate =
+        !existsSync(d.filePath) || (await readFile(d.filePath, 'utf8').then((t) => t !== d.text));
+
+      return needsUpdate && writeFile(d.filePath, d.text);
+    }),
   );
 };
 
 const clientData = (
   appDir: string,
   dirPath: string,
-  frourioDirs: string[],
+  frourioClientDirs: string[],
   params: ClientParamsInfo | undefined,
   methods: ServerMethod[],
   basePath: string | undefined,
 ) => {
-  const childDirs = frourioDirs
+  const childDirs = frourioClientDirs
     .filter((dir) => dir.startsWith(`${dirPath}/`))
     .map((dir) => ({
       import: dir.replace(`${dirPath}/`, ''),
@@ -232,7 +232,7 @@ const clientData = (
     dirPath === appDir
       ? basePath || '/'
       : `${basePath ?? ''}${dirPath.replace(appDir, '').replace(/\/\(.+?\)/g, '')}`;
-  const isRoot = frourioDirs.every((dir) => !dirPath.startsWith(`${dir}/`));
+  const isRoot = frourioClientDirs.every((dir) => !dirPath.startsWith(`${dir}/`));
   const getMethod = methods.find((m) => m.name === 'get');
   const hasMethodReqKeys = (method: ServerMethod) =>
     !!(params || method.hasHeaders || method.query);

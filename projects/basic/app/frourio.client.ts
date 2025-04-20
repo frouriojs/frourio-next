@@ -1,7 +1,9 @@
 import type { FrourioClientOption } from '@frourio/next';
 import { z } from 'zod';
-import { fc_82hx7j, $fc_82hx7j } from './(group1)/frourio.client';
-import { fc_17lcihw, $fc_17lcihw } from './(group2)/frourio.client';
+import { fc_rket09, $fc_rket09 } from './(group1)/[pid]/frourio.client';
+import { fc_er79ce, $fc_er79ce } from './(group1)/blog/[...slug]/frourio.client';
+import { fc_14jcy50, $fc_14jcy50 } from './(group1)/blog/hoge/[[...fuga]]/frourio.client';
+import { fc_13e9lnf, $fc_13e9lnf } from './(group2)/x/[y]/frourio.client';
 import { fc_knqmrp, $fc_knqmrp } from './[a]/frourio.client';
 import { fc_1f8i0zm, $fc_1f8i0zm } from './api/key-collision-test/frourio.client';
 import { fc_195l5vw, $fc_195l5vw } from './api/key-collision-test-another/frourio.client';
@@ -10,8 +12,10 @@ import { fc_17yqnk1, $fc_17yqnk1 } from './api/test-client/frourio.client';
 import { frourioSpec } from './frourio'
 
 export const fc = (option?: FrourioClientOption) => ({
-  '(group1)': fc_82hx7j(option),
-  '(group2)': fc_17lcihw(option),
+  '(group1)/[pid]': fc_rket09(option),
+  '(group1)/blog/[...slug]': fc_er79ce(option),
+  '(group1)/blog/hoge/[[...fuga]]': fc_14jcy50(option),
+  '(group2)/x/[y]': fc_13e9lnf(option),
   '[a]': fc_knqmrp(option),
   'api/key-collision-test': fc_1f8i0zm(option),
   'api/key-collision-test-another': fc_195l5vw(option),
@@ -32,8 +36,10 @@ export const fc = (option?: FrourioClientOption) => ({
 });
 
 export const $fc = (option?: FrourioClientOption) => ({
-  '(group1)': $fc_82hx7j(option),
-  '(group2)': $fc_17lcihw(option),
+  '(group1)/[pid]': $fc_rket09(option),
+  '(group1)/blog/[...slug]': $fc_er79ce(option),
+  '(group1)/blog/hoge/[[...fuga]]': $fc_14jcy50(option),
+  '(group2)/x/[y]': $fc_13e9lnf(option),
   '[a]': $fc_knqmrp(option),
   'api/key-collision-test': $fc_1f8i0zm(option),
   'api/key-collision-test-another': $fc_195l5vw(option),

@@ -5,14 +5,14 @@ import { frourioSpec } from './frourio'
 export const fc_1c6qmxu = (option?: FrourioClientOption) => ({
   $url: $url(option),
   $build(req: Parameters<ReturnType<typeof methods>['$get']>[0] | null): [
-    key: { dir: string } & Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'> | null,
+    key: { lowLevel: true; baseURL: FrourioClientOption['baseURL']; dir: string } & Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'> | null,
     fetcher: () => Promise<NonNullable<Awaited<ReturnType<ReturnType<typeof methods>['$get']>>>>,
   ] {
     if (req === null) return [null, () => Promise.reject(new Error('Fetcher is disabled.'))];
 
     const { init, ...rest } = req;
 
-    return [{ dir: '/(group1)/[pid]/foo', ...rest }, () => fc_1c6qmxu(option).$get(req)];
+    return [{ lowLevel: true, baseURL: option?.baseURL, dir: '/(group1)/[pid]/foo', ...rest }, () => fc_1c6qmxu(option).$get(req)];
   },
   ...methods(option),
 });
@@ -28,14 +28,14 @@ export const $fc_1c6qmxu = (option?: FrourioClientOption) => ({
     },
   },
   $build(req: Parameters<ReturnType<typeof methods>['$get']>[0] | null): [
-    key: { dir: string } & Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'> | null,
+    key: { lowLevel: false; baseURL: FrourioClientOption['baseURL']; dir: string } & Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'> | null,
     fetcher: () => Promise<z.infer<typeof frourioSpec.get.res[200]['body']>>,
   ] {
     if (req === null) return [null, () => Promise.reject(new Error('Fetcher is disabled.'))];
 
     const { init, ...rest } = req;
 
-    return [{ dir: '$/(group1)/[pid]/foo', ...rest }, () => $fc_1c6qmxu(option).$get(req)];
+    return [{ lowLevel: false, baseURL: option?.baseURL, dir: '/(group1)/[pid]/foo', ...rest }, () => $fc_1c6qmxu(option).$get(req)];
   },
   async $get(req: Parameters<ReturnType<typeof methods>['$get']>[0]): Promise<z.infer<typeof frourioSpec.get.res[200]['body']>> {
     const result = await methods(option).$get(req);

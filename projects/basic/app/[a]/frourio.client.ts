@@ -9,14 +9,14 @@ export const fc_knqmrp = (option?: FrourioClientOption) => ({
   '[b]/d': fc_1yzfjrp(option),
   $url: $url(option),
   $build(req: Parameters<ReturnType<typeof methods>['$get']>[0] | null): [
-    key: { dir: string } & Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'> | null,
+    key: { lowLevel: true; baseURL: FrourioClientOption['baseURL']; dir: string } & Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'> | null,
     fetcher: () => Promise<NonNullable<Awaited<ReturnType<ReturnType<typeof methods>['$get']>>>>,
   ] {
     if (req === null) return [null, () => Promise.reject(new Error('Fetcher is disabled.'))];
 
     const { init, ...rest } = req;
 
-    return [{ dir: '/[a]', ...rest }, () => fc_knqmrp(option).$get(req)];
+    return [{ lowLevel: true, baseURL: option?.baseURL, dir: '/[a]', ...rest }, () => fc_knqmrp(option).$get(req)];
   },
   ...methods(option),
 });
@@ -34,14 +34,14 @@ export const $fc_knqmrp = (option?: FrourioClientOption) => ({
     },
   },
   $build(req: Parameters<ReturnType<typeof methods>['$get']>[0] | null): [
-    key: { dir: string } & Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'> | null,
+    key: { lowLevel: false; baseURL: FrourioClientOption['baseURL']; dir: string } & Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'> | null,
     fetcher: () => Promise<z.infer<typeof frourioSpec.get.res[200]['body']>>,
   ] {
     if (req === null) return [null, () => Promise.reject(new Error('Fetcher is disabled.'))];
 
     const { init, ...rest } = req;
 
-    return [{ dir: '$/[a]', ...rest }, () => $fc_knqmrp(option).$get(req)];
+    return [{ lowLevel: false, baseURL: option?.baseURL, dir: '/[a]', ...rest }, () => $fc_knqmrp(option).$get(req)];
   },
   async $get(req: Parameters<ReturnType<typeof methods>['$get']>[0]): Promise<z.infer<typeof frourioSpec.get.res[200]['body']>> {
     const result = await methods(option).$get(req);

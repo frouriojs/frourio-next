@@ -247,21 +247,21 @@ export const ${CLIENT_NAME}${!isRoot ? `_${createHash(dirPath.replace(appDir, ''
       ? hasMethodReqKeys(getMethod)
         ? `
   $build(req: Parameters<ReturnType<typeof methods>['$get']>[0] | null): [
-    key: { dir: string } & Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'> | null,
+    key: { lowLevel: true; baseURL: FrourioClientOption['baseURL']; dir: string } & Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'> | null,
     fetcher: () => Promise<NonNullable<Awaited<ReturnType<ReturnType<typeof methods>['$get']>>>>,
   ] {
     if (req === null) return [null, () => Promise.reject(new Error('Fetcher is disabled.'))];
 
     const { init, ...rest } = req;
 
-    return [{ dir: '${dirPath.replace(appDir, '') || '/'}', ...rest }, () => ${CLIENT_NAME}${!isRoot ? `_${createHash(dirPath.replace(appDir, ''))}` : ''}(option).$get(req)];
+    return [{ lowLevel: true, baseURL: option?.baseURL, dir: '${dirPath.replace(appDir, '') || '/'}', ...rest }, () => ${CLIENT_NAME}${!isRoot ? `_${createHash(dirPath.replace(appDir, ''))}` : ''}(option).$get(req)];
   },`
         : `
   $build(req?: { init?: RequestInit }): [
-    key: { dir: string },
+    key: { lowLevel: true; baseURL: FrourioClientOption['baseURL']; dir: string },
     fetcher: () => Promise<NonNullable<Awaited<ReturnType<ReturnType<typeof methods>['$get']>>>>,
   ] {
-    return [{ dir: '${dirPath.replace(appDir, '') || '/'}' }, () => ${CLIENT_NAME}${!isRoot ? `_${createHash(dirPath.replace(appDir, ''))}` : ''}(option).$get(req)];
+    return [{ lowLevel: true, baseURL: option?.baseURL, dir: '${dirPath.replace(appDir, '') || '/'}' }, () => ${CLIENT_NAME}${!isRoot ? `_${createHash(dirPath.replace(appDir, ''))}` : ''}(option).$get(req)];
   },`
       : ''
   }
@@ -305,21 +305,21 @@ export const $${CLIENT_NAME}${!isRoot ? `_${createHash(dirPath.replace(appDir, '
           ? hasMethodReqKeys(method)
             ? `
   $build(req: Parameters<ReturnType<typeof methods>['$get']>[0] | null): [
-    key: { dir: string } & Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'> | null,
+    key: { lowLevel: false; baseURL: FrourioClientOption['baseURL']; dir: string } & Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'> | null,
     fetcher: () => Promise<${resType}>,
   ] {
     if (req === null) return [null, () => Promise.reject(new Error('Fetcher is disabled.'))];
 
     const { init, ...rest } = req;
 
-    return [{ dir: '$${dirPath.replace(appDir, '') || '/'}', ...rest }, () => $${CLIENT_NAME}${!isRoot ? `_${createHash(dirPath.replace(appDir, ''))}` : ''}(option).$get(req)];
+    return [{ lowLevel: false, baseURL: option?.baseURL, dir: '${dirPath.replace(appDir, '') || '/'}', ...rest }, () => $${CLIENT_NAME}${!isRoot ? `_${createHash(dirPath.replace(appDir, ''))}` : ''}(option).$get(req)];
   },`
             : `
   $build(req?: { init?: RequestInit }): [
-    key: { dir: string },
+    key: { lowLevel: false; baseURL: FrourioClientOption['baseURL']; dir: string },
     fetcher: () => Promise<${resType}>,
   ] {
-    return [{ dir: '$${dirPath.replace(appDir, '') || '/'}' }, () => $${CLIENT_NAME}${!isRoot ? `_${createHash(dirPath.replace(appDir, ''))}` : ''}(option).$get(req)];
+    return [{ lowLevel: false, baseURL: option?.baseURL, dir: '${dirPath.replace(appDir, '') || '/'}' }, () => $${CLIENT_NAME}${!isRoot ? `_${createHash(dirPath.replace(appDir, ''))}` : ''}(option).$get(req)];
   },`
           : '';
 

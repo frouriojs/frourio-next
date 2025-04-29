@@ -7,10 +7,10 @@ export const fc_n3it2j = (option?: FrourioClientOption) => ({
   'users': fc_gye2fo(option),
   $url: $url(option),
   $build(req?: { init?: RequestInit }): [
-    key: { dir: string },
+    key: { lowLevel: true; baseURL: FrourioClientOption['baseURL']; dir: string },
     fetcher: () => Promise<NonNullable<Awaited<ReturnType<ReturnType<typeof methods>['$get']>>>>,
   ] {
-    return [{ dir: '/api/mw/admin' }, () => fc_n3it2j(option).$get(req)];
+    return [{ lowLevel: true, baseURL: option?.baseURL, dir: '/api/mw/admin' }, () => fc_n3it2j(option).$get(req)];
   },
   ...methods(option),
 });
@@ -34,10 +34,10 @@ export const $fc_n3it2j = (option?: FrourioClientOption) => ({
     },
   },
   $build(req?: { init?: RequestInit }): [
-    key: { dir: string },
+    key: { lowLevel: false; baseURL: FrourioClientOption['baseURL']; dir: string },
     fetcher: () => Promise<z.infer<typeof frourioSpec.get.res[200]['body']>>,
   ] {
-    return [{ dir: '$/api/mw/admin' }, () => $fc_n3it2j(option).$get(req)];
+    return [{ lowLevel: false, baseURL: option?.baseURL, dir: '/api/mw/admin' }, () => $fc_n3it2j(option).$get(req)];
   },
   async $get(req?: Parameters<ReturnType<typeof methods>['$get']>[0]): Promise<z.infer<typeof frourioSpec.get.res[200]['body']>> {
     const result = await methods(option).$get(req);

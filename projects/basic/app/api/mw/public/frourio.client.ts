@@ -5,10 +5,10 @@ import { frourioSpec } from './frourio'
 export const fc_76vmqd = (option?: FrourioClientOption) => ({
   $url: $url(option),
   $build(req?: { init?: RequestInit }): [
-    key: { dir: string },
+    key: { lowLevel: true; baseURL: FrourioClientOption['baseURL']; dir: string },
     fetcher: () => Promise<NonNullable<Awaited<ReturnType<ReturnType<typeof methods>['$get']>>>>,
   ] {
-    return [{ dir: '/api/mw/public' }, () => fc_76vmqd(option).$get(req)];
+    return [{ lowLevel: true, baseURL: option?.baseURL, dir: '/api/mw/public' }, () => fc_76vmqd(option).$get(req)];
   },
   ...methods(option),
 });
@@ -24,10 +24,10 @@ export const $fc_76vmqd = (option?: FrourioClientOption) => ({
     },
   },
   $build(req?: { init?: RequestInit }): [
-    key: { dir: string },
+    key: { lowLevel: false; baseURL: FrourioClientOption['baseURL']; dir: string },
     fetcher: () => Promise<z.infer<typeof frourioSpec.get.res[200]['body']>>,
   ] {
-    return [{ dir: '$/api/mw/public' }, () => $fc_76vmqd(option).$get(req)];
+    return [{ lowLevel: false, baseURL: option?.baseURL, dir: '/api/mw/public' }, () => $fc_76vmqd(option).$get(req)];
   },
   async $get(req?: Parameters<ReturnType<typeof methods>['$get']>[0]): Promise<z.infer<typeof frourioSpec.get.res[200]['body']>> {
     const result = await methods(option).$get(req);

@@ -30,12 +30,16 @@ type Controller = {
   ) => Promise<NextResponse | Response>;
 };
 
-type MethodHandler = (req: NextRequest | Request, option: { params: Promise<ParamsType> }) => Promise<NextResponse>;;
+type NextParams<T extends Record<string, unknown>> = {
+  [Key in keyof T]: NonNullable<T[Key]> extends string[] | string ? T[Key] : (NonNullable<T[Key]> extends unknown[] ? string[] : string) | T[Key];
+};
+
+type MethodHandler = (req: NextRequest | Request, option: { params: Promise<NextParams<ParamsType>> }) => Promise<NextResponse>;
 
 type ResHandler = {
   middleware: (
     next: (args: { req: NextRequest, params: ParamsType }) => Promise<NextResponse>,
-  ) => (req: NextRequest, option: { params: Promise<ParamsType> }) => Promise<NextResponse>;
+  ) => (req: NextRequest, option: { params: Promise<NextParams<ParamsType>> }) => Promise<NextResponse>;
   GET: MethodHandler
 };
 

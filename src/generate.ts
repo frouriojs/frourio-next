@@ -641,12 +641,16 @@ const serverData = (
       )
       .join('')}
 }`,
-    `type MethodHandler = (req: NextRequest | Request${params ? ', option: { params: Promise<ParamsType> }' : ''}) => Promise<NextResponse>;`,
+    params &&
+      `type NextParams<T extends Record<string, unknown>> = {
+  [Key in keyof T]: NonNullable<T[Key]> extends string[] | string ? T[Key] : (NonNullable<T[Key]> extends unknown[] ? string[] : string) | T[Key];
+}`,
+    `type MethodHandler = (req: NextRequest | Request${params ? ', option: { params: Promise<NextParams<ParamsType>> }' : ''}) => Promise<NextResponse>`,
     `type ResHandler = {${
       middleware.current
         ? `\n  middleware: (
     next: (args: { req: NextRequest${params ? ', params: ParamsType' : ''} }${middleware.ancestorCtx || middleware.current.hasCtx ? ', ctx: ContextType' : ''}) => Promise<NextResponse>,
-  ) => (req: NextRequest, option${params ? ': { params: Promise<ParamsType> }' : '?: {}'}) => Promise<NextResponse>;`
+  ) => (req: NextRequest, option${params ? ': { params: Promise<NextParams<ParamsType>> }' : '?: {}'}) => Promise<NextResponse>;`
         : ''
     }${methods.map((m) => `\n  ${m.name.toUpperCase()}: MethodHandler`).join('')}
 }`,

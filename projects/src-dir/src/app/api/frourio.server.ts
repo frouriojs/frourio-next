@@ -20,7 +20,7 @@ type Controller = {
   >;
 };
 
-type MethodHandler = (req: NextRequest | Request) => Promise<NextResponse>;;
+type MethodHandler = (req: NextRequest | Request) => Promise<NextResponse>;
 
 type ResHandler = {
   POST: MethodHandler

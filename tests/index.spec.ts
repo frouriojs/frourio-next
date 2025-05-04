@@ -24,6 +24,8 @@ import * as formReqRoute from '../projects/src-dir/src/app/api/route';
 import { CLIENT_FILE, SERVER_FILE } from '../src/constants';
 import { generate } from '../src/generate';
 import { listFrourioDirs } from '../src/listFrourioDirs';
+import { generateMsw } from '../src/msw/generateMsw';
+import { getMswConfig } from '../src/msw/getMswConfig';
 import { generateOpenapi } from '../src/openapi/generateOpenapi';
 import { getOpenapiConfig } from '../src/openapi/getOpenapiConfig';
 
@@ -35,11 +37,11 @@ test('generate', async () => {
 
   await Promise.all(
     projectDirs.map(async (dir) => {
-      const config = await getOpenapiConfig({ output: undefined, root: undefined, dir });
+      const openapiConfig = await getOpenapiConfig({ output: undefined, root: undefined, dir });
 
-      assert(config.appDir);
+      assert(openapiConfig.appDir);
 
-      const frourioDirs = listFrourioDirs(config.appDir);
+      const frourioDirs = listFrourioDirs(openapiConfig.appDir);
 
       await Promise.all([
         ...frourioDirs.map((dir) => unlink(path.join(dir, SERVER_FILE))),
@@ -47,16 +49,21 @@ test('generate', async () => {
           (dir) => existsSync(path.join(dir, CLIENT_FILE)) && unlink(path.join(dir, CLIENT_FILE)),
         ),
       ]);
-      await generate(config);
+      await generate(openapiConfig);
 
-      generateOpenapi(config);
+      generateOpenapi(openapiConfig);
+
+      const mswConfig = await getMswConfig({ output: undefined, dir });
+
+      assert(mswConfig.appDir);
+      generateMsw(mswConfig);
     }),
   );
 
   const out = execSync('git status projects', { encoding: 'utf8' });
 
   expect(out).toMatch('nothing to commit, working tree clean');
-}, 30000);
+}, 35000);
 
 test('base handler', async () => {
   const res1 = await baseRoute.GET(new Request('http://example.com/'));

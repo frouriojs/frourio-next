@@ -23,6 +23,7 @@ FrourioNext streamlines API development in Next.js App Router by providing:
 - **Auto-Generated Type-Safe Client**: Generates a type-safe HTTP client (`frourio.client.ts`) for making API requests from your frontend or other server-side code, ensuring your calls match the defined API structure.
 - **Middleware Support**: Define and implement middleware for shared logic like authentication or logging.
 - **OpenAPI Generation**: Optionally generate OpenAPI 3.1 specification files from your route definitions.
+- **MSW Handlers Generation**: Automatically generate MSW (Mock Service Worker) request handlers from your `frourio.ts` definitions for mocking API calls in tests or during frontend development.
 
 ## ✨ Key Features
 
@@ -69,6 +70,7 @@ Add the FrourioNext CLI commands to the `scripts` section of your `package.json`
 
 - `frourio-next`: The core command that generates `*.server.ts` (server-side helpers) and `*.client.ts` (type-safe client).
 - `frourio-next-openapi`: (Optional) Generates an OpenAPI 3.1 JSON file based on your `frourio.ts` definitions.
+- `frourio-next-msw`: (Optional) Generates MSW (Mock Service Worker) request handlers from your `frourio.ts` definitions.
 
 ## 🚀 Core Concepts & Usage
 
@@ -828,6 +830,63 @@ function UserProfile({ userId }: { userId: string | null }) {
 ```
 
 See `tests/useQuery.spec.tsx` for more detailed examples.
+
+## 🧪 MSW Handlers Generation
+
+FrourioNext can automatically generate MSW (Mock Service Worker) request handlers based on your `frourio.ts` definitions. This is particularly useful for mocking API calls in tests or during frontend development without a running backend.
+
+### Setup & Usage
+
+1. Add the `frourio-next-msw` script to `package.json` (see [Setup](#️-setup)).
+2. Run the command:
+   ```bash
+   npm run generate:msw
+   # or with watch mode during development:
+   npm run dev:msw
+   ```
+   Add these scripts to your `package.json`:
+   ```json
+   {
+     "scripts": {
+       "dev": "run-p dev:*",
+       "dev:next": "next dev",
+       "dev:frourio": "frourio-next --watch",
+       "generate": "frourio-next",
+       "generate:msw": "frourio-next-msw --output=./src/mocks/handlers.ts",
+       "dev:msw": "frourio-next-msw --output=./src/mocks/handlers.ts --watch",
+       "build": "frourio-next && next build",
+       "build:openapi": "frourio-next-openapi --output=./public/openapi.json",
+       "dev:openapi": "frourio-next-openapi --output=./public/openapi.json --watch"
+     }
+   }
+   ```
+3. This generates a file (e.g., `./src/mocks/handlers.ts`) exporting a `setupMswHandlers` function.
+4. Use the generated `setupMswHandlers` function in your MSW setup code (e.g., in test setup files or your MSW worker file) to include the generated handlers.
+
+Example usage in a test setup file (`src/mocks/setup.ts`):
+
+```typescript
+import { setupServer } from 'msw/node';
+import { setupMswHandlers } from './handlers'; // Import the generated handlers
+
+// Assuming your API base URL is http://localhost:3000
+const handlers = setupMswHandlers('http://localhost:3000');
+
+export const server = setupServer(...handlers);
+
+// Example: In your test file
+// import { server } from './mocks/setup';
+// beforeAll(() => server.listen());
+// afterEach(() => server.resetHandlers());
+// afterAll(() => server.close());
+```
+
+### CLI Options (`frourio-next-msw`)
+
+| Option     | Alias | Type     | Description                                                                        |
+| :--------- | :---- | :------- | :--------------------------------------------------------------------------------- |
+| `--output` | `-o`  | `string` | Output path for the generated MSW handlers file (e.g., `./src/mocks/handlers.ts`). |
+| `--watch`  | `-w`  |          | Enable watch mode.                                                                 |
 
 ## 🧪 Testing
 

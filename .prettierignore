@@ -1,4 +1,5 @@
 dist
 projects/**/frourio.client.ts
 projects/**/frourio.server.ts
+projects/**/setupMswHandlers.ts
 $*.ts

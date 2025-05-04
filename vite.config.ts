@@ -13,6 +13,7 @@ const coverageBase = {
     'src/watchInputDir.ts',
     'src/writeDefaults.ts',
     'src/openapi/cli.ts',
+    'src/msw/cli.ts',
   ],
 };
 

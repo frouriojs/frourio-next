@@ -33,7 +33,7 @@ type Controller = {
 };
 
 type NextParams<T extends Record<string, unknown>> = {
-  [Key in keyof T]: NonNullable<T[Key]> extends string[] | string ? T[Key] : (NonNullable<T[Key]> extends unknown[] ? string[] : string) | T[Key];
+  [Key in keyof T]: (NonNullable<T[Key]> extends unknown[] ? string[] : string) | T[Key];
 };
 
 type MethodHandler = (req: NextRequest | Request, option: { params: Promise<NextParams<ParamsType>> }) => Promise<NextResponse>;

@@ -54,7 +54,7 @@ ${specs
         .split('/')
         .flatMap((name, index) =>
           name.startsWith('[')
-            ? ` '${name.replace(/[[\].]/g, '')}': pathChunks${name.includes('...') ? `.slice(${index})` : `[${index}]`}`
+            ? ` '${name.replace(/[[\].]/g, '')}': ${name.includes('...') ? `pathChunks.slice(${index})` : `\`\${pathChunks[${index}]}\``}`
             : [],
         )
         .join(',')} };\n`

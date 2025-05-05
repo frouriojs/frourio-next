@@ -28,13 +28,13 @@ export function setupMswHandlers(baseURL: string): RequestHandler[] {
     }),
     http.get(`${baseURL}/:pid`, ({ request }) => {
       const pathChunks = request.url.replace(baseURL, '').split('/');
-      const params = { 'pid': pathChunks[1] };
+      const params = { 'pid': `${pathChunks[1]}` };
 
       return route_rket09.GET(request, { params: Promise.resolve(params) });
     }),
     http.get(`${baseURL}/:pid/foo`, ({ request }) => {
       const pathChunks = request.url.replace(baseURL, '').split('/');
-      const params = { 'pid': pathChunks[1] };
+      const params = { 'pid': `${pathChunks[1]}` };
 
       return route_1c6qmxu.GET(request, { params: Promise.resolve(params) });
     }),
@@ -52,25 +52,25 @@ export function setupMswHandlers(baseURL: string): RequestHandler[] {
     }),
     http.get(`${baseURL}/x/:y`, ({ request }) => {
       const pathChunks = request.url.replace(baseURL, '').split('/');
-      const params = { 'y': pathChunks[2] };
+      const params = { 'y': `${pathChunks[2]}` };
 
       return route_13e9lnf.GET(request, { params: Promise.resolve(params) });
     }),
     http.get(`${baseURL}/:a`, ({ request }) => {
       const pathChunks = request.url.replace(baseURL, '').split('/');
-      const params = { 'a': pathChunks[1] };
+      const params = { 'a': `${pathChunks[1]}` };
 
       return route_knqmrp.GET(request, { params: Promise.resolve(params) });
     }),
     http.post(`${baseURL}/:a/:b/*`, ({ request }) => {
       const pathChunks = request.url.replace(baseURL, '').split('/');
-      const params = { 'a': pathChunks[1], 'b': pathChunks[2], 'c': pathChunks.slice(3) };
+      const params = { 'a': `${pathChunks[1]}`, 'b': `${pathChunks[2]}`, 'c': pathChunks.slice(3) };
 
       return route_2ijh4e.POST(request, { params: Promise.resolve(params) });
     }),
     http.get(`${baseURL}/:a/:b/d`, ({ request }) => {
       const pathChunks = request.url.replace(baseURL, '').split('/');
-      const params = { 'a': pathChunks[1], 'b': pathChunks[2] };
+      const params = { 'a': `${pathChunks[1]}`, 'b': `${pathChunks[2]}` };
 
       return route_1yzfjrp.GET(request, { params: Promise.resolve(params) });
     }),
@@ -106,13 +106,13 @@ export function setupMswHandlers(baseURL: string): RequestHandler[] {
     }),
     http.put(`${baseURL}/api/test-client/:userId`, ({ request }) => {
       const pathChunks = request.url.replace(baseURL, '').split('/');
-      const params = { 'userId': pathChunks[3] };
+      const params = { 'userId': `${pathChunks[3]}` };
 
       return route_1rqfh40.PUT(request, { params: Promise.resolve(params) });
     }),
     http.delete(`${baseURL}/api/test-client/:userId`, ({ request }) => {
       const pathChunks = request.url.replace(baseURL, '').split('/');
-      const params = { 'userId': pathChunks[3] };
+      const params = { 'userId': `${pathChunks[3]}` };
 
       return route_1rqfh40.DELETE(request, { params: Promise.resolve(params) });
     }),

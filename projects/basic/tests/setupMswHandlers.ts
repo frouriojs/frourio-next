@@ -18,7 +18,7 @@ import * as route_17yqnk1 from '../app/api/test-client/route';
 import * as route_1rqfh40 from '../app/api/test-client/[userId]/route';
 import * as route_1tp1ur6 from '../app/api/test-client/stream/route';
 
-export function setupMswHandlers(baseURL: string): RequestHandler[] {
+export function setupMswHandlers(baseURL = ''): RequestHandler[] {
   return [
     http.get(`${baseURL}`, ({ request }) => {
       return route_ztntfp.GET(request);

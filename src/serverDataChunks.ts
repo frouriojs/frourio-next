@@ -63,3 +63,9 @@ export const formDataToBoolText = `const formDataToBool = (val: FormDataEntryVal
 
 export const formDataToBoolArrText = `const formDataToBoolArr = (val: FormDataEntryValue[]) =>
   val.map((v) => (v === 'true' ? true : v === 'false' ? false : v))`;
+
+export const formDataToFileText = `const formDataToFile = (val: FormDataEntryValue | undefined) =>
+  val instanceof File || typeof val === 'string' || val === undefined ? val : new File([val], (val as { name: string }).name, val) /* for MSW */`;
+
+export const formDataToFileArrText = `const formDataToFileArr = (val: FormDataEntryValue[]) =>
+  val.map((v) => (v instanceof File || typeof v === 'string' ? v : new File([v], (v as { name: string }).name, v) /* for MSW */))`;

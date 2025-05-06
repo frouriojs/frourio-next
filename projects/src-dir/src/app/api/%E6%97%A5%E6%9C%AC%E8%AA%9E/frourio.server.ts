@@ -39,16 +39,16 @@ export const createRoute = (controller: Controller): ResHandler => {
             ['stringArr', formData.getAll('stringArr')],
             ['numberArr', formDataToNumArr(formData.getAll('numberArr'))],
             ['booleanArr', formDataToBoolArr(formData.getAll('booleanArr'))],
-            ['file', formData.get('file') ?? undefined],
-            ['fileArr', formData.getAll('fileArr')],
+            ['file', formDataToFile(formData.get('file') ?? undefined)],
+            ['fileArr', formDataToFileArr(formData.getAll('fileArr'))],
             ['optionalString', formData.get('optionalString') ?? undefined],
             ['optionalNumber', formDataToNum(formData.get('optionalNumber') ?? undefined)],
             ['optionalBoolean', formDataToBool(formData.get('optionalBoolean') ?? undefined)],
             ['optionalStringArr', formData.getAll('optionalStringArr').length > 0 ? formData.getAll('optionalStringArr') : undefined],
             ['optionalNumberArr', formData.getAll('optionalNumberArr').length > 0 ? formDataToNumArr(formData.getAll('optionalNumberArr')) : undefined],
             ['optionalBooleanArr', formData.getAll('optionalBooleanArr').length > 0 ? formDataToBoolArr(formData.getAll('optionalBooleanArr')) : undefined],
-            ['optionalFile', formData.get('optionalFile') ?? undefined],
-            ['optionalFileArr', formData.getAll('optionalFileArr').length > 0 ? formData.getAll('optionalFileArr') : undefined],
+            ['optionalFile', formDataToFile(formData.get('optionalFile') ?? undefined)],
+            ['optionalFileArr', formData.getAll('optionalFileArr').length > 0 ? formDataToFileArr(formData.getAll('optionalFileArr')) : undefined],
           ].filter(entry => entry[1] !== undefined),
         ),
       );
@@ -128,3 +128,9 @@ const formDataToBool = (val: FormDataEntryValue | undefined) =>
 
 const formDataToBoolArr = (val: FormDataEntryValue[]) =>
   val.map((v) => (v === 'true' ? true : v === 'false' ? false : v));
+
+const formDataToFile = (val: FormDataEntryValue | undefined) =>
+  val instanceof File || typeof val === 'string' || val === undefined ? val : new File([val], (val as { name: string }).name, val) /* for MSW */;
+
+const formDataToFileArr = (val: FormDataEntryValue[]) =>
+  val.map((v) => (v instanceof File || typeof v === 'string' ? v : new File([v], (v as { name: string }).name, v) /* for MSW */));

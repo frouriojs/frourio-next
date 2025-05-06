@@ -13,6 +13,8 @@ import { clientParamsToText, paramsToText, pathToClientParams, pathToParams } fr
 import {
   formDataToBoolArrText,
   formDataToBoolText,
+  formDataToFileArrText,
+  formDataToFileText,
   formDataToNumArrText,
   formDataToNumText,
   paramToNumArrText,
@@ -737,10 +739,10 @@ ${m.body.data
   .map((d) => {
     const fn = `formData.get${d.isArray ? 'All' : ''}('${d.name}')${d.isArray ? '' : ' ?? undefined'}`;
     const wrapped = `${
-      d.typeName === 'string' || d.typeName === 'File'
+      d.typeName === 'string'
         ? ''
-        : `formDataTo${d.typeName === 'number' ? 'Num' : 'Bool'}${d.isArray ? 'Arr' : ''}(`
-    }${fn}${d.typeName === 'string' || d.typeName === 'File' ? '' : ')'}`;
+        : `formDataTo${d.typeName === 'File' ? 'File' : d.typeName === 'number' ? 'Num' : 'Bool'}${d.isArray ? 'Arr' : ''}(`
+    }${fn}${d.typeName === 'string' ? '' : ')'}`;
 
     return `            ['${d.name}', ${d.isArray && d.isOptional ? `${fn}.length > 0 ? ${wrapped} : undefined` : wrapped}],`;
   })
@@ -839,6 +841,12 @@ ${m.res
     methods.some(
       (m) => m.body?.isFormData && m.body.data?.some((b) => b.typeName === 'boolean' && b.isArray),
     ) && formDataToBoolArrText,
+    methods.some(
+      (m) => m.body?.isFormData && m.body.data?.some((b) => b.typeName === 'File' && !b.isArray),
+    ) && formDataToFileText,
+    methods.some(
+      (m) => m.body?.isFormData && m.body.data?.some((b) => b.typeName === 'File' && b.isArray),
+    ) && formDataToFileArrText,
   ].filter((txt) => txt !== undefined && txt !== false);
 
   return `${imports.join(';\n')};

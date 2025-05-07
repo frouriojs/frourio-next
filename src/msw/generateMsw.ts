@@ -51,7 +51,7 @@ ${specs
     const hasParams = methodPath.includes('/[');
     const paramsChunk = hasParams
       ? `
-      const pathChunks = request.url.replace(baseURL || /https?:\\/\\/[^/].+/, '').split('/');
+      const pathChunks = request.url.replace(baseURL || /https?:\\/\\/[^/]+/, '').split('/');
       const params = {${methodPath
         .split('/')
         .flatMap((name, index) =>

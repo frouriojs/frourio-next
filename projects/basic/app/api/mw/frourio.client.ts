@@ -46,7 +46,7 @@ export const $fc_sqrir7 = (option?: FrourioClientOption) => ({
 
 const $url = (option?: FrourioClientOption) => ({
   get(): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
-    return { isValid: true, data: `${option?.baseURL ?? ''}/api/mw` };
+    return { isValid: true, data: `${option?.baseURL?.replace(/\/$/, '') ?? ''}/api/mw` };
   },
 });
 

@@ -41,7 +41,9 @@ export const generateMsw = ({ appDir, output }: MswConfig) => {
   const posixAppDir = appDir.replaceAll('\\', '/');
   const mswText = `import { http, type RequestHandler } from 'msw';
 ${specs.map(({ posixDirPath }) => `import * as route_${createHash(posixDirPath.replace(posixAppDir, ''))} from '${path.posix.relative(path.posix.resolve(output.replaceAll('\\', '/')).split('/').slice(0, -1).join('/'), `${posixDirPath}/route`)}';\n`).join('')}
-export function setupMswHandlers(baseURL = ''): RequestHandler[] {
+export function setupMswHandlers(option?: { baseURL: string }): RequestHandler[] {
+  const baseURL = option?.baseURL.replace(/\\/$/, '') ?? '';
+
   return [
 ${specs
   .flatMap(({ posixDirPath, methods }) => {
@@ -49,7 +51,7 @@ ${specs
     const hasParams = methodPath.includes('/[');
     const paramsChunk = hasParams
       ? `
-      const pathChunks = request.url.replace(baseURL, '').split('/');
+      const pathChunks = request.url.replace(baseURL || /https?:\\/\\/[^/].+/, '').split('/');
       const params = {${methodPath
         .split('/')
         .flatMap((name, index) =>

@@ -30,7 +30,7 @@ export const $fc_1tp1ur6 = (option?: FrourioClientOption) => ({
 
 const $url = (option?: FrourioClientOption) => ({
   post(): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
-    return { isValid: true, data: `${option?.baseURL ?? ''}/api/test-client/stream` };
+    return { isValid: true, data: `${option?.baseURL?.replace(/\/$/, '') ?? ''}/api/test-client/stream` };
   },
 });
 

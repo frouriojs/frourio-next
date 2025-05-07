@@ -128,7 +128,7 @@ const formDataToFile = async (val: FormDataEntryValue | undefined) => {
 
   const buffer = await (val as File).arrayBuffer();
 
-  return new File([buffer], (val as File).name, val) /* for jsdom */;
+  return new File([buffer], (val as File).name, val); // for jsdom
 };
 
 const formDataToFileArr = (vals: FormDataEntryValue[]) => Promise.all(vals.map(formDataToFile));

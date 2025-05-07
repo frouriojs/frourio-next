@@ -59,7 +59,7 @@ export const formDataToFileText = `const formDataToFile = async (val: FormDataEn
 
   const buffer = await (val as File).arrayBuffer();
 
-  return new File([buffer], (val as File).name, val) /* for jsdom */;
+  return new File([buffer], (val as File).name, val); // for jsdom
 }`;
 
 export const formDataToFileArrText =

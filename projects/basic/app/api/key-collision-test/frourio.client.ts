@@ -64,7 +64,7 @@ const $url = (option?: FrourioClientOption) => ({
       }
     });
 
-    return { isValid: true, data: `${option?.baseURL ?? ''}/api/key-collision-test?${searchParams.toString()}` };
+    return { isValid: true, data: `${option?.baseURL?.replace(/\/$/, '') ?? ''}/api/key-collision-test?${searchParams.toString()}` };
   },
 });
 

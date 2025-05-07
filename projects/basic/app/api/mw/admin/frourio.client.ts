@@ -61,10 +61,10 @@ export const $fc_n3it2j = (option?: FrourioClientOption) => ({
 
 const $url = (option?: FrourioClientOption) => ({
   get(): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
-    return { isValid: true, data: `${option?.baseURL ?? ''}/api/mw/admin` };
+    return { isValid: true, data: `${option?.baseURL?.replace(/\/$/, '') ?? ''}/api/mw/admin` };
   },
   post(): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
-    return { isValid: true, data: `${option?.baseURL ?? ''}/api/mw/admin` };
+    return { isValid: true, data: `${option?.baseURL?.replace(/\/$/, '') ?? ''}/api/mw/admin` };
   },
 });
 

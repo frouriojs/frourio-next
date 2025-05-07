@@ -107,10 +107,10 @@ const $url = (option?: FrourioClientOption) => ({
       }
     });
 
-    return { isValid: true, data: `${option?.baseURL ?? ''}/?${searchParams.toString()}` };
+    return { isValid: true, data: `${option?.baseURL?.replace(/\/$/, '') ?? ''}/?${searchParams.toString()}` };
   },
   post(): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
-    return { isValid: true, data: `${option?.baseURL ?? ''}/` };
+    return { isValid: true, data: `${option?.baseURL?.replace(/\/$/, '') ?? ''}/` };
   },
 });
 

@@ -28,7 +28,7 @@ export const $fc_15e5upz = (option?: FrourioClientOption) => ({
 
 const $url = (option?: FrourioClientOption) => ({
   post(): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
-    return { isValid: true, data: `${option?.baseURL ?? ''}/foo/bar/api/%E6%97%A5%E6%9C%AC%E8%AA%9E` };
+    return { isValid: true, data: `${option?.baseURL?.replace(/\/$/, '') ?? ''}/foo/bar/api/%E6%97%A5%E6%9C%AC%E8%AA%9E` };
   },
 });
 

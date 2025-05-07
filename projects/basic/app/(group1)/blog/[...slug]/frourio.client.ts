@@ -54,7 +54,7 @@ const $url = (option?: FrourioClientOption) => ({
 
     if (!parsedParams.success) return { isValid: false, reason: parsedParams.error };
 
-    return { isValid: true, data: `${option?.baseURL ?? ''}/blog/${parsedParams.data.slug.join('/')}` };
+    return { isValid: true, data: `${option?.baseURL?.replace(/\/$/, '') ?? ''}/blog/${parsedParams.data.slug.join('/')}` };
   },
 });
 

@@ -52,14 +52,14 @@ const $url = (option?: FrourioClientOption) => ({
 
     if (!parsedParams.success) return { isValid: false, reason: parsedParams.error };
 
-    return { isValid: true, data: `${option?.baseURL ?? ''}/api/test-client/${parsedParams.data.userId}` };
+    return { isValid: true, data: `${option?.baseURL?.replace(/\/$/, '') ?? ''}/api/test-client/${parsedParams.data.userId}` };
   },
   delete(req: { params: z.infer<typeof paramsSchema> }): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
     const parsedParams = paramsSchema.safeParse(req.params);
 
     if (!parsedParams.success) return { isValid: false, reason: parsedParams.error };
 
-    return { isValid: true, data: `${option?.baseURL ?? ''}/api/test-client/${parsedParams.data.userId}` };
+    return { isValid: true, data: `${option?.baseURL?.replace(/\/$/, '') ?? ''}/api/test-client/${parsedParams.data.userId}` };
   },
 });
 

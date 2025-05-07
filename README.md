@@ -870,7 +870,7 @@ import { setupServer } from 'msw/node';
 import { setupMswHandlers } from './handlers'; // Import the generated handlers
 
 // Assuming your API base URL is http://localhost:3000
-const handlers = setupMswHandlers('http://localhost:3000');
+const handlers = setupMswHandlers({ baseURL: 'http://localhost:3000' });
 
 export const server = setupServer(...handlers);
 

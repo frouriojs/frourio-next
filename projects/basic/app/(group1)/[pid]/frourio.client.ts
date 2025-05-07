@@ -73,7 +73,7 @@ const $url = (option?: FrourioClientOption) => ({
       }
     });
 
-    return { isValid: true, data: `${option?.baseURL ?? ''}/${parsedParams.data.pid}?${searchParams.toString()}` };
+    return { isValid: true, data: `${option?.baseURL?.replace(/\/$/, '') ?? ''}/${parsedParams.data.pid}?${searchParams.toString()}` };
   },
 });
 

@@ -72,7 +72,7 @@ const $url = (option?: FrourioClientOption) => ({
       }
     });
 
-    return { isValid: true, data: `${option?.baseURL ?? ''}/x/${parsedParams.data.y}?${searchParams.toString()}` };
+    return { isValid: true, data: `${option?.baseURL?.replace(/\/$/, '') ?? ''}/x/${parsedParams.data.y}?${searchParams.toString()}` };
   },
 });
 

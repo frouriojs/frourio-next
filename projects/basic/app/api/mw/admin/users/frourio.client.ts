@@ -66,7 +66,7 @@ const $url = (option?: FrourioClientOption) => ({
       }
     });
 
-    return { isValid: true, data: `${option?.baseURL ?? ''}/api/mw/admin/users?${searchParams.toString()}` };
+    return { isValid: true, data: `${option?.baseURL?.replace(/\/$/, '') ?? ''}/api/mw/admin/users?${searchParams.toString()}` };
   },
 });
 

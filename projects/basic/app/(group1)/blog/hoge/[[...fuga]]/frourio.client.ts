@@ -54,7 +54,7 @@ const $url = (option?: FrourioClientOption) => ({
 
     if (!parsedParams.success) return { isValid: false, reason: parsedParams.error };
 
-    return { isValid: true, data: `${option?.baseURL ?? ''}/blog/hoge${parsedParams.data.fuga !== undefined && parsedParams.data.fuga.length > 0 ? `/${parsedParams.data.fuga.join('/')}` : ''}` };
+    return { isValid: true, data: `${option?.baseURL?.replace(/\/$/, '') ?? ''}/blog/hoge${parsedParams.data.fuga !== undefined && parsedParams.data.fuga.length > 0 ? `/${parsedParams.data.fuga.join('/')}` : ''}` };
   },
 });
 

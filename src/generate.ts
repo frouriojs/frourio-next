@@ -385,7 +385,7 @@ ${
       }
     });\n\n`
           : ''
-      }    return { isValid: true, data: \`\${option?.baseURL ?? ''}${
+      }    return { isValid: true, data: \`\${option?.baseURL?.replace(/\\/$/, '') ?? ''}${
         params
           ? apiPath
               .replace(

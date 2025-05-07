@@ -741,7 +741,7 @@ ${m.body.data
     const wrapped = `${
       d.typeName === 'string'
         ? ''
-        : `formDataTo${d.typeName === 'File' ? 'File' : d.typeName === 'number' ? 'Num' : 'Bool'}${d.isArray ? 'Arr' : ''}(`
+        : `${d.typeName === 'File' ? 'await ' : ''}formDataTo${d.typeName === 'File' ? 'File' : d.typeName === 'number' ? 'Num' : 'Bool'}${d.isArray ? 'Arr' : ''}(`
     }${fn}${d.typeName === 'string' ? '' : ')'}`;
 
     return `            ['${d.name}', ${d.isArray && d.isOptional ? `${fn}.length > 0 ? ${wrapped} : undefined` : wrapped}],`;
@@ -821,29 +821,24 @@ ${m.res
   ].filter((txt) => txt !== undefined && txt !== false);
 
   const suffixes: string[] = [
-    methods.some((m) => m.query?.some((q) => q.typeName === 'number' && !q.isArray)) &&
-      queryToNumText,
+    methods.some((m) => m.query?.some((q) => q.typeName === 'number')) && queryToNumText,
     methods.some((m) => m.query?.some((q) => q.typeName === 'number' && q.isArray)) &&
       queryToNumArrText,
-    methods.some((m) => m.query?.some((q) => q.typeName === 'boolean' && !q.isArray)) &&
-      queryToBoolText,
+    methods.some((m) => m.query?.some((q) => q.typeName === 'boolean')) && queryToBoolText,
     methods.some((m) => m.query?.some((q) => q.typeName === 'boolean' && q.isArray)) &&
       queryToBoolArrText,
-    methods.some(
-      (m) => m.body?.isFormData && m.body.data?.some((b) => b.typeName === 'number' && !b.isArray),
-    ) && formDataToNumText,
+    methods.some((m) => m.body?.isFormData && m.body.data?.some((b) => b.typeName === 'number')) &&
+      formDataToNumText,
     methods.some(
       (m) => m.body?.isFormData && m.body.data?.some((b) => b.typeName === 'number' && b.isArray),
     ) && formDataToNumArrText,
-    methods.some(
-      (m) => m.body?.isFormData && m.body.data?.some((b) => b.typeName === 'boolean' && !b.isArray),
-    ) && formDataToBoolText,
+    methods.some((m) => m.body?.isFormData && m.body.data?.some((b) => b.typeName === 'boolean')) &&
+      formDataToBoolText,
     methods.some(
       (m) => m.body?.isFormData && m.body.data?.some((b) => b.typeName === 'boolean' && b.isArray),
     ) && formDataToBoolArrText,
-    methods.some(
-      (m) => m.body?.isFormData && m.body.data?.some((b) => b.typeName === 'File' && !b.isArray),
-    ) && formDataToFileText,
+    methods.some((m) => m.body?.isFormData && m.body.data?.some((b) => b.typeName === 'File')) &&
+      formDataToFileText,
     methods.some(
       (m) => m.body?.isFormData && m.body.data?.some((b) => b.typeName === 'File' && b.isArray),
     ) && formDataToFileArrText,

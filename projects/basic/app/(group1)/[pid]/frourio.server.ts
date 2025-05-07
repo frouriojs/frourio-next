@@ -147,15 +147,9 @@ const queryToNum = (val: string | undefined) => {
   return isNaN(num) ? val : num;
 };
 
-const queryToNumArr = (val: string[]) =>
-  val.map((v) => {
-    const numVal = Number(v);
-
-    return isNaN(numVal) ? v : numVal;
-  });
+const queryToNumArr = (val: string[]) => val.map(queryToNum);
 
 const queryToBool = (val: string | undefined) =>
   val === 'true' ? true : val === 'false' ? false : val;
 
-const queryToBoolArr = (val: string[]) =>
-  val.map((v) => (v === 'true' ? true : v === 'false' ? false : v));
+const queryToBoolArr = (val: string[]) => val.map(queryToBool);

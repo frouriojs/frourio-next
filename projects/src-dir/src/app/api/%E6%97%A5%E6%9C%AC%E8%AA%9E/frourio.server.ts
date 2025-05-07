@@ -39,16 +39,16 @@ export const createRoute = (controller: Controller): ResHandler => {
             ['stringArr', formData.getAll('stringArr')],
             ['numberArr', formDataToNumArr(formData.getAll('numberArr'))],
             ['booleanArr', formDataToBoolArr(formData.getAll('booleanArr'))],
-            ['file', formDataToFile(formData.get('file') ?? undefined)],
-            ['fileArr', formDataToFileArr(formData.getAll('fileArr'))],
+            ['file', await formDataToFile(formData.get('file') ?? undefined)],
+            ['fileArr', await formDataToFileArr(formData.getAll('fileArr'))],
             ['optionalString', formData.get('optionalString') ?? undefined],
             ['optionalNumber', formDataToNum(formData.get('optionalNumber') ?? undefined)],
             ['optionalBoolean', formDataToBool(formData.get('optionalBoolean') ?? undefined)],
             ['optionalStringArr', formData.getAll('optionalStringArr').length > 0 ? formData.getAll('optionalStringArr') : undefined],
             ['optionalNumberArr', formData.getAll('optionalNumberArr').length > 0 ? formDataToNumArr(formData.getAll('optionalNumberArr')) : undefined],
             ['optionalBooleanArr', formData.getAll('optionalBooleanArr').length > 0 ? formDataToBoolArr(formData.getAll('optionalBooleanArr')) : undefined],
-            ['optionalFile', formDataToFile(formData.get('optionalFile') ?? undefined)],
-            ['optionalFileArr', formData.getAll('optionalFileArr').length > 0 ? formDataToFileArr(formData.getAll('optionalFileArr')) : undefined],
+            ['optionalFile', await formDataToFile(formData.get('optionalFile') ?? undefined)],
+            ['optionalFileArr', formData.getAll('optionalFileArr').length > 0 ? await formDataToFileArr(formData.getAll('optionalFileArr')) : undefined],
           ].filter(entry => entry[1] !== undefined),
         ),
       );
@@ -116,21 +116,19 @@ const formDataToNum = (val: FormDataEntryValue | undefined) => {
   return isNaN(num) ? val : num;
 };
 
-const formDataToNumArr = (val: FormDataEntryValue[]) =>
-  val.map((v) => {
-    const numVal = Number(v);
-
-    return isNaN(numVal) ? v : numVal;
-  });
+const formDataToNumArr = (val: FormDataEntryValue[]) => val.map(formDataToNum);
 
 const formDataToBool = (val: FormDataEntryValue | undefined) =>
   val === 'true' ? true : val === 'false' ? false : val;
 
-const formDataToBoolArr = (val: FormDataEntryValue[]) =>
-  val.map((v) => (v === 'true' ? true : v === 'false' ? false : v));
+const formDataToBoolArr = (val: FormDataEntryValue[]) => val.map(formDataToBool);
 
-const formDataToFile = (val: FormDataEntryValue | undefined) =>
-  val instanceof File || typeof val === 'string' || val === undefined ? val : new File([val], (val as { name: string }).name, val) /* for MSW */;
+const formDataToFile = async (val: FormDataEntryValue | undefined) => {
+  if (val instanceof File || typeof val === 'string' || val === undefined) return val;
 
-const formDataToFileArr = (val: FormDataEntryValue[]) =>
-  val.map((v) => (v instanceof File || typeof v === 'string' ? v : new File([v], (v as { name: string }).name, v) /* for MSW */));
+  const buffer = await (val as File).arrayBuffer();
+
+  return new File([buffer], (val as File).name, val) /* for jsdom */;
+};
+
+const formDataToFileArr = (vals: FormDataEntryValue[]) => Promise.all(vals.map(formDataToFile));

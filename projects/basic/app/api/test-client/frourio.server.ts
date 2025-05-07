@@ -135,7 +135,7 @@ export const createRoute = (controller: Controller): ResHandler => {
         Object.fromEntries(
           [
             ['userId', formData.get('userId') ?? undefined],
-            ['avatar', formDataToFile(formData.get('avatar') ?? undefined)],
+            ['avatar', await formDataToFile(formData.get('avatar') ?? undefined)],
             ['metadata', formData.get('metadata') ?? undefined],
           ].filter(entry => entry[1] !== undefined),
         ),
@@ -211,5 +211,10 @@ const queryToNum = (val: string | undefined) => {
   return isNaN(num) ? val : num;
 };
 
-const formDataToFile = (val: FormDataEntryValue | undefined) =>
-  val instanceof File || typeof val === 'string' || val === undefined ? val : new File([val], (val as { name: string }).name, val) /* for MSW */;
+const formDataToFile = async (val: FormDataEntryValue | undefined) => {
+  if (val instanceof File || typeof val === 'string' || val === undefined) return val;
+
+  const buffer = await (val as File).arrayBuffer();
+
+  return new File([buffer], (val as File).name, val) /* for jsdom */;
+};

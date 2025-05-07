@@ -32,18 +32,12 @@ export const queryToNumText = `const queryToNum = (val: string | undefined) => {
   return isNaN(num) ? val : num;
 }`;
 
-export const queryToNumArrText = `const queryToNumArr = (val: string[]) =>
-  val.map((v) => {
-    const numVal = Number(v);
-
-    return isNaN(numVal) ? v : numVal;
-  })`;
+export const queryToNumArrText = 'const queryToNumArr = (val: string[]) => val.map(queryToNum)';
 
 export const queryToBoolText = `const queryToBool = (val: string | undefined) =>
   val === 'true' ? true : val === 'false' ? false : val`;
 
-export const queryToBoolArrText = `const queryToBoolArr = (val: string[]) =>
-  val.map((v) => (v === 'true' ? true : v === 'false' ? false : v))`;
+export const queryToBoolArrText = 'const queryToBoolArr = (val: string[]) => val.map(queryToBool)';
 
 export const formDataToNumText = `const formDataToNum = (val: FormDataEntryValue | undefined) => {
   const num = Number(val);
@@ -51,21 +45,22 @@ export const formDataToNumText = `const formDataToNum = (val: FormDataEntryValue
   return isNaN(num) ? val : num;
 }`;
 
-export const formDataToNumArrText = `const formDataToNumArr = (val: FormDataEntryValue[]) =>
-  val.map((v) => {
-    const numVal = Number(v);
-
-    return isNaN(numVal) ? v : numVal;
-  })`;
+export const formDataToNumArrText =
+  'const formDataToNumArr = (val: FormDataEntryValue[]) => val.map(formDataToNum)';
 
 export const formDataToBoolText = `const formDataToBool = (val: FormDataEntryValue | undefined) =>
   val === 'true' ? true : val === 'false' ? false : val`;
 
-export const formDataToBoolArrText = `const formDataToBoolArr = (val: FormDataEntryValue[]) =>
-  val.map((v) => (v === 'true' ? true : v === 'false' ? false : v))`;
+export const formDataToBoolArrText =
+  'const formDataToBoolArr = (val: FormDataEntryValue[]) => val.map(formDataToBool)';
 
-export const formDataToFileText = `const formDataToFile = (val: FormDataEntryValue | undefined) =>
-  val instanceof File || typeof val === 'string' || val === undefined ? val : new File([val], (val as { name: string }).name, val) /* for MSW */`;
+export const formDataToFileText = `const formDataToFile = async (val: FormDataEntryValue | undefined) => {
+  if (val instanceof File || typeof val === 'string' || val === undefined) return val;
 
-export const formDataToFileArrText = `const formDataToFileArr = (val: FormDataEntryValue[]) =>
-  val.map((v) => (v instanceof File || typeof v === 'string' ? v : new File([v], (v as { name: string }).name, v) /* for MSW */))`;
+  const buffer = await (val as File).arrayBuffer();
+
+  return new File([buffer], (val as File).name, val) /* for jsdom */;
+}`;
+
+export const formDataToFileArrText =
+  'const formDataToFileArr = (vals: FormDataEntryValue[]) => Promise.all(vals.map(formDataToFile))';

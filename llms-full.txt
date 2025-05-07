@@ -582,3 +582,21 @@ export const server = setupServer(...handlers);
 
 - `--output`, `-o` (string): Output path for the generated MSW handlers file (e.g., `./src/mocks/handlers.ts`). Defaults to `./tests/setupMswHandlers.ts`.
 - `--watch`, `-w`: Enable watch mode. Regenerates handlers on `frourio.ts` changes.
+
+### Patching `File.prototype` for Testing Environments
+
+Environments like jsdom (commonly used in testing) may not fully implement the `File` API, specifically methods like `arrayBuffer()`, `bytes()`, `stream()`, and `text()`. This can cause issues when using `FormData` with `z.instanceof(File)` in tests.
+
+The generated MSW handlers file (e.g., `./tests/setupMswHandlers.ts`) exports a `patchFilePrototype()` function. This function patches `File.prototype` to add basic implementations for these methods if they are missing, allowing `FormData` to work correctly in these environments.
+
+It is recommended to call `patchFilePrototype()` in your test setup file (e.g., `tests/setup.ts` or `jest.setup.js`) if you encounter issues with file uploads in your tests.
+
+```typescript
+// Example in tests/setup.ts
+// Import patchFilePrototype from your generated MSW handlers file
+import { patchFilePrototype } from './projects/src-dir/tests/setupMswHandlers';
+
+patchFilePrototype();
+
+// ... rest of your test setup
+```

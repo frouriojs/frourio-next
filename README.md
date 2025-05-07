@@ -888,6 +888,24 @@ export const server = setupServer(...handlers);
 | `--output` | `-o`  | `string` | Output path for the generated MSW handlers file (e.g., `./src/mocks/handlers.ts`). |
 | `--watch`  | `-w`  |          | Enable watch mode.                                                                 |
 
+### Patching `File.prototype` for Testing Environments
+
+Environments like jsdom (commonly used in testing) may not fully implement the `File` API, specifically methods like `arrayBuffer()`, `bytes()`, `stream()`, and `text()`. This can cause issues when using `FormData` with `z.instanceof(File)` in tests.
+
+The generated MSW handlers file (e.g., `./tests/setupMswHandlers.ts`) exports a `patchFilePrototype()` function. This function patches `File.prototype` to add basic implementations for these methods if they are missing, allowing `FormData` to work correctly in these environments.
+
+It is recommended to call `patchFilePrototype()` in your test setup file (e.g., `tests/setup.ts` or `jest.setup.js`) if you encounter issues with file uploads in your tests.
+
+```typescript
+// Example in tests/setup.ts
+// Import patchFilePrototype from your generated MSW handlers file
+import { patchFilePrototype } from './projects/src-dir/tests/setupMswHandlers';
+
+patchFilePrototype();
+
+// ... rest of your test setup
+```
+
 ## 🧪 Testing
 
 Test your FrourioNext handlers like standard Next.js Route Handlers, typically by mocking `NextRequest` and calling the exported handler functions directly. Use libraries like `msw` to mock the `fetch` calls when testing client-side logic or components using the generated Frourio clients (`fc`, `$fc`).

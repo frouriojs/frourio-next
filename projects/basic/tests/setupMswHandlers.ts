@@ -123,3 +123,50 @@ export function setupMswHandlers(option?: { baseURL: string }): RequestHandler[]
     }),
   ];
 }
+
+export function patchFilePrototype(): void {
+  File.prototype.arrayBuffer ??= function (): Promise<ArrayBuffer> {
+    return new Promise<ArrayBuffer>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (): void => resolve(reader.result as ArrayBuffer);
+      reader.onerror = reject;
+      reader.readAsArrayBuffer(this);
+    });
+  };
+
+  File.prototype.bytes ??= function (): Promise<Uint8Array> {
+    return new Promise<Uint8Array>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (): void => resolve(new Uint8Array(reader.result as ArrayBuffer));
+      reader.onerror = reject;
+      reader.readAsArrayBuffer(this);
+    });
+  };
+
+  File.prototype.stream ??= function (): ReadableStream<Uint8Array> {
+    return new ReadableStream({
+      start: (controller): void => {
+        const reader = new FileReader();
+
+        reader.onload = (): void => {
+          const arrayBuffer = reader.result as ArrayBuffer;
+          controller.enqueue(new Uint8Array(arrayBuffer));
+          controller.close();
+        };
+        reader.onerror = (): void => {
+          controller.error(reader.error);
+        };
+        reader.readAsArrayBuffer(this);
+      },
+    });
+  };
+
+  File.prototype.text ??= function (): Promise<string> {
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (): void => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsText(this);
+    });
+  };
+}

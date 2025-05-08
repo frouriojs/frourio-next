@@ -540,7 +540,7 @@ ${
             .map(
               (item) => `\n      case ${item.status}: {${
                 item.hasHeaders
-                  ? `\n        const headers = frourioSpec.${method.name}.res[${item.status}].headers.safeParse(result.res.headers);
+                  ? `\n        const headers = frourioSpec.${method.name}.res[${item.status}].headers.safeParse(Object.fromEntries(result.res.headers.entries()));
 
         if (!headers.success) return { ok: ${item.status.startsWith('2')}, isValid: false, raw: result.res, reason: headers.error };\n`
                   : ''

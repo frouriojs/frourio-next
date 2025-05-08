@@ -85,7 +85,7 @@ const methods = (option?: FrourioClientOption) => ({
 
     switch (result.res.status) {
       case 200: {
-        const headers = frourioSpec.get.res[200].headers.safeParse(result.res.headers);
+        const headers = frourioSpec.get.res[200].headers.safeParse(Object.fromEntries(result.res.headers.entries()));
 
         if (!headers.success) return { ok: true, isValid: false, raw: result.res, reason: headers.error };
 

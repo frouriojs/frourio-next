@@ -575,6 +575,7 @@ const serverData = (
   },
   methods: ServerMethod[],
 ) => {
+  const needsRouteFile = methods.length > 0 || middleware.current;
   const imports: string[] = [
     "import { NextRequest, NextResponse } from 'next/server'",
     `import ${params ? '' : 'type '}{ z } from 'zod'`,
@@ -585,11 +586,13 @@ const serverData = (
     middleware.ancestorCtx &&
       `import { contextSchema as ancestorContextSchema${middleware.current ? ', type ContextType as AncestorContextType' : ''} } from '${middleware.ancestorCtx}/${SERVER_FILE.replace('.ts', '')}'`,
     "import { frourioSpec } from './frourio'",
-    `import type { ${[...methods.map((m) => m.name.toUpperCase()), ...(middleware.current ? ['middleware'] : [])].join(', ')} } from './route'`,
+    needsRouteFile &&
+      `import type { ${[...methods.map((m) => m.name.toUpperCase()), ...(middleware.current ? ['middleware'] : [])].join(', ')} } from './route'`,
   ].filter((txt) => txt !== undefined);
 
   const chunks: string[] = [
-    `type RouteChecker = [${[...methods.map((m) => `typeof ${m.name.toUpperCase()}`), ...(middleware.current ? ['typeof middleware'] : [])].join(', ')}]`,
+    needsRouteFile &&
+      `type RouteChecker = [${[...methods.map((m) => `typeof ${m.name.toUpperCase()}`), ...(middleware.current ? ['typeof middleware'] : [])].join(', ')}]`,
     params &&
       `${
         params.current

@@ -11,6 +11,84 @@
   ],
   "paths": {
     "/blog/{slug}": {},
+    "/{a}/arrayBuffer": {
+      "get": {
+        "parameters": [
+          {
+            "name": "a",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArrayBuffer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{a}/blob": {
+      "get": {
+        "parameters": [
+          {
+            "name": "a",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Blob"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{a}/text": {
+      "get": {
+        "parameters": [
+          {
+            "name": "a",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api": {
       "post": {
         "requestBody": {
@@ -64,6 +142,72 @@
   },
   "components": {
     "schemas": {
+      "12qbo1n": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "$ref": "#/components/schemas/ArrayBuffer"
+          }
+        },
+        "required": [
+          "body"
+        ]
+      },
+      "ArrayBuffer": {
+        "type": "object",
+        "properties": {
+          "byteLength": {
+            "type": "number"
+          },
+          "__@toStringTag@15101": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "__@toStringTag@15101",
+          "byteLength"
+        ]
+      },
+      "24ay5f": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "$ref": "#/components/schemas/Blob"
+          }
+        },
+        "required": [
+          "body"
+        ]
+      },
+      "Blob": {
+        "description": "A [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob) encapsulates immutable, raw data that can be safely shared across\nmultiple worker threads.",
+        "type": "object",
+        "properties": {
+          "size": {
+            "description": "The total size of the `Blob` in bytes.",
+            "type": "number"
+          },
+          "type": {
+            "description": "The content-type of the `Blob`.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "size",
+          "type"
+        ]
+      },
+      "1ycd0h9": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "body"
+        ]
+      },
       "1q0vv0x": {
         "type": "object",
         "properties": {

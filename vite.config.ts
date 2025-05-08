@@ -3,7 +3,11 @@ import { defineConfig } from 'vitest/config';
 import type { InlineConfig } from 'vitest/node';
 
 const includeFile = process.argv[4];
-const testBase: InlineConfig = { environment: 'jsdom', setupFiles: ['./tests/setup.ts'] };
+const testBase: InlineConfig = {
+  environment: 'jsdom',
+  setupFiles: ['./tests/setup.ts'],
+  poolOptions: { forks: { singleFork: true } },
+};
 const coverageBase = {
   include: ['src/**/*.ts'],
   exclude: [

@@ -1,5 +1,3 @@
-// @vitest-environment node
-
 import assert from 'assert';
 import { execSync } from 'child_process';
 import fs, { existsSync } from 'fs';

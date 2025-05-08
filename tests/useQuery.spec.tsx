@@ -4,12 +4,12 @@ import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import React from 'react';
 import { afterAll, afterEach, beforeAll, describe, expect, test } from 'vitest';
-import { $fc, fc } from '../projects/basic/app/frourio.client'; // fc をインポート
+import { $fc, fc } from '../projects/basic/app/frourio.client';
 
 const mockData = { bb: 'test-bb' };
 
 const apiClient = $fc({ baseURL: 'http://localhost' });
-const lowLevelApiClient = fc({ baseURL: 'http://localhost' }); // lowLevelApiClient を定義
+const lowLevelApiClient = fc({ baseURL: 'http://localhost' });
 
 const handlers = [
   http.get('http://localhost/', ({ request }) => {

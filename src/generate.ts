@@ -5,6 +5,7 @@ import ts from 'typescript';
 import { CLIENT_FILE, CLIENT_NAME, FROURIO_FILE, SERVER_FILE } from './constants';
 import { createHash } from './createHash';
 import type { Config } from './getConfig';
+import { getGlobalType } from './getGlobalType';
 import { getPropOptions, getSchemaOption, inferZodType, type PropOption } from './getPropOptions';
 import { initTSC } from './initTSC';
 import { listFrourioDirs } from './listFrourioDirs';
@@ -34,7 +35,13 @@ type ServerMethod = {
     | { isFormData: true; data: PropOption[] | null }
     | { isFormData: false; data?: undefined }
     | null;
-  res: { status: string; hasHeaders: boolean; body: { isString: boolean } | null }[] | undefined;
+  res:
+    | {
+        status: string;
+        hasHeaders: boolean;
+        body: { type: 'text' | 'json' | 'arrayBuffer' | 'blob' } | null;
+      }[]
+    | undefined;
 };
 
 export const generate = async ({ appDir, basePath }: Config): Promise<void> => {
@@ -124,16 +131,21 @@ export const generate = async ({ appDir, basePath }: Config): Promise<void> => {
                         resBodyZodType,
                         resBodyZodType.valueDeclaration,
                       );
+                    const blobType = getGlobalType('Blob', checker);
 
                     return {
                       status: s.getName(),
                       hasHeaders: statusProps.some((p) => p.getName() === 'headers'),
                       body: resBodyType
                         ? {
-                            isString: checker.isTypeAssignableTo(
-                              resBodyType,
-                              checker.getStringType(),
-                            ),
+                            type:
+                              resBodyType.getSymbol()?.getName() === 'ArrayBuffer'
+                                ? ('arrayBuffer' as const)
+                                : blobType && checker.isTypeAssignableTo(resBodyType, blobType)
+                                  ? ('blob' as const)
+                                  : checker.isTypeAssignableTo(resBodyType, checker.getStringType())
+                                    ? ('text' as const)
+                                    : ('json' as const),
                           }
                         : null,
                     };
@@ -535,7 +547,7 @@ ${
               }${
                 item.body
                   ? `\n        const resBody: { success: true; data: unknown } | { success: false; error: unknown } = await result.res.${
-                      item.body.isString ? 'text' : 'json'
+                      item.body.type
                     }().then(data => ({ success: true, data } as const)).catch(error => ({ success: false, error }));
 
         if (!resBody.success) return { ok: ${item.status.startsWith('2')}, raw: result.res, error: resBody.error };

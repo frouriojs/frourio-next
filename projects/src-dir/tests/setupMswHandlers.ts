@@ -1,4 +1,7 @@
 import { http, type RequestHandler } from 'msw';
+import * as route_og4f3x from '../src/app/[a]/arrayBuffer/route';
+import * as route_uq501x from '../src/app/[a]/blob/route';
+import * as route_bfn325 from '../src/app/[a]/text/route';
 import * as route_36xt6y from '../src/app/api/route';
 import * as route_15e5upz from '../src/app/api/%E6%97%A5%E6%9C%AC%E8%AA%9E/route';
 
@@ -6,6 +9,24 @@ export function setupMswHandlers(option?: { baseURL: string }): RequestHandler[]
   const baseURL = option?.baseURL.replace(/\/$/, '') ?? '';
 
   return [
+    http.get(`${baseURL}/:a/arrayBuffer`, ({ request }) => {
+      const pathChunks = request.url.replace(baseURL || /https?:\/\/[^/]+/, '').split('/');
+      const params = { 'a': `${pathChunks[1]}` };
+
+      return route_og4f3x.GET(request, { params: Promise.resolve(params) });
+    }),
+    http.get(`${baseURL}/:a/blob`, ({ request }) => {
+      const pathChunks = request.url.replace(baseURL || /https?:\/\/[^/]+/, '').split('/');
+      const params = { 'a': `${pathChunks[1]}` };
+
+      return route_uq501x.GET(request, { params: Promise.resolve(params) });
+    }),
+    http.get(`${baseURL}/:a/text`, ({ request }) => {
+      const pathChunks = request.url.replace(baseURL || /https?:\/\/[^/]+/, '').split('/');
+      const params = { 'a': `${pathChunks[1]}` };
+
+      return route_bfn325.GET(request, { params: Promise.resolve(params) });
+    }),
     http.post(`${baseURL}/api`, ({ request }) => {
       return route_36xt6y.POST(request);
     }),

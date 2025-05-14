@@ -4,7 +4,7 @@ import { fc_2ijh4e, $fc_2ijh4e } from './[b]/[...c]/frourio.client';
 import { fc_1yzfjrp, $fc_1yzfjrp } from './[b]/d/frourio.client';
 import { frourioSpec } from './frourio'
 
-export const fc_knqmrp = (option?: FrourioClientOption) => ({
+export const fc = (option?: FrourioClientOption) => ({
   '[b]/[...c]': fc_2ijh4e(option),
   '[b]/d': fc_1yzfjrp(option),
   $url: $url(option),
@@ -16,12 +16,12 @@ export const fc_knqmrp = (option?: FrourioClientOption) => ({
 
     const { init, ...rest } = req;
 
-    return [{ lowLevel: true, baseURL: option?.baseURL, dir: '/[a]', ...rest }, () => fc_knqmrp(option).$get(req)];
+    return [{ lowLevel: true, baseURL: option?.baseURL, dir: '/[a]', ...rest }, () => fc(option).$get(req)];
   },
   ...methods(option),
 });
 
-export const $fc_knqmrp = (option?: FrourioClientOption) => ({
+export const $fc = (option?: FrourioClientOption) => ({
   '[b]/[...c]': $fc_2ijh4e(option),
   '[b]/d': $fc_1yzfjrp(option),
   $url: {
@@ -41,7 +41,7 @@ export const $fc_knqmrp = (option?: FrourioClientOption) => ({
 
     const { init, ...rest } = req;
 
-    return [{ lowLevel: false, baseURL: option?.baseURL, dir: '/[a]', ...rest }, () => $fc_knqmrp(option).$get(req)];
+    return [{ lowLevel: false, baseURL: option?.baseURL, dir: '/[a]', ...rest }, () => $fc(option).$get(req)];
   },
   async $get(req: Parameters<ReturnType<typeof methods>['$get']>[0]): Promise<z.infer<typeof frourioSpec.get.res[200]['body']>> {
     const result = await methods(option).$get(req);
@@ -51,6 +51,10 @@ export const $fc_knqmrp = (option?: FrourioClientOption) => ({
     return result.data.body;
   },
 });
+
+export const fc_knqmrp = fc;
+
+export const $fc_knqmrp = $fc;
 
 const paramsSchema = z.object({ 'a': frourioSpec.param });
 

@@ -4,7 +4,7 @@ import { fc_n3it2j, $fc_n3it2j } from './admin/frourio.client';
 import { fc_76vmqd, $fc_76vmqd } from './public/frourio.client';
 import { frourioSpec } from './frourio'
 
-export const fc_sqrir7 = (option?: FrourioClientOption) => ({
+export const fc = (option?: FrourioClientOption) => ({
   'admin': fc_n3it2j(option),
   'public': fc_76vmqd(option),
   $url: $url(option),
@@ -12,12 +12,12 @@ export const fc_sqrir7 = (option?: FrourioClientOption) => ({
     key: { lowLevel: true; baseURL: FrourioClientOption['baseURL']; dir: string },
     fetcher: () => Promise<NonNullable<Awaited<ReturnType<ReturnType<typeof methods>['$get']>>>>,
   ] {
-    return [{ lowLevel: true, baseURL: option?.baseURL, dir: '/api/mw' }, () => fc_sqrir7(option).$get(req)];
+    return [{ lowLevel: true, baseURL: option?.baseURL, dir: '/api/mw' }, () => fc(option).$get(req)];
   },
   ...methods(option),
 });
 
-export const $fc_sqrir7 = (option?: FrourioClientOption) => ({
+export const $fc = (option?: FrourioClientOption) => ({
   'admin': $fc_n3it2j(option),
   'public': $fc_76vmqd(option),
   $url: {
@@ -33,7 +33,7 @@ export const $fc_sqrir7 = (option?: FrourioClientOption) => ({
     key: { lowLevel: false; baseURL: FrourioClientOption['baseURL']; dir: string },
     fetcher: () => Promise<z.infer<typeof frourioSpec.get.res[200]['body']>>,
   ] {
-    return [{ lowLevel: false, baseURL: option?.baseURL, dir: '/api/mw' }, () => $fc_sqrir7(option).$get(req)];
+    return [{ lowLevel: false, baseURL: option?.baseURL, dir: '/api/mw' }, () => $fc(option).$get(req)];
   },
   async $get(req?: Parameters<ReturnType<typeof methods>['$get']>[0]): Promise<z.infer<typeof frourioSpec.get.res[200]['body']>> {
     const result = await methods(option).$get(req);
@@ -43,6 +43,10 @@ export const $fc_sqrir7 = (option?: FrourioClientOption) => ({
     return result.data.body;
   },
 });
+
+export const fc_sqrir7 = fc;
+
+export const $fc_sqrir7 = $fc;
 
 const $url = (option?: FrourioClientOption) => ({
   get(): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {

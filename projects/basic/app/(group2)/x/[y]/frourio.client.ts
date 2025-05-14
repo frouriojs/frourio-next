@@ -2,7 +2,7 @@ import type { FrourioClientOption } from '@frourio/next';
 import { z } from 'zod';
 import { frourioSpec } from './frourio'
 
-export const fc_13e9lnf = (option?: FrourioClientOption) => ({
+export const fc = (option?: FrourioClientOption) => ({
   $url: $url(option),
   $build(req: Parameters<ReturnType<typeof methods>['$get']>[0] | null): [
     key: { lowLevel: true; baseURL: FrourioClientOption['baseURL']; dir: string } & Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'> | null,
@@ -12,12 +12,12 @@ export const fc_13e9lnf = (option?: FrourioClientOption) => ({
 
     const { init, ...rest } = req;
 
-    return [{ lowLevel: true, baseURL: option?.baseURL, dir: '/(group2)/x/[y]', ...rest }, () => fc_13e9lnf(option).$get(req)];
+    return [{ lowLevel: true, baseURL: option?.baseURL, dir: '/(group2)/x/[y]', ...rest }, () => fc(option).$get(req)];
   },
   ...methods(option),
 });
 
-export const $fc_13e9lnf = (option?: FrourioClientOption) => ({
+export const $fc = (option?: FrourioClientOption) => ({
   $url: {
     get(req: Parameters<ReturnType<typeof $url>['get']>[0]): string {
       const result = $url(option).get(req);
@@ -35,7 +35,7 @@ export const $fc_13e9lnf = (option?: FrourioClientOption) => ({
 
     const { init, ...rest } = req;
 
-    return [{ lowLevel: false, baseURL: option?.baseURL, dir: '/(group2)/x/[y]', ...rest }, () => $fc_13e9lnf(option).$get(req)];
+    return [{ lowLevel: false, baseURL: option?.baseURL, dir: '/(group2)/x/[y]', ...rest }, () => $fc(option).$get(req)];
   },
   async $get(req: Parameters<ReturnType<typeof methods>['$get']>[0]): Promise<Response> {
     const result = await methods(option).$get(req);
@@ -47,6 +47,10 @@ export const $fc_13e9lnf = (option?: FrourioClientOption) => ({
     return result.data;
   },
 });
+
+export const fc_13e9lnf = fc;
+
+export const $fc_13e9lnf = $fc;
 
 const paramsSchema = z.object({ 'y': z.string() });
 

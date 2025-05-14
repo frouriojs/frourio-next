@@ -46,6 +46,10 @@ export const $fc = (option?: FrourioClientOption) => ({
   },
 });
 
+export const fc_og4f3x = fc;
+
+export const $fc_og4f3x = $fc;
+
 const paramsSchema = z.object({ 'a': z.string() });
 
 const $url = (option?: FrourioClientOption) => ({

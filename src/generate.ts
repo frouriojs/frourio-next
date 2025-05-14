@@ -242,18 +242,19 @@ const clientData = (
     ),
     "import { frourioSpec } from './frourio'",
   ];
+  const relativePath = dirPath.replace(appDir, '');
   const apiPath =
     dirPath === appDir
       ? basePath || '/'
-      : `${basePath ?? ''}${dirPath.replace(appDir, '').replace(/\/\(.+?\)/g, '')}`;
-  const isRoot = frourioClientDirs.every((dir) => !dirPath.startsWith(`${dir}/`));
+      : `${basePath ?? ''}${relativePath.replace(/\/\(.+?\)/g, '')}`;
+  const currentHash = createHash(relativePath);
   const getMethod = methods.find((m) => m.name === 'get');
   const hasMethodReqKeys = (method: ServerMethod) =>
     !!(params || method.hasHeaders || method.query);
 
   return `${imports.join(';\n')}
 
-export const ${CLIENT_NAME}${!isRoot ? `_${createHash(dirPath.replace(appDir, ''))}` : ''} = (option?: FrourioClientOption) => ({${childDirs
+export const ${CLIENT_NAME} = (option?: FrourioClientOption) => ({${childDirs
     .map((child) => `\n  '${child.import}': ${CLIENT_NAME}_${child.hash}(option),`)
     .join('')}
   $url: $url(option),${
@@ -268,21 +269,21 @@ export const ${CLIENT_NAME}${!isRoot ? `_${createHash(dirPath.replace(appDir, ''
 
     const { init, ...rest } = req;
 
-    return [{ lowLevel: true, baseURL: option?.baseURL, dir: '${dirPath.replace(appDir, '') || '/'}', ...rest }, () => ${CLIENT_NAME}${!isRoot ? `_${createHash(dirPath.replace(appDir, ''))}` : ''}(option).$get(req)];
+    return [{ lowLevel: true, baseURL: option?.baseURL, dir: '${relativePath || '/'}', ...rest }, () => ${CLIENT_NAME}(option).$get(req)];
   },`
         : `
   $build(req?: { init?: RequestInit }): [
     key: { lowLevel: true; baseURL: FrourioClientOption['baseURL']; dir: string },
     fetcher: () => Promise<NonNullable<Awaited<ReturnType<ReturnType<typeof methods>['$get']>>>>,
   ] {
-    return [{ lowLevel: true, baseURL: option?.baseURL, dir: '${dirPath.replace(appDir, '') || '/'}' }, () => ${CLIENT_NAME}${!isRoot ? `_${createHash(dirPath.replace(appDir, ''))}` : ''}(option).$get(req)];
+    return [{ lowLevel: true, baseURL: option?.baseURL, dir: '${relativePath || '/'}' }, () => ${CLIENT_NAME}(option).$get(req)];
   },`
       : ''
   }
   ...methods(option),
 });
 
-export const $${CLIENT_NAME}${!isRoot ? `_${createHash(dirPath.replace(appDir, ''))}` : ''} = (option?: FrourioClientOption) => ({${childDirs
+export const $${CLIENT_NAME} = (option?: FrourioClientOption) => ({${childDirs
     .map((child) => `\n  '${child.import}': $${CLIENT_NAME}_${child.hash}(option),`)
     .join('')}
   $url: {${methods
@@ -326,14 +327,14 @@ export const $${CLIENT_NAME}${!isRoot ? `_${createHash(dirPath.replace(appDir, '
 
     const { init, ...rest } = req;
 
-    return [{ lowLevel: false, baseURL: option?.baseURL, dir: '${dirPath.replace(appDir, '') || '/'}', ...rest }, () => $${CLIENT_NAME}${!isRoot ? `_${createHash(dirPath.replace(appDir, ''))}` : ''}(option).$get(req)];
+    return [{ lowLevel: false, baseURL: option?.baseURL, dir: '${relativePath || '/'}', ...rest }, () => $${CLIENT_NAME}(option).$get(req)];
   },`
             : `
   $build(req?: { init?: RequestInit }): [
     key: { lowLevel: false; baseURL: FrourioClientOption['baseURL']; dir: string },
     fetcher: () => Promise<${resType}>,
   ] {
-    return [{ lowLevel: false, baseURL: option?.baseURL, dir: '${dirPath.replace(appDir, '') || '/'}' }, () => $${CLIENT_NAME}${!isRoot ? `_${createHash(dirPath.replace(appDir, ''))}` : ''}(option).$get(req)];
+    return [{ lowLevel: false, baseURL: option?.baseURL, dir: '${relativePath || '/'}' }, () => $${CLIENT_NAME}(option).$get(req)];
   },`
           : '';
 
@@ -362,6 +363,10 @@ export const $${CLIENT_NAME}${!isRoot ? `_${createHash(dirPath.replace(appDir, '
     })
     .join('')}
 });
+
+export const ${CLIENT_NAME}_${currentHash} = ${CLIENT_NAME};
+
+export const $${CLIENT_NAME}_${currentHash} = $${CLIENT_NAME};
 ${params ? `\nconst paramsSchema = ${clientParamsToText(params)};\n` : ''}
 const $url = (option?: FrourioClientOption) => ({${methods
     .map(

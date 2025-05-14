@@ -2,18 +2,18 @@ import type { FrourioClientOption } from '@frourio/next';
 import { z } from 'zod';
 import { frourioSpec } from './frourio'
 
-export const fc_76vmqd = (option?: FrourioClientOption) => ({
+export const fc = (option?: FrourioClientOption) => ({
   $url: $url(option),
   $build(req?: { init?: RequestInit }): [
     key: { lowLevel: true; baseURL: FrourioClientOption['baseURL']; dir: string },
     fetcher: () => Promise<NonNullable<Awaited<ReturnType<ReturnType<typeof methods>['$get']>>>>,
   ] {
-    return [{ lowLevel: true, baseURL: option?.baseURL, dir: '/api/mw/public' }, () => fc_76vmqd(option).$get(req)];
+    return [{ lowLevel: true, baseURL: option?.baseURL, dir: '/api/mw/public' }, () => fc(option).$get(req)];
   },
   ...methods(option),
 });
 
-export const $fc_76vmqd = (option?: FrourioClientOption) => ({
+export const $fc = (option?: FrourioClientOption) => ({
   $url: {
     get(): string {
       const result = $url(option).get();
@@ -27,7 +27,7 @@ export const $fc_76vmqd = (option?: FrourioClientOption) => ({
     key: { lowLevel: false; baseURL: FrourioClientOption['baseURL']; dir: string },
     fetcher: () => Promise<z.infer<typeof frourioSpec.get.res[200]['body']>>,
   ] {
-    return [{ lowLevel: false, baseURL: option?.baseURL, dir: '/api/mw/public' }, () => $fc_76vmqd(option).$get(req)];
+    return [{ lowLevel: false, baseURL: option?.baseURL, dir: '/api/mw/public' }, () => $fc(option).$get(req)];
   },
   async $get(req?: Parameters<ReturnType<typeof methods>['$get']>[0]): Promise<z.infer<typeof frourioSpec.get.res[200]['body']>> {
     const result = await methods(option).$get(req);
@@ -37,6 +37,10 @@ export const $fc_76vmqd = (option?: FrourioClientOption) => ({
     return result.data.body;
   },
 });
+
+export const fc_76vmqd = fc;
+
+export const $fc_76vmqd = $fc;
 
 const $url = (option?: FrourioClientOption) => ({
   get(): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {

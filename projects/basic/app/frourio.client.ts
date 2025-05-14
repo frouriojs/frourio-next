@@ -89,6 +89,10 @@ export const $fc = (option?: FrourioClientOption) => ({
   },
 });
 
+export const fc_ztntfp = fc;
+
+export const $fc_ztntfp = $fc;
+
 const $url = (option?: FrourioClientOption) => ({
   get(req: { query: z.infer<typeof frourioSpec.get.query> }): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
     const parsedQuery = frourioSpec.get.query.safeParse(req.query);

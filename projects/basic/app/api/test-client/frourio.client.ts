@@ -4,7 +4,7 @@ import { fc_1rqfh40, $fc_1rqfh40 } from './[userId]/frourio.client';
 import { fc_1tp1ur6, $fc_1tp1ur6 } from './stream/frourio.client';
 import { frourioSpec } from './frourio'
 
-export const fc_17yqnk1 = (option?: FrourioClientOption) => ({
+export const fc = (option?: FrourioClientOption) => ({
   '[userId]': fc_1rqfh40(option),
   'stream': fc_1tp1ur6(option),
   $url: $url(option),
@@ -16,12 +16,12 @@ export const fc_17yqnk1 = (option?: FrourioClientOption) => ({
 
     const { init, ...rest } = req;
 
-    return [{ lowLevel: true, baseURL: option?.baseURL, dir: '/api/test-client', ...rest }, () => fc_17yqnk1(option).$get(req)];
+    return [{ lowLevel: true, baseURL: option?.baseURL, dir: '/api/test-client', ...rest }, () => fc(option).$get(req)];
   },
   ...methods(option),
 });
 
-export const $fc_17yqnk1 = (option?: FrourioClientOption) => ({
+export const $fc = (option?: FrourioClientOption) => ({
   '[userId]': $fc_1rqfh40(option),
   'stream': $fc_1tp1ur6(option),
   $url: {
@@ -55,7 +55,7 @@ export const $fc_17yqnk1 = (option?: FrourioClientOption) => ({
 
     const { init, ...rest } = req;
 
-    return [{ lowLevel: false, baseURL: option?.baseURL, dir: '/api/test-client', ...rest }, () => $fc_17yqnk1(option).$get(req)];
+    return [{ lowLevel: false, baseURL: option?.baseURL, dir: '/api/test-client', ...rest }, () => $fc(option).$get(req)];
   },
   async $get(req: Parameters<ReturnType<typeof methods>['$get']>[0]): Promise<z.infer<typeof frourioSpec.get.res[200]['body']>> {
     const result = await methods(option).$get(req);
@@ -85,6 +85,10 @@ export const $fc_17yqnk1 = (option?: FrourioClientOption) => ({
     return result.data.body;
   },
 });
+
+export const fc_17yqnk1 = fc;
+
+export const $fc_17yqnk1 = $fc;
 
 const $url = (option?: FrourioClientOption) => ({
   get(req: { query: z.infer<typeof frourioSpec.get.query> }): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {

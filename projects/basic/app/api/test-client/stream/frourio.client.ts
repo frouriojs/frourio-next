@@ -2,12 +2,12 @@ import type { FrourioClientOption } from '@frourio/next';
 import { z } from 'zod';
 import { frourioSpec } from './frourio'
 
-export const fc_1tp1ur6 = (option?: FrourioClientOption) => ({
+export const fc = (option?: FrourioClientOption) => ({
   $url: $url(option),
   ...methods(option),
 });
 
-export const $fc_1tp1ur6 = (option?: FrourioClientOption) => ({
+export const $fc = (option?: FrourioClientOption) => ({
   $url: {
     post(): string {
       const result = $url(option).post();
@@ -27,6 +27,10 @@ export const $fc_1tp1ur6 = (option?: FrourioClientOption) => ({
     return result.data;
   },
 });
+
+export const fc_1tp1ur6 = fc;
+
+export const $fc_1tp1ur6 = $fc;
 
 const $url = (option?: FrourioClientOption) => ({
   post(): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {

@@ -3,19 +3,19 @@ import { z } from 'zod';
 import { fc_gye2fo, $fc_gye2fo } from './users/frourio.client';
 import { frourioSpec } from './frourio'
 
-export const fc_n3it2j = (option?: FrourioClientOption) => ({
+export const fc = (option?: FrourioClientOption) => ({
   'users': fc_gye2fo(option),
   $url: $url(option),
   $build(req?: { init?: RequestInit }): [
     key: { lowLevel: true; baseURL: FrourioClientOption['baseURL']; dir: string },
     fetcher: () => Promise<NonNullable<Awaited<ReturnType<ReturnType<typeof methods>['$get']>>>>,
   ] {
-    return [{ lowLevel: true, baseURL: option?.baseURL, dir: '/api/mw/admin' }, () => fc_n3it2j(option).$get(req)];
+    return [{ lowLevel: true, baseURL: option?.baseURL, dir: '/api/mw/admin' }, () => fc(option).$get(req)];
   },
   ...methods(option),
 });
 
-export const $fc_n3it2j = (option?: FrourioClientOption) => ({
+export const $fc = (option?: FrourioClientOption) => ({
   'users': $fc_gye2fo(option),
   $url: {
     get(): string {
@@ -37,7 +37,7 @@ export const $fc_n3it2j = (option?: FrourioClientOption) => ({
     key: { lowLevel: false; baseURL: FrourioClientOption['baseURL']; dir: string },
     fetcher: () => Promise<z.infer<typeof frourioSpec.get.res[200]['body']>>,
   ] {
-    return [{ lowLevel: false, baseURL: option?.baseURL, dir: '/api/mw/admin' }, () => $fc_n3it2j(option).$get(req)];
+    return [{ lowLevel: false, baseURL: option?.baseURL, dir: '/api/mw/admin' }, () => $fc(option).$get(req)];
   },
   async $get(req?: Parameters<ReturnType<typeof methods>['$get']>[0]): Promise<z.infer<typeof frourioSpec.get.res[200]['body']>> {
     const result = await methods(option).$get(req);
@@ -58,6 +58,10 @@ export const $fc_n3it2j = (option?: FrourioClientOption) => ({
     return result.data.body;
   },
 });
+
+export const fc_n3it2j = fc;
+
+export const $fc_n3it2j = $fc;
 
 const $url = (option?: FrourioClientOption) => ({
   get(): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {

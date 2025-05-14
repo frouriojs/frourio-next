@@ -2,7 +2,7 @@ import type { FrourioClientOption } from '@frourio/next';
 import { z } from 'zod';
 import { frourioSpec } from './frourio'
 
-export const fc_195l5vw = (option?: FrourioClientOption) => ({
+export const fc = (option?: FrourioClientOption) => ({
   $url: $url(option),
   $build(req: Parameters<ReturnType<typeof methods>['$get']>[0] | null): [
     key: { lowLevel: true; baseURL: FrourioClientOption['baseURL']; dir: string } & Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'> | null,
@@ -12,12 +12,12 @@ export const fc_195l5vw = (option?: FrourioClientOption) => ({
 
     const { init, ...rest } = req;
 
-    return [{ lowLevel: true, baseURL: option?.baseURL, dir: '/api/key-collision-test-another', ...rest }, () => fc_195l5vw(option).$get(req)];
+    return [{ lowLevel: true, baseURL: option?.baseURL, dir: '/api/key-collision-test-another', ...rest }, () => fc(option).$get(req)];
   },
   ...methods(option),
 });
 
-export const $fc_195l5vw = (option?: FrourioClientOption) => ({
+export const $fc = (option?: FrourioClientOption) => ({
   $url: {
     get(req: Parameters<ReturnType<typeof $url>['get']>[0]): string {
       const result = $url(option).get(req);
@@ -35,7 +35,7 @@ export const $fc_195l5vw = (option?: FrourioClientOption) => ({
 
     const { init, ...rest } = req;
 
-    return [{ lowLevel: false, baseURL: option?.baseURL, dir: '/api/key-collision-test-another', ...rest }, () => $fc_195l5vw(option).$get(req)];
+    return [{ lowLevel: false, baseURL: option?.baseURL, dir: '/api/key-collision-test-another', ...rest }, () => $fc(option).$get(req)];
   },
   async $get(req: Parameters<ReturnType<typeof methods>['$get']>[0]): Promise<z.infer<typeof frourioSpec.get.res[200]['body']>> {
     const result = await methods(option).$get(req);
@@ -45,6 +45,10 @@ export const $fc_195l5vw = (option?: FrourioClientOption) => ({
     return result.data.body;
   },
 });
+
+export const fc_195l5vw = fc;
+
+export const $fc_195l5vw = $fc;
 
 const $url = (option?: FrourioClientOption) => ({
   get(req: { query: z.infer<typeof frourioSpec.get.query> }): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {

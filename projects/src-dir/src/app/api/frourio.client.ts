@@ -29,6 +29,10 @@ export const $fc = (option?: FrourioClientOption) => ({
   },
 });
 
+export const fc_36xt6y = fc;
+
+export const $fc_36xt6y = $fc;
+
 const $url = (option?: FrourioClientOption) => ({
   post(): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
     return { isValid: true, data: `${option?.baseURL?.replace(/\/$/, '') ?? ''}/foo/bar/api` };

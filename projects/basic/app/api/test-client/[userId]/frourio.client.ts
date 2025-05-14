@@ -2,12 +2,12 @@ import type { FrourioClientOption } from '@frourio/next';
 import { z } from 'zod';
 import { frourioSpec } from './frourio'
 
-export const fc_1rqfh40 = (option?: FrourioClientOption) => ({
+export const fc = (option?: FrourioClientOption) => ({
   $url: $url(option),
   ...methods(option),
 });
 
-export const $fc_1rqfh40 = (option?: FrourioClientOption) => ({
+export const $fc = (option?: FrourioClientOption) => ({
   $url: {
     put(req: Parameters<ReturnType<typeof $url>['put']>[0]): string {
       const result = $url(option).put(req);
@@ -43,6 +43,10 @@ export const $fc_1rqfh40 = (option?: FrourioClientOption) => ({
     return result.data.body;
   },
 });
+
+export const fc_1rqfh40 = fc;
+
+export const $fc_1rqfh40 = $fc;
 
 const paramsSchema = z.object({ 'userId': frourioSpec.param });
 

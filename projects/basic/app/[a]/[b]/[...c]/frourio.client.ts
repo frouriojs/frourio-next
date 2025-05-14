@@ -3,12 +3,12 @@ import { z } from 'zod';
 import { frourioSpec as ancestorSpec0 } from '../../frourio';
 import { frourioSpec } from './frourio'
 
-export const fc_2ijh4e = (option?: FrourioClientOption) => ({
+export const fc = (option?: FrourioClientOption) => ({
   $url: $url(option),
   ...methods(option),
 });
 
-export const $fc_2ijh4e = (option?: FrourioClientOption) => ({
+export const $fc = (option?: FrourioClientOption) => ({
   $url: {
     post(req: Parameters<ReturnType<typeof $url>['post']>[0]): string {
       const result = $url(option).post(req);
@@ -26,6 +26,10 @@ export const $fc_2ijh4e = (option?: FrourioClientOption) => ({
     return result.data.body;
   },
 });
+
+export const fc_2ijh4e = fc;
+
+export const $fc_2ijh4e = $fc;
 
 const paramsSchema = z.object({ 'a': ancestorSpec0.param, 'b': z.string(), 'c': z.array(z.string()) });
 

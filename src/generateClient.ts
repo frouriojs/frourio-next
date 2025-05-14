@@ -10,42 +10,37 @@ export const generateClientTexts = (
   basePath: string | undefined,
   specs: DirSpec[],
   hasParamDict: HasParamsDict,
-) => {
+): { filePath: string; text: string }[] => {
   const clientSpecs = specs.filter(({ spec }) => spec.methods.length > 0);
-  const frourioClientDirs = clientSpecs.map(({ dirPath }) => dirPath);
 
-  return clientSpecs.map(({ dirPath, spec }) => ({
-    filePath: path.posix.join(dirPath, CLIENT_FILE),
-    text: generateClient(
-      appDir,
-      dirPath,
-      frourioClientDirs,
-      pathToClientParams(hasParamDict, dirPath, spec.param),
-      spec.methods,
-      basePath,
-    ),
+  return clientSpecs.map((dirSpec) => ({
+    filePath: path.posix.join(dirSpec.dirPath, CLIENT_FILE),
+    text: generateClient(appDir, hasParamDict, clientSpecs, dirSpec, basePath),
   }));
 };
 
+const hasMethodReqKeys = (method: MethodInfo, params: ClientParamsInfo | undefined): boolean =>
+  !!(params || method.hasHeaders || method.query);
+
 const generateClient = (
   appDir: string,
-  dirPath: string,
-  frourioClientDirs: string[],
-  params: ClientParamsInfo | undefined,
-  methods: MethodInfo[],
+  hasParamDict: HasParamsDict,
+  clientSpecs: DirSpec[],
+  { dirPath, spec }: DirSpec,
   basePath: string | undefined,
-) => {
-  const childDirs = frourioClientDirs
-    .filter((dir) => dir.startsWith(`${dirPath}/`))
-    .map((dir) => ({
-      import: dir.replace(`${dirPath}/`, ''),
-      hash: createHash(dir.replace(appDir, '')),
+): string => {
+  const childDirs = clientSpecs
+    .filter((d) => d.dirPath.startsWith(`${dirPath}/`))
+    .map((d) => ({
+      import: d.dirPath.replace(`${dirPath}/`, ''),
+      hash: createHash(d.dirPath.replace(appDir, '')),
     }))
     .filter((dir, _, arr) =>
       arr.every(
         (other) => !dir.import.startsWith(`${other.import}/`) || dir.import === other.import,
       ),
     );
+  const params = pathToClientParams(hasParamDict, dirPath, spec.param);
   const imports: string[] = [
     "import type { FrourioClientOption } from '@frourio/next'",
     "import { z } from 'zod'",
@@ -64,18 +59,42 @@ const generateClient = (
       ? basePath || '/'
       : `${basePath ?? ''}${relativePath.replace(/\/\(.+?\)/g, '')}`;
   const currentHash = createHash(relativePath);
-  const getMethod = methods.find((m) => m.name === 'get');
-  const hasMethodReqKeys = (method: MethodInfo) => !!(params || method.hasHeaders || method.query);
 
   return `${imports.join(';\n')}
 
 export const ${CLIENT_NAME} = (option?: FrourioClientOption) => ({${childDirs
     .map((child) => `\n  '${child.import}': ${CLIENT_NAME}_${child.hash}(option),`)
     .join('')}
-  $url: $url(option),${
-    getMethod
-      ? hasMethodReqKeys(getMethod)
-        ? `
+  $url: $url(option),${generateLowLevel$build(spec.methods, params, relativePath)}
+  ...methods(option),
+});
+
+export const $${CLIENT_NAME} = (option?: FrourioClientOption) => ({${childDirs
+    .map((child) => `\n  '${child.import}': $${CLIENT_NAME}_${child.hash}(option),`)
+    .join('')}
+${generateHighLevel$url(spec.methods, params)}${generateHighLevelMethods(spec.methods, params, relativePath)}
+});
+
+export const ${CLIENT_NAME}_${currentHash} = ${CLIENT_NAME};
+
+export const $${CLIENT_NAME}_${currentHash} = $${CLIENT_NAME};
+${params ? `\nconst paramsSchema = ${clientParamsToText(params)};\n` : ''}
+const $url = ${generateUrlFn(spec.methods, params, apiPath)};
+
+const methods = ${generateMethodsFn(spec.methods, params)};
+`;
+};
+
+const generateLowLevel$build = (
+  methods: MethodInfo[],
+  params: ClientParamsInfo | undefined,
+  relativePath: string,
+): string => {
+  const getMethod = methods.find((m) => m.name === 'get');
+
+  return getMethod
+    ? hasMethodReqKeys(getMethod, params)
+      ? `
   $build(req: Parameters<ReturnType<typeof methods>['$get']>[0] | null): [
     key: { lowLevel: true; baseURL: FrourioClientOption['baseURL']; dir: string } & Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'> | null,
     fetcher: () => Promise<NonNullable<Awaited<ReturnType<ReturnType<typeof methods>['$get']>>>>,
@@ -86,26 +105,25 @@ export const ${CLIENT_NAME} = (option?: FrourioClientOption) => ({${childDirs
 
     return [{ lowLevel: true, baseURL: option?.baseURL, dir: '${relativePath || '/'}', ...rest }, () => ${CLIENT_NAME}(option).$get(req)];
   },`
-        : `
+      : `
   $build(req?: { init?: RequestInit }): [
     key: { lowLevel: true; baseURL: FrourioClientOption['baseURL']; dir: string },
     fetcher: () => Promise<NonNullable<Awaited<ReturnType<ReturnType<typeof methods>['$get']>>>>,
   ] {
     return [{ lowLevel: true, baseURL: option?.baseURL, dir: '${relativePath || '/'}' }, () => ${CLIENT_NAME}(option).$get(req)];
   },`
-      : ''
-  }
-  ...methods(option),
-});
+    : '';
+};
 
-export const $${CLIENT_NAME} = (option?: FrourioClientOption) => ({${childDirs
-    .map((child) => `\n  '${child.import}': $${CLIENT_NAME}_${child.hash}(option),`)
-    .join('')}
-  $url: {${methods
+const generateHighLevel$url = (
+  methods: MethodInfo[],
+  params: ClientParamsInfo | undefined,
+): string => {
+  return `  $url: {${methods
     .map(
       (method) => `
-    ${method.name}(${hasMethodReqKeys(method) ? `req: Parameters<ReturnType<typeof $url>['${method.name}']>[0]` : ''}): string {
-      const result = $url(option).${method.name}(${hasMethodReqKeys(method) ? 'req' : ''});
+    ${method.name}(${hasMethodReqKeys(method, params) ? `req: Parameters<ReturnType<typeof $url>['${method.name}']>[0]` : ''}): string {
+      const result = $url(option).${method.name}(${hasMethodReqKeys(method, params) ? 'req' : ''});
 
       if (!result.isValid) throw result.reason;
 
@@ -113,7 +131,15 @@ export const $${CLIENT_NAME} = (option?: FrourioClientOption) => ({${childDirs
     },`,
     )
     .join('')}
-  },${methods
+  },`;
+};
+
+const generateHighLevelMethods = (
+  methods: MethodInfo[],
+  params: ClientParamsInfo | undefined,
+  relativePath: string,
+): string => {
+  return methods
     .map((method) => {
       const resType = method.res?.every((r) => !r.status.startsWith('2'))
         ? 'never'
@@ -132,7 +158,7 @@ export const $${CLIENT_NAME} = (option?: FrourioClientOption) => ({${childDirs
             ].join(' | ');
       const builder =
         method.name === 'get'
-          ? hasMethodReqKeys(method)
+          ? hasMethodReqKeys(method, params)
             ? `
   $build(req: Parameters<ReturnType<typeof methods>['$get']>[0] | null): [
     key: { lowLevel: false; baseURL: FrourioClientOption['baseURL']; dir: string } & Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'> | null,
@@ -155,7 +181,7 @@ export const $${CLIENT_NAME} = (option?: FrourioClientOption) => ({${childDirs
 
       return `${builder}
   async $${method.name}(req${
-    hasMethodReqKeys(method) || method.body ? '' : '?'
+    hasMethodReqKeys(method, params) || method.body ? '' : '?'
   }: Parameters<ReturnType<typeof methods>['$${method.name}']>[0]): Promise<${resType}> {
     const result = await methods(option).$${method.name}(req);
 
@@ -176,23 +202,23 @@ export const $${CLIENT_NAME} = (option?: FrourioClientOption) => ({${childDirs
     }
   },`;
     })
-    .join('')}
-});
+    .join('');
+};
 
-export const ${CLIENT_NAME}_${currentHash} = ${CLIENT_NAME};
-
-export const $${CLIENT_NAME}_${currentHash} = $${CLIENT_NAME};
-${params ? `\nconst paramsSchema = ${clientParamsToText(params)};\n` : ''}
-const $url = (option?: FrourioClientOption) => ({${methods
-    .map(
-      (method) => `\n  ${method.name}(${
-        params || method.query
-          ? `req: { ${[
-              ...(params ? ['params: z.infer<typeof paramsSchema>'] : []),
-              ...(method.query ? [`query: z.infer<typeof frourioSpec.${method.name}.query>`] : []),
-            ].join(',')} }`
-          : ''
-      }): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
+const generateUrlFn = (
+  methods: MethodInfo[],
+  params: ClientParamsInfo | undefined,
+  apiPath: string,
+): string => `(option?: FrourioClientOption) => ({${methods
+  .map(
+    (method) => `\n  ${method.name}(${
+      params || method.query
+        ? `req: { ${[
+            ...(params ? ['params: z.infer<typeof paramsSchema>'] : []),
+            ...(method.query ? [`query: z.infer<typeof frourioSpec.${method.name}.query>`] : []),
+          ].join(',')} }`
+        : ''
+    }): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
 ${
   params
     ? `    const parsedParams = paramsSchema.safeParse(req.params);
@@ -200,8 +226,8 @@ ${
     if (!parsedParams.success) return { isValid: false, reason: parsedParams.error };\n\n`
     : ''
 }${
-        method.query
-          ? `    const parsedQuery = frourioSpec.${method.name}.query.safeParse(req.query);
+      method.query
+        ? `    const parsedQuery = frourioSpec.${method.name}.query.safeParse(req.query);
 
     if (!parsedQuery.success) return { isValid: false, reason: parsedQuery.error };
 
@@ -216,24 +242,25 @@ ${
         searchParams.append(key, value.toString());
       }
     });\n\n`
-          : ''
-      }    return { isValid: true, data: \`\${option?.baseURL?.replace(/\\/$/, '') ?? ''}${
-        params
-          ? apiPath
-              .replace(
-                /\/\[\[\.\.\.(.+?)\]\]/,
-                "${parsedParams.data.$1 !== undefined && parsedParams.data.$1.length > 0 ? `/${parsedParams.data.$1.join('/')}` : ''}",
-              )
-              .replace(/\[\.\.\.(.+?)\]/, "${parsedParams.data.$1.join('/')}")
-              .replace(/\[(.+?)\]/g, '${parsedParams.data.$1}')
-          : apiPath
-      }${method.query ? `?\${searchParams.toString()}` : ''}\` };
+        : ''
+    }    return { isValid: true, data: \`\${option?.baseURL?.replace(/\\/$/, '') ?? ''}${
+      params
+        ? apiPath
+            .replace(
+              /\/\[\[\.\.\.(.+?)\]\]/,
+              "${parsedParams.data.$1 !== undefined && parsedParams.data.$1.length > 0 ? `/${parsedParams.data.$1.join('/')}` : ''}",
+            )
+            .replace(/\[\.\.\.(.+?)\]/, "${parsedParams.data.$1.join('/')}")
+            .replace(/\[(.+?)\]/g, '${parsedParams.data.$1}')
+        : apiPath
+    }${method.query ? `?\${searchParams.toString()}` : ''}\` };
   },`,
-    )
-    .join('')}
-});
+  )
+  .join('')}
+})`;
 
-const methods = (option?: FrourioClientOption) => ({${methods
+const generateMethodsFn = (methods: MethodInfo[], params: ClientParamsInfo | undefined): string => {
+  return `(option?: FrourioClientOption) => ({${methods
     .map((method) => {
       return `\n  async $${method.name}(req${
         params || method.hasHeaders || method.query || method.body ? '' : '?'
@@ -295,7 +322,7 @@ const methods = (option?: FrourioClientOption) => ({${methods
     | { ok?: undefined; isValid: false; data?: undefined; failure?: undefined; raw?: undefined; reason: z.ZodError; error?: undefined }
     | { ok?: undefined; isValid?: undefined; data?: undefined; failure?: undefined; raw?: undefined; reason?: undefined; error: unknown }
   > {
-    const url = $url(option).${method.name}(${hasMethodReqKeys(method) ? 'req' : ''});
+    const url = $url(option).${method.name}(${hasMethodReqKeys(method, params) ? 'req' : ''});
 
     if (url.reason) return url;
 ${
@@ -394,6 +421,5 @@ ${
   },`;
     })
     .join('')}
-});
-`;
+})`;
 };

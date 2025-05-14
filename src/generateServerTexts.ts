@@ -8,7 +8,7 @@ export const generateServerTexts = (
   specs: DirSpec[],
   frourioDirs: string[],
   middlewareDict: MiddlewareDict,
-) =>
+): { filePath: string; text: string }[] =>
   specs.map(({ dirPath, spec }) => {
     const ancestorMiddleware = frourioDirs.findLast(
       (dir) => dir !== dirPath && dirPath.includes(dir) && middlewareDict[dir],
@@ -43,7 +43,7 @@ const generateServer = (
     current: { hasCtx: boolean } | undefined;
   },
   methods: MethodInfo[],
-) => {
+): string => {
   const needsRouteFile = methods.length > 0 || middleware.current;
   const imports: string[] = [
     "import { NextRequest, NextResponse } from 'next/server'",

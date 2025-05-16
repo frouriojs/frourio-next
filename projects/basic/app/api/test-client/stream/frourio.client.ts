@@ -4,7 +4,7 @@ import { frourioSpec as frourioSpec_1tp1ur6 } from './frourio'
 
 export const fc = (option?: FrourioClientOption) => ({
   $url: $url_1tp1ur6(option),
-  ...methods(option),
+  ...methods_1tp1ur6(option),
 });
 
 export const $fc = (option?: FrourioClientOption) => ({
@@ -17,8 +17,8 @@ export const $fc = (option?: FrourioClientOption) => ({
       return result.data;
     },
   },
-  async $post(req: Parameters<ReturnType<typeof methods>['$post']>[0]): Promise<Response> {
-    const result = await methods(option).$post(req);
+  async $post(req: Parameters<ReturnType<typeof methods_1tp1ur6>['$post']>[0]): Promise<Response> {
+    const result = await methods_1tp1ur6(option).$post(req);
 
     if (!result.isValid) throw result.isValid === false ? result.reason : result.error;
 
@@ -38,7 +38,7 @@ const $url_1tp1ur6 = (option?: FrourioClientOption) => ({
   },
 });
 
-const methods = (option?: FrourioClientOption) => ({
+const methods_1tp1ur6 = (option?: FrourioClientOption) => ({
   async $post(req: { body: z.infer<typeof frourioSpec_1tp1ur6.post.body>, init?: RequestInit }): Promise<
     | { ok: true; isValid: true; data: Response; failure?: undefined; raw: Response; reason?: undefined; error?: undefined }
     | { ok: false; isValid: true; data?: undefined; failure: Response; raw: Response; reason?: undefined; error?: undefined }
@@ -72,3 +72,4 @@ const methods = (option?: FrourioClientOption) => ({
     return result.res.ok ? { ok: true, isValid: true, data: result.res, raw: result.res } : { ok: false, isValid: true, failure: result.res, raw: result.res };
   },
 });
+

@@ -4,7 +4,7 @@ import { frourioSpec as frourioSpec_15e5upz } from './frourio'
 
 export const fc = (option?: FrourioClientOption) => ({
   $url: $url_15e5upz(option),
-  ...methods(option),
+  ...methods_15e5upz(option),
 });
 
 export const $fc = (option?: FrourioClientOption) => ({
@@ -17,8 +17,8 @@ export const $fc = (option?: FrourioClientOption) => ({
       return result.data;
     },
   },
-  async $post(req: Parameters<ReturnType<typeof methods>['$post']>[0]): Promise<z.infer<typeof frourioSpec_15e5upz.post.res[200]['body']>> {
-    const result = await methods(option).$post(req);
+  async $post(req: Parameters<ReturnType<typeof methods_15e5upz>['$post']>[0]): Promise<z.infer<typeof frourioSpec_15e5upz.post.res[200]['body']>> {
+    const result = await methods_15e5upz(option).$post(req);
 
     if (!result.isValid) throw result.isValid === false ? result.reason : result.error;
 
@@ -36,7 +36,7 @@ const $url_15e5upz = (option?: FrourioClientOption) => ({
   },
 });
 
-const methods = (option?: FrourioClientOption) => ({
+const methods_15e5upz = (option?: FrourioClientOption) => ({
   async $post(req: { body: z.infer<typeof frourioSpec_15e5upz.post.body>, init?: RequestInit }): Promise<
     | { ok: true; isValid: true; data: { status: 200; headers?: undefined; body: z.infer<typeof frourioSpec_15e5upz.post.res[200]['body']> }; failure?: undefined; raw: Response; reason?: undefined; error?: undefined }
     | { ok: boolean; isValid: false; data?: undefined; failure?: undefined; raw: Response; reason: z.ZodError; error?: undefined }
@@ -106,3 +106,4 @@ const methods = (option?: FrourioClientOption) => ({
     }
   },
 });
+

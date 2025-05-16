@@ -4,17 +4,17 @@ import { frourioSpec as frourioSpec_gye2fo } from './frourio'
 
 export const fc = (option?: FrourioClientOption) => ({
   $url: $url_gye2fo(option),
-  $build(req: Parameters<ReturnType<typeof methods>['$get']>[0] | null): [
-    key: { lowLevel: true; baseURL: FrourioClientOption['baseURL']; dir: string } & Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'> | null,
-    fetcher: () => Promise<NonNullable<Awaited<ReturnType<ReturnType<typeof methods>['$get']>>>>,
+  $build(req: Parameters<ReturnType<typeof methods_gye2fo>['$get']>[0] | null): [
+    key: { lowLevel: true; baseURL: FrourioClientOption['baseURL']; dir: string } & Omit<Parameters<ReturnType<typeof methods_gye2fo>['$get']>[0], 'init'> | null,
+    fetcher: () => Promise<NonNullable<Awaited<ReturnType<ReturnType<typeof methods_gye2fo>['$get']>>>>,
   ] {
     if (req === null) return [null, () => Promise.reject(new Error('Fetcher is disabled.'))];
 
     const { init, ...rest } = req;
 
-    return [{ lowLevel: true, baseURL: option?.baseURL, dir: '/api/mw/admin/users', ...rest }, () => fc(option).$get(req)];
+    return [{ lowLevel: true, baseURL: option?.baseURL, dir: '/api/mw/admin/users', ...rest }, () => methods_gye2fo(option).$get(req)];
   },
-  ...methods(option),
+  ...methods_gye2fo(option),
 });
 
 export const $fc = (option?: FrourioClientOption) => ({
@@ -27,8 +27,8 @@ export const $fc = (option?: FrourioClientOption) => ({
       return result.data;
     },
   },
-  $build(req: Parameters<ReturnType<typeof methods>['$get']>[0] | null): [
-    key: { lowLevel: false; baseURL: FrourioClientOption['baseURL']; dir: string } & Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'> | null,
+  $build(req: Parameters<ReturnType<typeof methods_gye2fo>['$get']>[0] | null): [
+    key: { lowLevel: false; baseURL: FrourioClientOption['baseURL']; dir: string } & Omit<Parameters<ReturnType<typeof methods_gye2fo>['$get']>[0], 'init'> | null,
     fetcher: () => Promise<z.infer<typeof frourioSpec_gye2fo.get.res[200]['body']>>,
   ] {
     if (req === null) return [null, () => Promise.reject(new Error('Fetcher is disabled.'))];
@@ -37,8 +37,8 @@ export const $fc = (option?: FrourioClientOption) => ({
 
     return [{ lowLevel: false, baseURL: option?.baseURL, dir: '/api/mw/admin/users', ...rest }, () => $fc(option).$get(req)];
   },
-  async $get(req: Parameters<ReturnType<typeof methods>['$get']>[0]): Promise<z.infer<typeof frourioSpec_gye2fo.get.res[200]['body']>> {
-    const result = await methods(option).$get(req);
+  async $get(req: Parameters<ReturnType<typeof methods_gye2fo>['$get']>[0]): Promise<z.infer<typeof frourioSpec_gye2fo.get.res[200]['body']>> {
+    const result = await methods_gye2fo(option).$get(req);
 
     if (!result.isValid) throw result.isValid === false ? result.reason : result.error;
 
@@ -74,7 +74,7 @@ const $url_gye2fo = (option?: FrourioClientOption) => ({
   },
 });
 
-const methods = (option?: FrourioClientOption) => ({
+const methods_gye2fo = (option?: FrourioClientOption) => ({
   async $get(req: { query: z.infer<typeof frourioSpec_gye2fo.get.query>, init?: RequestInit }): Promise<
     | { ok: true; isValid: true; data: { status: 200; headers?: undefined; body: z.infer<typeof frourioSpec_gye2fo.get.res[200]['body']> }; failure?: undefined; raw: Response; reason?: undefined; error?: undefined }
     | { ok: false; isValid: true; data?: undefined; failure: { status: 403; headers?: undefined; body: z.infer<typeof frourioSpec_gye2fo.get.res[403]['body']> }; raw: Response; reason?: undefined; error?: undefined }
@@ -138,3 +138,4 @@ const methods = (option?: FrourioClientOption) => ({
     }
   },
 });
+

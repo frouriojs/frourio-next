@@ -60,26 +60,55 @@ const generateClient = (
       ({ importPath, hash }) =>
         `import { frourioSpec as frourioSpec_${hash} } from '${importPath}'`,
     ) ?? []),
-    ...childDirs.flatMap((child) => [
-      `import { frourioSpec as frourioSpec_${child.hash} } from './${child.import}/frourio'`,
-      `import { ${CLIENT_NAME}_${child.hash}, $${CLIENT_NAME}_${child.hash} } from './${child.import}/${CLIENT_FILE.replace('.ts', '')}'`,
-    ]),
+    ...childDirs.map(
+      (child) =>
+        `import { frourioSpec as frourioSpec_${child.hash} } from './${child.import}/frourio'`,
+    ),
     `import { frourioSpec as frourioSpec_${currentHash} } from './frourio'`,
   ];
 
   return `${imports.join(';\n')}
 
 export const ${CLIENT_NAME} = (option?: FrourioClientOption) => ({${childDirs
-    .map((child) => `\n  '${child.import}': ${CLIENT_NAME}_${child.hash}(option),`)
+    .map(
+      (child) => `\n  '${child.import}': {
+    $url: $url_${child.hash}(option),${generateLowLevel$build(
+      child.hash,
+      child.spec.methods,
+      child.params,
+      generateRelativePath({ appDir, dirPath: child.dirPath }),
+      '  ',
+    )}
+    ...methods_${child.hash}(option),
+  },`,
+    )
     .join('')}
-  $url: $url_${currentHash}(option),${generateLowLevel$build(spec.methods, params, relativePath)}
-  ...methods(option),
+  $url: $url_${currentHash}(option),${generateLowLevel$build(currentHash, spec.methods, params, relativePath, '')}
+  ...methods_${currentHash}(option),
 });
 
 export const $${CLIENT_NAME} = (option?: FrourioClientOption) => ({${childDirs
-    .map((child) => `\n  '${child.import}': $${CLIENT_NAME}_${child.hash}(option),`)
+    .map(
+      (child) => `\n  '${child.import}': {
+${generateHighLevel$url(child.hash, child.spec.methods, child.params, '  ')}${generateHighLevelMethods(
+        child.import,
+        child.hash,
+        child.spec.methods,
+        child.params,
+        generateRelativePath({ appDir, dirPath: child.dirPath }),
+        '  ',
+      )}
+  },`,
+    )
     .join('')}
-${generateHighLevel$url(currentHash, spec.methods, params)}${generateHighLevelMethods(currentHash, spec.methods, params, relativePath)}
+${generateHighLevel$url(currentHash, spec.methods, params, '')}${generateHighLevelMethods(
+    '',
+    currentHash,
+    spec.methods,
+    params,
+    relativePath,
+    '',
+  )}
 });
 
 export const ${CLIENT_NAME}_${currentHash} = ${CLIENT_NAME};
@@ -103,37 +132,48 @@ ${childDirs
     )};\n`;
   })
   .join('')}
-const methods = ${generateMethodsFn(currentHash, spec.methods, params)};
+const methods_${currentHash} = ${generateMethodsFn(currentHash, spec.methods, params)};
+${childDirs
+  .map((child) => {
+    return `\nconst methods_${child.hash} = ${generateMethodsFn(
+      child.hash,
+      child.spec.methods,
+      child.params,
+    )};\n`;
+  })
+  .join('')}
 `;
 };
 
 const generateLowLevel$build = (
+  hash: string,
   methods: MethodInfo[],
   params: ClientParamsInfo | undefined,
   relativePath: string,
+  indent: string,
 ): string => {
   const getMethod = methods.find((m) => m.name === 'get');
 
   return getMethod
     ? hasMethodReqKeys(getMethod, params)
       ? `
-  $build(req: Parameters<ReturnType<typeof methods>['$get']>[0] | null): [
-    key: { lowLevel: true; baseURL: FrourioClientOption['baseURL']; dir: string } & Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'> | null,
-    fetcher: () => Promise<NonNullable<Awaited<ReturnType<ReturnType<typeof methods>['$get']>>>>,
-  ] {
-    if (req === null) return [null, () => Promise.reject(new Error('Fetcher is disabled.'))];
+${indent}  $build(req: Parameters<ReturnType<typeof methods_${hash}>['$get']>[0] | null): [
+${indent}    key: { lowLevel: true; baseURL: FrourioClientOption['baseURL']; dir: string } & Omit<Parameters<ReturnType<typeof methods_${hash}>['$get']>[0], 'init'> | null,
+${indent}    fetcher: () => Promise<NonNullable<Awaited<ReturnType<ReturnType<typeof methods_${hash}>['$get']>>>>,
+${indent}  ] {
+${indent}    if (req === null) return [null, () => Promise.reject(new Error('Fetcher is disabled.'))];
 
-    const { init, ...rest } = req;
+${indent}    const { init, ...rest } = req;
 
-    return [{ lowLevel: true, baseURL: option?.baseURL, dir: '${relativePath || '/'}', ...rest }, () => ${CLIENT_NAME}(option).$get(req)];
-  },`
+${indent}    return [{ lowLevel: true, baseURL: option?.baseURL, dir: '${relativePath || '/'}', ...rest }, () => methods_${hash}(option).$get(req)];
+${indent}  },`
       : `
-  $build(req?: { init?: RequestInit }): [
-    key: { lowLevel: true; baseURL: FrourioClientOption['baseURL']; dir: string },
-    fetcher: () => Promise<NonNullable<Awaited<ReturnType<ReturnType<typeof methods>['$get']>>>>,
-  ] {
-    return [{ lowLevel: true, baseURL: option?.baseURL, dir: '${relativePath || '/'}' }, () => ${CLIENT_NAME}(option).$get(req)];
-  },`
+${indent}  $build(req?: { init?: RequestInit }): [
+${indent}    key: { lowLevel: true; baseURL: FrourioClientOption['baseURL']; dir: string },
+${indent}    fetcher: () => Promise<NonNullable<Awaited<ReturnType<ReturnType<typeof methods_${hash}>['$get']>>>>,
+${indent}  ] {
+${indent}    return [{ lowLevel: true, baseURL: option?.baseURL, dir: '${relativePath || '/'}' }, () => methods_${hash}(option).$get(req)];
+${indent}  },`
     : '';
 };
 
@@ -141,27 +181,30 @@ const generateHighLevel$url = (
   hash: string,
   methods: MethodInfo[],
   params: ClientParamsInfo | undefined,
+  indent: string,
 ): string => {
-  return `  $url: {${methods
+  return `${indent}  $url: {${methods
     .map(
       (method) => `
-    ${method.name}(${hasMethodReqKeys(method, params) ? `req: Parameters<ReturnType<typeof $url_${hash}>['${method.name}']>[0]` : ''}): string {
-      const result = $url_${hash}(option).${method.name}(${hasMethodReqKeys(method, params) ? 'req' : ''});
+${indent}    ${method.name}(${hasMethodReqKeys(method, params) ? `req: Parameters<ReturnType<typeof $url_${hash}>['${method.name}']>[0]` : ''}): string {
+${indent}      const result = $url_${hash}(option).${method.name}(${hasMethodReqKeys(method, params) ? 'req' : ''});
 
-      if (!result.isValid) throw result.reason;
+${indent}      if (!result.isValid) throw result.reason;
 
-      return result.data;
-    },`,
+${indent}      return result.data;
+${indent}    },`,
     )
     .join('')}
-  },`;
+${indent}  },`;
 };
 
 const generateHighLevelMethods = (
+  propKey: string,
   hash: string,
   methods: MethodInfo[],
   params: ClientParamsInfo | undefined,
   relativePath: string,
+  indent: string,
 ): string => {
   return methods
     .map((method) => {
@@ -184,47 +227,47 @@ const generateHighLevelMethods = (
         method.name === 'get'
           ? hasMethodReqKeys(method, params)
             ? `
-  $build(req: Parameters<ReturnType<typeof methods>['$get']>[0] | null): [
-    key: { lowLevel: false; baseURL: FrourioClientOption['baseURL']; dir: string } & Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'> | null,
-    fetcher: () => Promise<${resType}>,
-  ] {
-    if (req === null) return [null, () => Promise.reject(new Error('Fetcher is disabled.'))];
+${indent}  $build(req: Parameters<ReturnType<typeof methods_${hash}>['$get']>[0] | null): [
+${indent}    key: { lowLevel: false; baseURL: FrourioClientOption['baseURL']; dir: string } & Omit<Parameters<ReturnType<typeof methods_${hash}>['$get']>[0], 'init'> | null,
+${indent}    fetcher: () => Promise<${resType}>,
+${indent}  ] {
+${indent}    if (req === null) return [null, () => Promise.reject(new Error('Fetcher is disabled.'))];
 
-    const { init, ...rest } = req;
+${indent}    const { init, ...rest } = req;
 
-    return [{ lowLevel: false, baseURL: option?.baseURL, dir: '${relativePath || '/'}', ...rest }, () => $${CLIENT_NAME}(option).$get(req)];
-  },`
+${indent}    return [{ lowLevel: false, baseURL: option?.baseURL, dir: '${relativePath || '/'}', ...rest }, () => $${CLIENT_NAME}(option)${propKey ? `['${propKey}']` : ''}.$get(req)];
+${indent}  },`
             : `
-  $build(req?: { init?: RequestInit }): [
-    key: { lowLevel: false; baseURL: FrourioClientOption['baseURL']; dir: string },
-    fetcher: () => Promise<${resType}>,
-  ] {
-    return [{ lowLevel: false, baseURL: option?.baseURL, dir: '${relativePath || '/'}' }, () => $${CLIENT_NAME}(option).$get(req)];
-  },`
+${indent}  $build(req?: { init?: RequestInit }): [
+${indent}    key: { lowLevel: false; baseURL: FrourioClientOption['baseURL']; dir: string },
+${indent}    fetcher: () => Promise<${resType}>,
+${indent}  ] {
+${indent}    return [{ lowLevel: false, baseURL: option?.baseURL, dir: '${relativePath || '/'}' }, () => $${CLIENT_NAME}(option)${propKey ? `['${propKey}']` : ''}.$get(req)];
+${indent}  },`
           : '';
 
       return `${builder}
-  async $${method.name}(req${
-    hasMethodReqKeys(method, params) || method.body ? '' : '?'
-  }: Parameters<ReturnType<typeof methods>['$${method.name}']>[0]): Promise<${resType}> {
-    const result = await methods(option).$${method.name}(req);
+${indent}  async $${method.name}(req${
+        hasMethodReqKeys(method, params) || method.body ? '' : '?'
+      }: Parameters<ReturnType<typeof methods_${hash}>['$${method.name}']>[0]): Promise<${resType}> {
+${indent}    const result = await methods_${hash}(option).$${method.name}(req);
 
-    if (!result.isValid) throw result.isValid === false ? result.reason : result.error;
+${indent}    if (!result.isValid) throw result.isValid === false ? result.reason : result.error;
 
-    ${
-      method.res?.every((r) => !r.status.startsWith('2'))
-        ? 'throw new Error(`HTTP Error: ${result.failure.status}`);'
-        : !method.res
-          ? `if (!result.ok) throw new Error(\`HTTP Error: \${result.failure.status}\`);
+${indent}    ${
+        method.res?.every((r) => !r.status.startsWith('2'))
+          ? 'throw new Error(`HTTP Error: ${result.failure.status}`);'
+          : !method.res
+            ? `if (!result.ok) throw new Error(\`HTTP Error: \${result.failure.status}\`);
 
-    return result.data;`
-          : `${
-              method.res.some((r) => !r.status.startsWith('2'))
-                ? `if (!result.ok) throw new Error(\`HTTP Error: \${result.failure.status}\`);\n\n    `
-                : ''
-            }return result.data.body;`
-    }
-  },`;
+${indent}    return result.data;`
+            : `${
+                method.res.some((r) => !r.status.startsWith('2'))
+                  ? `if (!result.ok) throw new Error(\`HTTP Error: \${result.failure.status}\`);\n\n    `
+                  : ''
+              }return result.data.body;`
+      }
+${indent}  },`;
     })
     .join('');
 };

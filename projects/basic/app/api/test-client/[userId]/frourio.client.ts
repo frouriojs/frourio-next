@@ -4,7 +4,7 @@ import { frourioSpec as frourioSpec_1rqfh40 } from './frourio'
 
 export const fc = (option?: FrourioClientOption) => ({
   $url: $url_1rqfh40(option),
-  ...methods(option),
+  ...methods_1rqfh40(option),
 });
 
 export const $fc = (option?: FrourioClientOption) => ({
@@ -24,8 +24,8 @@ export const $fc = (option?: FrourioClientOption) => ({
       return result.data;
     },
   },
-  async $put(req: Parameters<ReturnType<typeof methods>['$put']>[0]): Promise<z.infer<typeof frourioSpec_1rqfh40.put.res[200]['body']>> {
-    const result = await methods(option).$put(req);
+  async $put(req: Parameters<ReturnType<typeof methods_1rqfh40>['$put']>[0]): Promise<z.infer<typeof frourioSpec_1rqfh40.put.res[200]['body']>> {
+    const result = await methods_1rqfh40(option).$put(req);
 
     if (!result.isValid) throw result.isValid === false ? result.reason : result.error;
 
@@ -33,8 +33,8 @@ export const $fc = (option?: FrourioClientOption) => ({
 
     return result.data.body;
   },
-  async $delete(req: Parameters<ReturnType<typeof methods>['$delete']>[0]): Promise<void> {
-    const result = await methods(option).$delete(req);
+  async $delete(req: Parameters<ReturnType<typeof methods_1rqfh40>['$delete']>[0]): Promise<void> {
+    const result = await methods_1rqfh40(option).$delete(req);
 
     if (!result.isValid) throw result.isValid === false ? result.reason : result.error;
 
@@ -67,7 +67,7 @@ const $url_1rqfh40 = (option?: FrourioClientOption) => ({
   },
 });
 
-const methods = (option?: FrourioClientOption) => ({
+const methods_1rqfh40 = (option?: FrourioClientOption) => ({
   async $put(req: { params: z.infer<typeof paramsSchema_1rqfh40>, body: z.infer<typeof frourioSpec_1rqfh40.put.body>, init?: RequestInit }): Promise<
     | { ok: true; isValid: true; data: { status: 200; headers?: undefined; body: z.infer<typeof frourioSpec_1rqfh40.put.res[200]['body']> }; failure?: undefined; raw: Response; reason?: undefined; error?: undefined }
     | { ok: false; isValid: true; data?: undefined; failure: { status: 404; headers?: undefined; body: z.infer<typeof frourioSpec_1rqfh40.put.res[404]['body']> }; raw: Response; reason?: undefined; error?: undefined }
@@ -190,3 +190,4 @@ const methods = (option?: FrourioClientOption) => ({
     }
   },
 });
+

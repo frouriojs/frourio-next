@@ -295,11 +295,13 @@ describe('fc (Low-Level Client)', () => {
     expect(result.ok).toBe(false);
     expect(result.isValid).toBe(true);
     expect(result.failure!.status).toBe(400);
+
     if (result.failure?.status === 400) {
       expect(result.failure.body).toEqual({ message: 'Invalid search query' });
     } else {
       throw new Error('Expected failure status 400');
     }
+
     expect(result.data).toBeUndefined();
     expect(result.reason).toBeUndefined();
     expect(result.raw).toBeInstanceOf(Response);
@@ -390,7 +392,7 @@ describe('fc (Low-Level Client)', () => {
   });
 
   test('PUT /api/test-client/:userId - Success', async () => {
-    const result = await lowLevelApiClient['api/test-client']['[userId]'].$put({
+    const result = await lowLevelApiClient['api/test-client/[userId]'].$put({
       params: { userId: 1 },
       body: { isAdmin: false },
     });
@@ -403,7 +405,7 @@ describe('fc (Low-Level Client)', () => {
     expect(result.raw).toBeInstanceOf(Response);
   });
   test('PUT /api/test-client/:userId - Not Found (404)', async () => {
-    const result = await lowLevelApiClient['api/test-client']['[userId]'].$put({
+    const result = await lowLevelApiClient['api/test-client/[userId]'].$put({
       params: { userId: 3 },
       body: { name: 'Nobody' },
     });
@@ -416,7 +418,7 @@ describe('fc (Low-Level Client)', () => {
   });
 
   test('DELETE /api/test-client/:userId - Success (204)', async () => {
-    const result = await lowLevelApiClient['api/test-client']['[userId]'].$delete({
+    const result = await lowLevelApiClient['api/test-client/[userId]'].$delete({
       params: { userId: 1 },
     });
     expect(result.ok).toBe(true);
@@ -427,7 +429,7 @@ describe('fc (Low-Level Client)', () => {
     expect(result.raw!.status).toBe(204);
   });
   test('DELETE /api/test-client/:userId - Not Found (404)', async () => {
-    const result = await lowLevelApiClient['api/test-client']['[userId]'].$delete({
+    const result = await lowLevelApiClient['api/test-client/[userId]'].$delete({
       params: { userId: 3 },
     });
     expect(result.ok).toBe(false);
@@ -471,7 +473,7 @@ describe('fc (Low-Level Client)', () => {
   });
 
   test('POST /api/test-client/stream - Success', async () => {
-    const result = await lowLevelApiClient['api/test-client'].stream.$post({
+    const result = await lowLevelApiClient['api/test-client/stream'].$post({
       body: { prompt: 'Test' },
     });
     expect(result.ok).toBe(true);
@@ -486,13 +488,15 @@ describe('fc (Low-Level Client)', () => {
     const reader = result.data!.body!.getReader();
     let streamedContent = '';
     let chunk;
+
     while (!(chunk = await reader.read()).done) {
       streamedContent += new TextDecoder().decode(chunk.value);
     }
+
     expect(streamedContent).toContain('Streaming response for prompt: "Test"');
   });
   test('POST /api/test-client/stream - API Error (400)', async () => {
-    const result = await lowLevelApiClient['api/test-client'].stream.$post({
+    const result = await lowLevelApiClient['api/test-client/stream'].$post({
       body: { prompt: '' },
     });
     expect(result.ok).toBe(false);

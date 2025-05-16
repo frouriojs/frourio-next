@@ -6,11 +6,11 @@ export const fc = (option?: FrourioClientOption) => ({
   $url: $url_76vmqd(option),
   $build(req?: { init?: RequestInit }): [
     key: { lowLevel: true; baseURL: FrourioClientOption['baseURL']; dir: string },
-    fetcher: () => Promise<NonNullable<Awaited<ReturnType<ReturnType<typeof methods>['$get']>>>>,
+    fetcher: () => Promise<NonNullable<Awaited<ReturnType<ReturnType<typeof methods_76vmqd>['$get']>>>>,
   ] {
-    return [{ lowLevel: true, baseURL: option?.baseURL, dir: '/api/mw/public' }, () => fc(option).$get(req)];
+    return [{ lowLevel: true, baseURL: option?.baseURL, dir: '/api/mw/public' }, () => methods_76vmqd(option).$get(req)];
   },
-  ...methods(option),
+  ...methods_76vmqd(option),
 });
 
 export const $fc = (option?: FrourioClientOption) => ({
@@ -29,8 +29,8 @@ export const $fc = (option?: FrourioClientOption) => ({
   ] {
     return [{ lowLevel: false, baseURL: option?.baseURL, dir: '/api/mw/public' }, () => $fc(option).$get(req)];
   },
-  async $get(req?: Parameters<ReturnType<typeof methods>['$get']>[0]): Promise<z.infer<typeof frourioSpec_76vmqd.get.res[200]['body']>> {
-    const result = await methods(option).$get(req);
+  async $get(req?: Parameters<ReturnType<typeof methods_76vmqd>['$get']>[0]): Promise<z.infer<typeof frourioSpec_76vmqd.get.res[200]['body']>> {
+    const result = await methods_76vmqd(option).$get(req);
 
     if (!result.isValid) throw result.isValid === false ? result.reason : result.error;
 
@@ -48,7 +48,7 @@ const $url_76vmqd = (option?: FrourioClientOption) => ({
   },
 });
 
-const methods = (option?: FrourioClientOption) => ({
+const methods_76vmqd = (option?: FrourioClientOption) => ({
   async $get(req?: { init?: RequestInit }): Promise<
     | { ok: true; isValid: true; data: { status: 200; headers?: undefined; body: z.infer<typeof frourioSpec_76vmqd.get.res[200]['body']> }; failure?: undefined; raw: Response; reason?: undefined; error?: undefined }
     | { ok: boolean; isValid: false; data?: undefined; failure?: undefined; raw: Response; reason: z.ZodError; error?: undefined }
@@ -95,3 +95,4 @@ const methods = (option?: FrourioClientOption) => ({
     }
   },
 });
+

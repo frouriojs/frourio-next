@@ -1,9 +1,9 @@
 import type { FrourioClientOption } from '@frourio/next';
 import { z } from 'zod';
-import { frourioSpec } from './frourio'
+import { frourioSpec as frourioSpec_gye2fo } from './frourio'
 
 export const fc = (option?: FrourioClientOption) => ({
-  $url: $url(option),
+  $url: $url_gye2fo(option),
   $build(req: Parameters<ReturnType<typeof methods>['$get']>[0] | null): [
     key: { lowLevel: true; baseURL: FrourioClientOption['baseURL']; dir: string } & Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'> | null,
     fetcher: () => Promise<NonNullable<Awaited<ReturnType<ReturnType<typeof methods>['$get']>>>>,
@@ -19,8 +19,8 @@ export const fc = (option?: FrourioClientOption) => ({
 
 export const $fc = (option?: FrourioClientOption) => ({
   $url: {
-    get(req: Parameters<ReturnType<typeof $url>['get']>[0]): string {
-      const result = $url(option).get(req);
+    get(req: Parameters<ReturnType<typeof $url_gye2fo>['get']>[0]): string {
+      const result = $url_gye2fo(option).get(req);
 
       if (!result.isValid) throw result.reason;
 
@@ -29,7 +29,7 @@ export const $fc = (option?: FrourioClientOption) => ({
   },
   $build(req: Parameters<ReturnType<typeof methods>['$get']>[0] | null): [
     key: { lowLevel: false; baseURL: FrourioClientOption['baseURL']; dir: string } & Omit<Parameters<ReturnType<typeof methods>['$get']>[0], 'init'> | null,
-    fetcher: () => Promise<z.infer<typeof frourioSpec.get.res[200]['body']>>,
+    fetcher: () => Promise<z.infer<typeof frourioSpec_gye2fo.get.res[200]['body']>>,
   ] {
     if (req === null) return [null, () => Promise.reject(new Error('Fetcher is disabled.'))];
 
@@ -37,7 +37,7 @@ export const $fc = (option?: FrourioClientOption) => ({
 
     return [{ lowLevel: false, baseURL: option?.baseURL, dir: '/api/mw/admin/users', ...rest }, () => $fc(option).$get(req)];
   },
-  async $get(req: Parameters<ReturnType<typeof methods>['$get']>[0]): Promise<z.infer<typeof frourioSpec.get.res[200]['body']>> {
+  async $get(req: Parameters<ReturnType<typeof methods>['$get']>[0]): Promise<z.infer<typeof frourioSpec_gye2fo.get.res[200]['body']>> {
     const result = await methods(option).$get(req);
 
     if (!result.isValid) throw result.isValid === false ? result.reason : result.error;
@@ -52,9 +52,9 @@ export const fc_gye2fo = fc;
 
 export const $fc_gye2fo = $fc;
 
-const $url = (option?: FrourioClientOption) => ({
-  get(req: { query: z.infer<typeof frourioSpec.get.query> }): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
-    const parsedQuery = frourioSpec.get.query.safeParse(req.query);
+const $url_gye2fo = (option?: FrourioClientOption) => ({
+  get(req: { query: z.infer<typeof frourioSpec_gye2fo.get.query> }): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
+    const parsedQuery = frourioSpec_gye2fo.get.query.safeParse(req.query);
 
     if (!parsedQuery.success) return { isValid: false, reason: parsedQuery.error };
 
@@ -75,15 +75,15 @@ const $url = (option?: FrourioClientOption) => ({
 });
 
 const methods = (option?: FrourioClientOption) => ({
-  async $get(req: { query: z.infer<typeof frourioSpec.get.query>, init?: RequestInit }): Promise<
-    | { ok: true; isValid: true; data: { status: 200; headers?: undefined; body: z.infer<typeof frourioSpec.get.res[200]['body']> }; failure?: undefined; raw: Response; reason?: undefined; error?: undefined }
-    | { ok: false; isValid: true; data?: undefined; failure: { status: 403; headers?: undefined; body: z.infer<typeof frourioSpec.get.res[403]['body']> }; raw: Response; reason?: undefined; error?: undefined }
+  async $get(req: { query: z.infer<typeof frourioSpec_gye2fo.get.query>, init?: RequestInit }): Promise<
+    | { ok: true; isValid: true; data: { status: 200; headers?: undefined; body: z.infer<typeof frourioSpec_gye2fo.get.res[200]['body']> }; failure?: undefined; raw: Response; reason?: undefined; error?: undefined }
+    | { ok: false; isValid: true; data?: undefined; failure: { status: 403; headers?: undefined; body: z.infer<typeof frourioSpec_gye2fo.get.res[403]['body']> }; raw: Response; reason?: undefined; error?: undefined }
     | { ok: boolean; isValid: false; data?: undefined; failure?: undefined; raw: Response; reason: z.ZodError; error?: undefined }
     | { ok: boolean; isValid?: undefined; data?: undefined; failure?: undefined; raw: Response; reason?: undefined; error: unknown }
     | { ok?: undefined; isValid: false; data?: undefined; failure?: undefined; raw?: undefined; reason: z.ZodError; error?: undefined }
     | { ok?: undefined; isValid?: undefined; data?: undefined; failure?: undefined; raw?: undefined; reason?: undefined; error: unknown }
   > {
-    const url = $url(option).get(req);
+    const url = $url_gye2fo(option).get(req);
 
     if (url.reason) return url;
 
@@ -106,7 +106,7 @@ const methods = (option?: FrourioClientOption) => ({
 
         if (!resBody.success) return { ok: true, raw: result.res, error: resBody.error };
 
-        const body = frourioSpec.get.res[200].body.safeParse(resBody.data);
+        const body = frourioSpec_gye2fo.get.res[200].body.safeParse(resBody.data);
 
         if (!body.success) return { ok: true, isValid: false, raw: result.res, reason: body.error };
 
@@ -122,7 +122,7 @@ const methods = (option?: FrourioClientOption) => ({
 
         if (!resBody.success) return { ok: false, raw: result.res, error: resBody.error };
 
-        const body = frourioSpec.get.res[403].body.safeParse(resBody.data);
+        const body = frourioSpec_gye2fo.get.res[403].body.safeParse(resBody.data);
 
         if (!body.success) return { ok: false, isValid: false, raw: result.res, reason: body.error };
 

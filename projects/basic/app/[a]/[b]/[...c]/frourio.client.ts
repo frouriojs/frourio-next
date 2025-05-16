@@ -1,24 +1,24 @@
 import type { FrourioClientOption } from '@frourio/next';
 import { z } from 'zod';
-import { frourioSpec as ancestorSpec0 } from '../../frourio';
-import { frourioSpec } from './frourio'
+import { frourioSpec as frourioSpec_knqmrp } from '../../frourio';
+import { frourioSpec as frourioSpec_2ijh4e } from './frourio'
 
 export const fc = (option?: FrourioClientOption) => ({
-  $url: $url(option),
+  $url: $url_2ijh4e(option),
   ...methods(option),
 });
 
 export const $fc = (option?: FrourioClientOption) => ({
   $url: {
-    post(req: Parameters<ReturnType<typeof $url>['post']>[0]): string {
-      const result = $url(option).post(req);
+    post(req: Parameters<ReturnType<typeof $url_2ijh4e>['post']>[0]): string {
+      const result = $url_2ijh4e(option).post(req);
 
       if (!result.isValid) throw result.reason;
 
       return result.data;
     },
   },
-  async $post(req: Parameters<ReturnType<typeof methods>['$post']>[0]): Promise<z.infer<typeof frourioSpec.post.res[200]['body']>> {
+  async $post(req: Parameters<ReturnType<typeof methods>['$post']>[0]): Promise<z.infer<typeof frourioSpec_2ijh4e.post.res[200]['body']>> {
     const result = await methods(option).$post(req);
 
     if (!result.isValid) throw result.isValid === false ? result.reason : result.error;
@@ -31,11 +31,11 @@ export const fc_2ijh4e = fc;
 
 export const $fc_2ijh4e = $fc;
 
-const paramsSchema = z.object({ 'a': ancestorSpec0.param, 'b': z.string(), 'c': z.array(z.string()) });
+const paramsSchema_2ijh4e = z.object({ 'a': frourioSpec_knqmrp.param, 'b': z.string(), 'c': z.array(z.string()) });
 
-const $url = (option?: FrourioClientOption) => ({
-  post(req: { params: z.infer<typeof paramsSchema> }): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
-    const parsedParams = paramsSchema.safeParse(req.params);
+const $url_2ijh4e = (option?: FrourioClientOption) => ({
+  post(req: { params: z.infer<typeof paramsSchema_2ijh4e> }): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
+    const parsedParams = paramsSchema_2ijh4e.safeParse(req.params);
 
     if (!parsedParams.success) return { isValid: false, reason: parsedParams.error };
 
@@ -44,14 +44,14 @@ const $url = (option?: FrourioClientOption) => ({
 });
 
 const methods = (option?: FrourioClientOption) => ({
-  async $post(req: { params: z.infer<typeof paramsSchema>, init?: RequestInit }): Promise<
-    | { ok: true; isValid: true; data: { status: 200; headers?: undefined; body: z.infer<typeof frourioSpec.post.res[200]['body']> }; failure?: undefined; raw: Response; reason?: undefined; error?: undefined }
+  async $post(req: { params: z.infer<typeof paramsSchema_2ijh4e>, init?: RequestInit }): Promise<
+    | { ok: true; isValid: true; data: { status: 200; headers?: undefined; body: z.infer<typeof frourioSpec_2ijh4e.post.res[200]['body']> }; failure?: undefined; raw: Response; reason?: undefined; error?: undefined }
     | { ok: boolean; isValid: false; data?: undefined; failure?: undefined; raw: Response; reason: z.ZodError; error?: undefined }
     | { ok: boolean; isValid?: undefined; data?: undefined; failure?: undefined; raw: Response; reason?: undefined; error: unknown }
     | { ok?: undefined; isValid: false; data?: undefined; failure?: undefined; raw?: undefined; reason: z.ZodError; error?: undefined }
     | { ok?: undefined; isValid?: undefined; data?: undefined; failure?: undefined; raw?: undefined; reason?: undefined; error: unknown }
   > {
-    const url = $url(option).post(req);
+    const url = $url_2ijh4e(option).post(req);
 
     if (url.reason) return url;
 
@@ -74,7 +74,7 @@ const methods = (option?: FrourioClientOption) => ({
 
         if (!resBody.success) return { ok: true, raw: result.res, error: resBody.error };
 
-        const body = frourioSpec.post.res[200].body.safeParse(resBody.data);
+        const body = frourioSpec_2ijh4e.post.res[200].body.safeParse(resBody.data);
 
         if (!body.success) return { ok: true, isValid: false, raw: result.res, reason: body.error };
 

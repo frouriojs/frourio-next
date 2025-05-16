@@ -1,9 +1,9 @@
 import type { FrourioClientOption } from '@frourio/next';
 import { z } from 'zod';
-import { frourioSpec } from './frourio'
+import { frourioSpec as frourioSpec_76vmqd } from './frourio'
 
 export const fc = (option?: FrourioClientOption) => ({
-  $url: $url(option),
+  $url: $url_76vmqd(option),
   $build(req?: { init?: RequestInit }): [
     key: { lowLevel: true; baseURL: FrourioClientOption['baseURL']; dir: string },
     fetcher: () => Promise<NonNullable<Awaited<ReturnType<ReturnType<typeof methods>['$get']>>>>,
@@ -16,7 +16,7 @@ export const fc = (option?: FrourioClientOption) => ({
 export const $fc = (option?: FrourioClientOption) => ({
   $url: {
     get(): string {
-      const result = $url(option).get();
+      const result = $url_76vmqd(option).get();
 
       if (!result.isValid) throw result.reason;
 
@@ -25,11 +25,11 @@ export const $fc = (option?: FrourioClientOption) => ({
   },
   $build(req?: { init?: RequestInit }): [
     key: { lowLevel: false; baseURL: FrourioClientOption['baseURL']; dir: string },
-    fetcher: () => Promise<z.infer<typeof frourioSpec.get.res[200]['body']>>,
+    fetcher: () => Promise<z.infer<typeof frourioSpec_76vmqd.get.res[200]['body']>>,
   ] {
     return [{ lowLevel: false, baseURL: option?.baseURL, dir: '/api/mw/public' }, () => $fc(option).$get(req)];
   },
-  async $get(req?: Parameters<ReturnType<typeof methods>['$get']>[0]): Promise<z.infer<typeof frourioSpec.get.res[200]['body']>> {
+  async $get(req?: Parameters<ReturnType<typeof methods>['$get']>[0]): Promise<z.infer<typeof frourioSpec_76vmqd.get.res[200]['body']>> {
     const result = await methods(option).$get(req);
 
     if (!result.isValid) throw result.isValid === false ? result.reason : result.error;
@@ -42,7 +42,7 @@ export const fc_76vmqd = fc;
 
 export const $fc_76vmqd = $fc;
 
-const $url = (option?: FrourioClientOption) => ({
+const $url_76vmqd = (option?: FrourioClientOption) => ({
   get(): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
     return { isValid: true, data: `${option?.baseURL?.replace(/\/$/, '') ?? ''}/api/mw/public` };
   },
@@ -50,13 +50,13 @@ const $url = (option?: FrourioClientOption) => ({
 
 const methods = (option?: FrourioClientOption) => ({
   async $get(req?: { init?: RequestInit }): Promise<
-    | { ok: true; isValid: true; data: { status: 200; headers?: undefined; body: z.infer<typeof frourioSpec.get.res[200]['body']> }; failure?: undefined; raw: Response; reason?: undefined; error?: undefined }
+    | { ok: true; isValid: true; data: { status: 200; headers?: undefined; body: z.infer<typeof frourioSpec_76vmqd.get.res[200]['body']> }; failure?: undefined; raw: Response; reason?: undefined; error?: undefined }
     | { ok: boolean; isValid: false; data?: undefined; failure?: undefined; raw: Response; reason: z.ZodError; error?: undefined }
     | { ok: boolean; isValid?: undefined; data?: undefined; failure?: undefined; raw: Response; reason?: undefined; error: unknown }
     | { ok?: undefined; isValid: false; data?: undefined; failure?: undefined; raw?: undefined; reason: z.ZodError; error?: undefined }
     | { ok?: undefined; isValid?: undefined; data?: undefined; failure?: undefined; raw?: undefined; reason?: undefined; error: unknown }
   > {
-    const url = $url(option).get();
+    const url = $url_76vmqd(option).get();
 
     if (url.reason) return url;
 
@@ -79,7 +79,7 @@ const methods = (option?: FrourioClientOption) => ({
 
         if (!resBody.success) return { ok: true, raw: result.res, error: resBody.error };
 
-        const body = frourioSpec.get.res[200].body.safeParse(resBody.data);
+        const body = frourioSpec_76vmqd.get.res[200].body.safeParse(resBody.data);
 
         if (!body.success) return { ok: true, isValid: false, raw: result.res, reason: body.error };
 

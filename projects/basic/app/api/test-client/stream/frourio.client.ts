@@ -1,16 +1,16 @@
 import type { FrourioClientOption } from '@frourio/next';
 import { z } from 'zod';
-import { frourioSpec } from './frourio'
+import { frourioSpec as frourioSpec_1tp1ur6 } from './frourio'
 
 export const fc = (option?: FrourioClientOption) => ({
-  $url: $url(option),
+  $url: $url_1tp1ur6(option),
   ...methods(option),
 });
 
 export const $fc = (option?: FrourioClientOption) => ({
   $url: {
     post(): string {
-      const result = $url(option).post();
+      const result = $url_1tp1ur6(option).post();
 
       if (!result.isValid) throw result.reason;
 
@@ -32,14 +32,14 @@ export const fc_1tp1ur6 = fc;
 
 export const $fc_1tp1ur6 = $fc;
 
-const $url = (option?: FrourioClientOption) => ({
+const $url_1tp1ur6 = (option?: FrourioClientOption) => ({
   post(): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
     return { isValid: true, data: `${option?.baseURL?.replace(/\/$/, '') ?? ''}/api/test-client/stream` };
   },
 });
 
 const methods = (option?: FrourioClientOption) => ({
-  async $post(req: { body: z.infer<typeof frourioSpec.post.body>, init?: RequestInit }): Promise<
+  async $post(req: { body: z.infer<typeof frourioSpec_1tp1ur6.post.body>, init?: RequestInit }): Promise<
     | { ok: true; isValid: true; data: Response; failure?: undefined; raw: Response; reason?: undefined; error?: undefined }
     | { ok: false; isValid: true; data?: undefined; failure: Response; raw: Response; reason?: undefined; error?: undefined }
     | { ok: boolean; isValid: false; data?: undefined; failure?: undefined; raw: Response; reason: z.ZodError; error?: undefined }
@@ -47,11 +47,11 @@ const methods = (option?: FrourioClientOption) => ({
     | { ok?: undefined; isValid: false; data?: undefined; failure?: undefined; raw?: undefined; reason: z.ZodError; error?: undefined }
     | { ok?: undefined; isValid?: undefined; data?: undefined; failure?: undefined; raw?: undefined; reason?: undefined; error: unknown }
   > {
-    const url = $url(option).post();
+    const url = $url_1tp1ur6(option).post();
 
     if (url.reason) return url;
 
-    const parsedBody = frourioSpec.post.body.safeParse(req.body);
+    const parsedBody = frourioSpec_1tp1ur6.post.body.safeParse(req.body);
 
     if (!parsedBody.success) return { isValid: false, reason: parsedBody.error };
 

@@ -1,6 +1,6 @@
 import path from 'path';
 import { CLIENT_FILE, CLIENT_NAME } from './constants';
-import { createHash } from './createHash';
+import { createDirPathHash, generateRelativePath } from './createDirPathHash';
 import type { DirSpec, HasParamsDict, MethodInfo } from './generate';
 import type { ClientParamsInfo } from './paramsUtil';
 import { clientParamsToText, pathToClientParams } from './paramsUtil';
@@ -22,6 +22,19 @@ export const generateClientTexts = (
 const hasMethodReqKeys = (method: MethodInfo, params: ClientParamsInfo | undefined): boolean =>
   !!(params || method.hasHeaders || method.query);
 
+const generateApiPath = ({
+  appDir,
+  dirPath,
+  basePath,
+}: {
+  appDir: string;
+  dirPath: string;
+  basePath: string | undefined;
+}): string =>
+  dirPath === appDir
+    ? basePath || '/'
+    : `${basePath ?? ''}${generateRelativePath({ appDir, dirPath }).replace(/\/\(.+?\)/g, '')}`;
+
 const generateClient = (
   appDir: string,
   hasParamDict: HasParamsDict,
@@ -32,56 +45,65 @@ const generateClient = (
   const childDirs = clientSpecs
     .filter((d) => d.dirPath.startsWith(`${dirPath}/`))
     .map((d) => ({
+      ...d,
       import: d.dirPath.replace(`${dirPath}/`, ''),
-      hash: createHash(d.dirPath.replace(appDir, '')),
-    }))
-    .filter((dir, _, arr) =>
-      arr.every(
-        (other) => !dir.import.startsWith(`${other.import}/`) || dir.import === other.import,
-      ),
-    );
-  const params = pathToClientParams(hasParamDict, dirPath, spec.param);
+      hash: createDirPathHash({ appDir, dirPath: d.dirPath }),
+      params: pathToClientParams(appDir, hasParamDict, d.dirPath, d.spec.param),
+    }));
+  const params = pathToClientParams(appDir, hasParamDict, dirPath, spec.param);
+  const relativePath = generateRelativePath({ appDir, dirPath });
+  const currentHash = createDirPathHash({ appDir, dirPath });
   const imports: string[] = [
     "import type { FrourioClientOption } from '@frourio/next'",
     "import { z } from 'zod'",
     ...(params?.ancestors.map(
-      ({ path }, n) => `import { frourioSpec as ancestorSpec${n} } from '${path}'`,
+      ({ importPath, hash }) =>
+        `import { frourioSpec as frourioSpec_${hash} } from '${importPath}'`,
     ) ?? []),
-    ...childDirs.map(
-      (child) =>
-        `import { ${CLIENT_NAME}_${child.hash}, $${CLIENT_NAME}_${child.hash} } from './${child.import}/${CLIENT_FILE.replace('.ts', '')}'`,
-    ),
-    "import { frourioSpec } from './frourio'",
+    ...childDirs.flatMap((child) => [
+      `import { frourioSpec as frourioSpec_${child.hash} } from './${child.import}/frourio'`,
+      `import { ${CLIENT_NAME}_${child.hash}, $${CLIENT_NAME}_${child.hash} } from './${child.import}/${CLIENT_FILE.replace('.ts', '')}'`,
+    ]),
+    `import { frourioSpec as frourioSpec_${currentHash} } from './frourio'`,
   ];
-  const relativePath = dirPath.replace(appDir, '');
-  const apiPath =
-    dirPath === appDir
-      ? basePath || '/'
-      : `${basePath ?? ''}${relativePath.replace(/\/\(.+?\)/g, '')}`;
-  const currentHash = createHash(relativePath);
 
   return `${imports.join(';\n')}
 
 export const ${CLIENT_NAME} = (option?: FrourioClientOption) => ({${childDirs
     .map((child) => `\n  '${child.import}': ${CLIENT_NAME}_${child.hash}(option),`)
     .join('')}
-  $url: $url(option),${generateLowLevel$build(spec.methods, params, relativePath)}
+  $url: $url_${currentHash}(option),${generateLowLevel$build(spec.methods, params, relativePath)}
   ...methods(option),
 });
 
 export const $${CLIENT_NAME} = (option?: FrourioClientOption) => ({${childDirs
     .map((child) => `\n  '${child.import}': $${CLIENT_NAME}_${child.hash}(option),`)
     .join('')}
-${generateHighLevel$url(spec.methods, params)}${generateHighLevelMethods(spec.methods, params, relativePath)}
+${generateHighLevel$url(currentHash, spec.methods, params)}${generateHighLevelMethods(currentHash, spec.methods, params, relativePath)}
 });
 
 export const ${CLIENT_NAME}_${currentHash} = ${CLIENT_NAME};
 
 export const $${CLIENT_NAME}_${currentHash} = $${CLIENT_NAME};
-${params ? `\nconst paramsSchema = ${clientParamsToText(params)};\n` : ''}
-const $url = ${generateUrlFn(spec.methods, params, apiPath)};
-
-const methods = ${generateMethodsFn(spec.methods, params)};
+${params ? `\nconst paramsSchema_${currentHash} = ${clientParamsToText(currentHash, params)};\n` : ''}${childDirs
+    .map((child) => {
+      return child.params
+        ? `\nconst paramsSchema_${child.hash} = ${clientParamsToText(child.hash, child.params)};\n`
+        : '';
+    })
+    .join('')}
+const $url_${currentHash} = ${generateUrlFn(currentHash, spec.methods, params, generateApiPath({ appDir, dirPath, basePath }))};
+${childDirs
+  .map((child) => {
+    return `\nconst $url_${child.hash} = ${generateUrlFn(
+      child.hash,
+      child.spec.methods,
+      child.params,
+      generateApiPath({ appDir, dirPath: child.dirPath, basePath }),
+    )};\n`;
+  })
+  .join('')}
+const methods = ${generateMethodsFn(currentHash, spec.methods, params)};
 `;
 };
 
@@ -116,14 +138,15 @@ const generateLowLevel$build = (
 };
 
 const generateHighLevel$url = (
+  hash: string,
   methods: MethodInfo[],
   params: ClientParamsInfo | undefined,
 ): string => {
   return `  $url: {${methods
     .map(
       (method) => `
-    ${method.name}(${hasMethodReqKeys(method, params) ? `req: Parameters<ReturnType<typeof $url>['${method.name}']>[0]` : ''}): string {
-      const result = $url(option).${method.name}(${hasMethodReqKeys(method, params) ? 'req' : ''});
+    ${method.name}(${hasMethodReqKeys(method, params) ? `req: Parameters<ReturnType<typeof $url_${hash}>['${method.name}']>[0]` : ''}): string {
+      const result = $url_${hash}(option).${method.name}(${hasMethodReqKeys(method, params) ? 'req' : ''});
 
       if (!result.isValid) throw result.reason;
 
@@ -135,6 +158,7 @@ const generateHighLevel$url = (
 };
 
 const generateHighLevelMethods = (
+  hash: string,
   methods: MethodInfo[],
   params: ClientParamsInfo | undefined,
   relativePath: string,
@@ -148,7 +172,7 @@ const generateHighLevelMethods = (
           : [
               ...(method.res.some((r) => r.status.startsWith('2') && r.body)
                 ? [
-                    `z.infer<typeof frourioSpec.${method.name}.res[${method.res
+                    `z.infer<typeof frourioSpec_${hash}.${method.name}.res[${method.res
                       .filter((r) => r.status.startsWith('2') && r.body)
                       .map((r) => r.status)
                       .join(' | ')}]['body']>`,
@@ -206,6 +230,7 @@ const generateHighLevelMethods = (
 };
 
 const generateUrlFn = (
+  hash: string,
   methods: MethodInfo[],
   params: ClientParamsInfo | undefined,
   apiPath: string,
@@ -214,20 +239,22 @@ const generateUrlFn = (
     (method) => `\n  ${method.name}(${
       params || method.query
         ? `req: { ${[
-            ...(params ? ['params: z.infer<typeof paramsSchema>'] : []),
-            ...(method.query ? [`query: z.infer<typeof frourioSpec.${method.name}.query>`] : []),
+            ...(params ? [`params: z.infer<typeof paramsSchema_${hash}>`] : []),
+            ...(method.query
+              ? [`query: z.infer<typeof frourioSpec_${hash}.${method.name}.query>`]
+              : []),
           ].join(',')} }`
         : ''
     }): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
 ${
   params
-    ? `    const parsedParams = paramsSchema.safeParse(req.params);
+    ? `    const parsedParams = paramsSchema_${hash}.safeParse(req.params);
 
     if (!parsedParams.success) return { isValid: false, reason: parsedParams.error };\n\n`
     : ''
 }${
       method.query
-        ? `    const parsedQuery = frourioSpec.${method.name}.query.safeParse(req.query);
+        ? `    const parsedQuery = frourioSpec_${hash}.${method.name}.query.safeParse(req.query);
 
     if (!parsedQuery.success) return { isValid: false, reason: parsedQuery.error };
 
@@ -259,18 +286,24 @@ ${
   .join('')}
 })`;
 
-const generateMethodsFn = (methods: MethodInfo[], params: ClientParamsInfo | undefined): string => {
+const generateMethodsFn = (
+  hash: string,
+  methods: MethodInfo[],
+  params: ClientParamsInfo | undefined,
+): string => {
   return `(option?: FrourioClientOption) => ({${methods
     .map((method) => {
       return `\n  async $${method.name}(req${
         params || method.hasHeaders || method.query || method.body ? '' : '?'
       }: { ${[
-        ...(params ? ['params: z.infer<typeof paramsSchema>'] : []),
+        ...(params ? [`params: z.infer<typeof paramsSchema_${hash}>`] : []),
         ...(method.hasHeaders
-          ? [`headers: z.infer<typeof frourioSpec.${method.name}.headers>`]
+          ? [`headers: z.infer<typeof frourioSpec_${hash}.${method.name}.headers>`]
           : []),
-        ...(method.query ? [`query: z.infer<typeof frourioSpec.${method.name}.query>`] : []),
-        ...(method.body ? [`body: z.infer<typeof frourioSpec.${method.name}.body>`] : []),
+        ...(method.query
+          ? [`query: z.infer<typeof frourioSpec_${hash}.${method.name}.query>`]
+          : []),
+        ...(method.body ? [`body: z.infer<typeof frourioSpec_${hash}.${method.name}.body>`] : []),
         'init?: RequestInit',
       ].join(', ')} }): Promise<${
         !method.res
@@ -285,11 +318,11 @@ const generateMethodsFn = (methods: MethodInfo[], params: ClientParamsInfo | und
                       (r) =>
                         `{ status: ${r.status}; headers${
                           r.hasHeaders
-                            ? `: z.infer<typeof frourioSpec.${method.name}.res[${r.status}]['headers']>`
+                            ? `: z.infer<typeof frourioSpec_${hash}.${method.name}.res[${r.status}]['headers']>`
                             : '?: undefined'
                         }; body${
                           r.body
-                            ? `: z.infer<typeof frourioSpec.${method.name}.res[${r.status}]['body']>`
+                            ? `: z.infer<typeof frourioSpec_${hash}.${method.name}.res[${r.status}]['body']>`
                             : '?: undefined'
                         } }`,
                     )
@@ -305,11 +338,11 @@ const generateMethodsFn = (methods: MethodInfo[], params: ClientParamsInfo | und
                       (r) =>
                         `{ status: ${r.status}; headers${
                           r.hasHeaders
-                            ? `: z.infer<typeof frourioSpec.${method.name}.res[${r.status}]['headers']>`
+                            ? `: z.infer<typeof frourioSpec_${hash}.${method.name}.res[${r.status}]['headers']>`
                             : '?: undefined'
                         }; body${
                           r.body
-                            ? `: z.infer<typeof frourioSpec.${method.name}.res[${r.status}]['body']>`
+                            ? `: z.infer<typeof frourioSpec_${hash}.${method.name}.res[${r.status}]['body']>`
                             : '?: undefined'
                         } }`,
                     )
@@ -322,18 +355,18 @@ const generateMethodsFn = (methods: MethodInfo[], params: ClientParamsInfo | und
     | { ok?: undefined; isValid: false; data?: undefined; failure?: undefined; raw?: undefined; reason: z.ZodError; error?: undefined }
     | { ok?: undefined; isValid?: undefined; data?: undefined; failure?: undefined; raw?: undefined; reason?: undefined; error: unknown }
   > {
-    const url = $url(option).${method.name}(${hasMethodReqKeys(method, params) ? 'req' : ''});
+    const url = $url_${hash}(option).${method.name}(${hasMethodReqKeys(method, params) ? 'req' : ''});
 
     if (url.reason) return url;
 ${
   method.hasHeaders
-    ? `\n    const parsedHeaders = frourioSpec.${method.name}.headers.safeParse(req.headers);
+    ? `\n    const parsedHeaders = frourioSpec_${hash}.${method.name}.headers.safeParse(req.headers);
 
     if (!parsedHeaders.success) return { isValid: false, reason: parsedHeaders.error };\n`
     : ''
 }${
         method.body
-          ? `\n    const parsedBody = frourioSpec.${method.name}.body.safeParse(req.body);
+          ? `\n    const parsedBody = frourioSpec_${hash}.${method.name}.body.safeParse(req.body);
 
     if (!parsedBody.success) return { isValid: false, reason: parsedBody.error };\n`
           : ''
@@ -387,7 +420,7 @@ ${
             .map(
               (item) => `\n      case ${item.status}: {${
                 item.hasHeaders
-                  ? `\n        const headers = frourioSpec.${method.name}.res[${item.status}].headers.safeParse(Object.fromEntries(result.res.headers.entries()));
+                  ? `\n        const headers = frourioSpec_${hash}.${method.name}.res[${item.status}].headers.safeParse(Object.fromEntries(result.res.headers.entries()));
 
         if (!headers.success) return { ok: ${item.status.startsWith('2')}, isValid: false, raw: result.res, reason: headers.error };\n`
                   : ''
@@ -399,7 +432,7 @@ ${
 
         if (!resBody.success) return { ok: ${item.status.startsWith('2')}, raw: result.res, error: resBody.error };
 
-        const body = frourioSpec.${method.name}.res[${item.status}].body.safeParse(resBody.data);
+        const body = frourioSpec_${hash}.${method.name}.res[${item.status}].body.safeParse(resBody.data);
 
         if (!body.success) return { ok: ${item.status.startsWith('2')}, isValid: false, raw: result.res, reason: body.error };\n`
                   : ''

@@ -48,13 +48,9 @@ test('generate', async () => {
         ),
       ]);
       await generate(openapiConfig);
+      await getMswConfig({ output: undefined, dir }).then(generateMsw);
 
       generateOpenapi(openapiConfig);
-
-      const mswConfig = await getMswConfig({ output: undefined, dir });
-
-      assert(mswConfig.appDir);
-      generateMsw(mswConfig);
     }),
   );
 

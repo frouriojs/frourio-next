@@ -1,11 +1,12 @@
 import type { FrourioClientOption } from '@frourio/next';
 import { z } from 'zod';
+import { frourioSpec as frourioSpec_15e5upz } from './%E6%97%A5%E6%9C%AC%E8%AA%9E/frourio';
 import { fc_15e5upz, $fc_15e5upz } from './%E6%97%A5%E6%9C%AC%E8%AA%9E/frourio.client';
-import { frourioSpec } from './frourio'
+import { frourioSpec as frourioSpec_36xt6y } from './frourio'
 
 export const fc = (option?: FrourioClientOption) => ({
   '%E6%97%A5%E6%9C%AC%E8%AA%9E': fc_15e5upz(option),
-  $url: $url(option),
+  $url: $url_36xt6y(option),
   ...methods(option),
 });
 
@@ -13,14 +14,14 @@ export const $fc = (option?: FrourioClientOption) => ({
   '%E6%97%A5%E6%9C%AC%E8%AA%9E': $fc_15e5upz(option),
   $url: {
     post(): string {
-      const result = $url(option).post();
+      const result = $url_36xt6y(option).post();
 
       if (!result.isValid) throw result.reason;
 
       return result.data;
     },
   },
-  async $post(req: Parameters<ReturnType<typeof methods>['$post']>[0]): Promise<z.infer<typeof frourioSpec.post.res[200]['body']>> {
+  async $post(req: Parameters<ReturnType<typeof methods>['$post']>[0]): Promise<z.infer<typeof frourioSpec_36xt6y.post.res[200]['body']>> {
     const result = await methods(option).$post(req);
 
     if (!result.isValid) throw result.isValid === false ? result.reason : result.error;
@@ -33,25 +34,31 @@ export const fc_36xt6y = fc;
 
 export const $fc_36xt6y = $fc;
 
-const $url = (option?: FrourioClientOption) => ({
+const $url_36xt6y = (option?: FrourioClientOption) => ({
   post(): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
     return { isValid: true, data: `${option?.baseURL?.replace(/\/$/, '') ?? ''}/foo/bar/api` };
   },
 });
 
+const $url_15e5upz = (option?: FrourioClientOption) => ({
+  post(): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {
+    return { isValid: true, data: `${option?.baseURL?.replace(/\/$/, '') ?? ''}/foo/bar/api/%E6%97%A5%E6%9C%AC%E8%AA%9E` };
+  },
+});
+
 const methods = (option?: FrourioClientOption) => ({
-  async $post(req: { body: z.infer<typeof frourioSpec.post.body>, init?: RequestInit }): Promise<
-    | { ok: true; isValid: true; data: { status: 200; headers?: undefined; body: z.infer<typeof frourioSpec.post.res[200]['body']> }; failure?: undefined; raw: Response; reason?: undefined; error?: undefined }
+  async $post(req: { body: z.infer<typeof frourioSpec_36xt6y.post.body>, init?: RequestInit }): Promise<
+    | { ok: true; isValid: true; data: { status: 200; headers?: undefined; body: z.infer<typeof frourioSpec_36xt6y.post.res[200]['body']> }; failure?: undefined; raw: Response; reason?: undefined; error?: undefined }
     | { ok: boolean; isValid: false; data?: undefined; failure?: undefined; raw: Response; reason: z.ZodError; error?: undefined }
     | { ok: boolean; isValid?: undefined; data?: undefined; failure?: undefined; raw: Response; reason?: undefined; error: unknown }
     | { ok?: undefined; isValid: false; data?: undefined; failure?: undefined; raw?: undefined; reason: z.ZodError; error?: undefined }
     | { ok?: undefined; isValid?: undefined; data?: undefined; failure?: undefined; raw?: undefined; reason?: undefined; error: unknown }
   > {
-    const url = $url(option).post();
+    const url = $url_36xt6y(option).post();
 
     if (url.reason) return url;
 
-    const parsedBody = frourioSpec.post.body.safeParse(req.body);
+    const parsedBody = frourioSpec_36xt6y.post.body.safeParse(req.body);
 
     if (!parsedBody.success) return { isValid: false, reason: parsedBody.error };
 
@@ -93,7 +100,7 @@ const methods = (option?: FrourioClientOption) => ({
 
         if (!resBody.success) return { ok: true, raw: result.res, error: resBody.error };
 
-        const body = frourioSpec.post.res[200].body.safeParse(resBody.data);
+        const body = frourioSpec_36xt6y.post.res[200].body.safeParse(resBody.data);
 
         if (!body.success) return { ok: true, isValid: false, raw: result.res, reason: body.error };
 

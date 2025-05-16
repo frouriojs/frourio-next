@@ -1,4 +1,5 @@
 import { FROURIO_FILE, SERVER_FILE } from './constants';
+import { createDirPathHash } from './createDirPathHash';
 import type { PropOption } from './getPropOptions';
 
 export type ParamsInfo = {
@@ -44,12 +45,13 @@ export const pathToParams = (
 };
 
 export type ClientParamsInfo = {
-  ancestors: { name: string; path: string }[];
+  ancestors: { name: string; importPath: string; hash: string }[];
   middleNames: string[];
   current: ParamsInfo['current'];
 };
 
 export const pathToClientParams = (
+  appDir: string,
   hasParamDict: Record<string, boolean>,
   dirPath: string,
   param: PropOption | null,
@@ -57,23 +59,24 @@ export const pathToClientParams = (
   if (!dirPath.includes('[')) return undefined;
 
   const [tail, ...heads] = dirPath.split('/').reverse();
-  const ancestors = heads.flatMap((head, i) => {
-    return head.startsWith('[') && hasParamDict[heads.slice(i).reverse().join('/')]
-      ? {
-          name: chunkToSlugName(head),
-          path: `${[...Array(i + 2)].join('../')}${FROURIO_FILE.replace('.ts', '')}`,
-        }
-      : [];
-  });
-  const middleNames = heads
-    .filter((head, i) => {
-      return head.startsWith('[') && !hasParamDict[heads.slice(i).reverse().join('/')];
-    })
-    .map(chunkToSlugName);
 
   return {
-    ancestors,
-    middleNames,
+    ancestors: heads.flatMap((head, i) => {
+      const ancestorDirPath = heads.slice(i).reverse().join('/');
+
+      return head.startsWith('[') && hasParamDict[ancestorDirPath]
+        ? {
+            name: chunkToSlugName(head),
+            importPath: `${[...Array(i + 2)].join('../')}${FROURIO_FILE.replace('.ts', '')}`,
+            hash: createDirPathHash({ appDir, dirPath: ancestorDirPath }),
+          }
+        : [];
+    }),
+    middleNames: heads
+      .filter((head, i) => {
+        return head.startsWith('[') && !hasParamDict[heads.slice(i).reverse().join('/')];
+      })
+      .map(chunkToSlugName),
     current: tail.startsWith('[')
       ? {
           name: chunkToSlugName(tail),
@@ -101,15 +104,15 @@ export const paramsToText = (params: ParamsInfo): string => {
   }${params.middleNames.length === 0 ? '' : params.current || params.ancestorFrourio ? `.and(${middles})` : middles}`;
 };
 
-export const clientParamsToText = (params: ClientParamsInfo): string => {
+export const clientParamsToText = (hash: string, params: ClientParamsInfo): string => {
   return `z.object({ ${[
-    ...params.ancestors.map(({ name }, n) => `'${name}': ancestorSpec${n}.param`),
+    ...params.ancestors.map(({ name, hash }) => `'${name}': frourioSpec_${hash}.param`),
     ...params.middleNames.map((name) => `'${name}': z.string()`),
     ...(params.current
       ? [
           `'${params.current.name}': ${
             params.current.param
-              ? 'frourioSpec.param'
+              ? `frourioSpec_${hash}.param`
               : params.current.array
                 ? `z.array(z.string())${params.current.array.isOptional ? '.optional()' : ''}`
                 : 'z.string()'

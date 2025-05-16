@@ -321,7 +321,7 @@ export const lowLevelApiClient = fc(options);
 ```typescript
 // Example GET request
 try {
-  const task = await apiClient['api']['tasks']['[taskId]'].$get({
+  const task = await apiClient['api/tasks/[taskId]'].$get({
     params: { taskId: 'task-1' },
     query: { includeAssignee: true },
     headers: { 'x-api-key': 'my-key' },
@@ -332,7 +332,7 @@ try {
 }
 
 // Example POST request with low-level client
-const result = await lowLevelApiClient['api']['tasks'].$post({
+const result = await lowLevelApiClient['api/tasks'].$post({
   body: { label: 'New Task', isDone: false },
 });
 if (result.ok && result.isValid) {
@@ -443,7 +443,7 @@ Use the `$build()` method on `$fc` client endpoints.
 import useSWR from 'swr';
 import { apiClient } from '@/lib/apiClient';
 
-const buildArgs = apiClient['api/users']['[userId]'].$build(userId ? { params: { userId } } : null);
+const buildArgs = apiClient['api/users/[userId]'].$build(userId ? { params: { userId } } : null);
 // buildArgs is e.g., ['GET:/api/users/[userId]?userId=abc', async () => { ... }] or [null, async () => { ... }]
 const { data, error, isLoading } = useSWR(...buildArgs); // Spread tuple
 ```
@@ -454,7 +454,7 @@ const { data, error, isLoading } = useSWR(...buildArgs); // Spread tuple
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/apiClient';
 
-const [queryKey, queryFn] = apiClient['api/users']['[userId]'].$build(userId ? { params: { userId } } : null);
+const [queryKey, queryFn] = apiClient['api/users/[userId]'].$build(userId ? { params: { userId } } : null);
 const { data, error, status } = useQuery({
   queryKey: [queryKey], // Use key (wrapped in array)
   queryFn: queryFn,     // Use fetcher
@@ -500,7 +500,7 @@ const { data, error, status } = useQuery({
   afterAll(() => server.close());
 
   test('apiClient fetches task successfully', async () => {
-    const task = await apiClient['api']['tasks']['[taskId]'].$get({ params: { taskId: 'task-1' } });
+    const task = await apiClient['api/tasks/[taskId]'].$get({ params: { taskId: 'task-1' } });
     expect(task.label).toBe('Mock Task');
   });
   ```

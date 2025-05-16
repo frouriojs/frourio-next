@@ -286,7 +286,7 @@ export function TaskDetails({ taskId }: TaskDetailsProps) {
         // --- Using the high-level client ($fc) ---
         // Automatically handles response parsing and throws on error.
         // Pass path parameters via the 'params' property in the options object.
-        const fetchedTask = await apiClient['api/tasks']['[taskId]'].$get({
+        const fetchedTask = await apiClient['api/tasks/[taskId]'].$get({
           params: { taskId }, // Pass taskId here
           query: { includeAssignee: true },
         });
@@ -309,7 +309,7 @@ export function TaskDetails({ taskId }: TaskDetailsProps) {
        setError(null);
        // --- Using the low-level client (fc) ---
        // Pass path parameters via the 'params' property in the options object.
-       const result = await lowLevelApiClient['api/tasks']['[taskId]'].$get({
+       const result = await lowLevelApiClient['api/tasks/[taskId]'].$get({
          params: { taskId }, // Pass taskId here
          query: { includeAssignee: true },
        });
@@ -343,7 +343,7 @@ export function TaskDetails({ taskId }: TaskDetailsProps) {
     if (!task) return;
     try {
       // Using $fc for simplicity
-      const updatedTask = await apiClient['api/tasks']['[taskId]'].$patch({
+      const updatedTask = await apiClient['api/tasks/[taskId]'].$patch({
         params: { taskId }, // Pass taskId here
         body: { isDone: !task.isDone },
       });
@@ -360,7 +360,7 @@ export function TaskDetails({ taskId }: TaskDetailsProps) {
 
     try {
       // Using $fc - returns void on success (204)
-      await apiClient['api/tasks']['[taskId]'].$delete({ params: { taskId } }); // Pass taskId here
+      await apiClient['api/tasks/[taskId]'].$delete({ params: { taskId } }); // Pass taskId here
       setTask(null);
       alert('Task deleted');
     } catch (err: any) {
@@ -436,7 +436,7 @@ export function TaskDetails({ taskId }: TaskDetailsProps) {
 **Structure**: Both clients mirror your API directory structure:
 
 - Directory names become properties accessible via bracket notation if they contain special characters: `apiClient['api/tasks']`, `lowLevelApiClient['api/tasks']`.
-- Dynamic segments (`[param]`) are accessed via bracket notation: `apiClient['api/tasks']['[taskId]']`.
+- Dynamic segments (`[param]`) are accessed via bracket notation: `apiClient['api/tasks/[taskId]']`.
 - HTTP methods are called with `$`: `.$get()`, `.$post()`, `.$patch()`, `.$delete()`. Path parameters for dynamic segments are passed within the `params` property of the options object for these methods (e.g., `.$get({ params: { taskId: 'abc' } })`).
 - Request data (`query`, `body`, `headers`, `params`) is passed in an object, fully typed according to `frourio.ts`.
 
@@ -744,7 +744,7 @@ import { apiClient } from '@/lib/apiClient'; // Your initialized client
 function UserProfile({ userId }: { userId: string | null }) {
   // Build the key and fetcher based on userId
   // If userId is null, buildArgs will be [null, fetcher], disabling the query
-  const buildArgs = apiClient['api/users']['[userId]'].$build(
+  const buildArgs = apiClient['api/users/[userId]'].$build(
     userId ? { params: { userId }, headers: {} } : null
   );
 
@@ -776,7 +776,7 @@ function App() {
 
 function UserProfile({ userId }: { userId: string | null }) {
   // Generate only the key
-  const [key] = apiClient['api/users']['[userId]'].$build(
+  const [key] = apiClient['api/users/[userId]'].$build(
     userId ? { params: { userId }, headers: {} } : null
   );
 
@@ -809,7 +809,7 @@ function App() {
 
 function UserProfile({ userId }: { userId: string | null }) {
   // Build the key and fetcher
-  const [queryKey, queryFn] = apiClient['api/users']['[userId]'].$build(
+  const [queryKey, queryFn] = apiClient['api/users/[userId]'].$build(
     userId ? { params: { userId }, headers: {} } : null
   );
 

@@ -873,6 +873,32 @@
           }
         }
       }
+    },
+    "/xxx/{id}/zzz": {
+      "get": {
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1751,6 +1777,17 @@
         },
         "required": [
           "prompt"
+        ]
+      },
+      "1ftcnr9": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "body"
         ]
       }
     }

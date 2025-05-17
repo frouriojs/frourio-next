@@ -164,6 +164,12 @@ type AllParams = [${hasParamsDirs.map((_, i) => `z.infer<typeof paramsSchema${i}
   (methodsSchema?.items as TJS.Definition[])?.forEach((def, i) => {
     if (!def.properties) return;
 
+    const methods = Object.entries(def.properties).filter(
+      ([method]) => method !== 'param' && method !== 'middleware',
+    );
+
+    if (methods.length === 0) return;
+
     const parameters: {
       name: string;
       in: 'path' | 'query' | 'header';
@@ -208,9 +214,7 @@ type AllParams = [${hasParamsDirs.map((_, i) => `z.infer<typeof paramsSchema${i}
         .replace(/\[+\.*(.+?)]+/g, '{$1}')
         .replace(path.resolve(params.appDir).replaceAll('\\', '/'), '') || '/';
 
-    doc.paths![apiPath] = Object.entries(def.properties).reduce((dict, [method, val]) => {
-      if (method === 'param' || method === 'middleware') return dict;
-
+    doc.paths![apiPath] = methods.reduce((dict, [method, val]) => {
       const props = (val as TJS.Definition).properties as Record<string, TJS.Definition>;
       const methodParameters = [...parameters];
 

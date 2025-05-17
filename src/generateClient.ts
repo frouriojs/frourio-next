@@ -12,10 +12,11 @@ export const generateClientTexts = (
   hasParamDict: HasParamsDict,
 ): { filePath: string; text: string }[] => {
   const clientSpecs = specs.filter(({ spec }) => spec.methods.length > 0);
+  const paramOnlySpecs = specs.filter(({ spec }) => spec.methods.length === 0 && spec.param);
 
   return clientSpecs.map((dirSpec) => ({
     filePath: path.posix.join(dirSpec.dirPath, CLIENT_FILE),
-    text: generateClient(appDir, hasParamDict, clientSpecs, dirSpec, basePath),
+    text: generateClient(appDir, hasParamDict, clientSpecs, paramOnlySpecs, dirSpec, basePath),
   }));
 };
 
@@ -39,6 +40,7 @@ const generateClient = (
   appDir: string,
   hasParamDict: HasParamsDict,
   clientSpecs: DirSpec[],
+  paramOnlySpecs: DirSpec[],
   { dirPath, spec }: DirSpec,
   basePath: string | undefined,
 ): string => {
@@ -50,6 +52,12 @@ const generateClient = (
       hash: createDirPathHash({ appDir, dirPath: d.dirPath }),
       params: pathToClientParams(appDir, hasParamDict, d.dirPath, d.spec.param),
     }));
+  const childParamOnlyDirs = paramOnlySpecs
+    .filter((d) => d.dirPath.startsWith(`${dirPath}/`))
+    .map((d) => ({
+      import: d.dirPath.replace(`${dirPath}/`, ''),
+      hash: createDirPathHash({ appDir, dirPath: d.dirPath }),
+    }));
   const params = pathToClientParams(appDir, hasParamDict, dirPath, spec.param);
   const relativePath = generateRelativePath({ appDir, dirPath });
   const currentHash = createDirPathHash({ appDir, dirPath });
@@ -60,7 +68,7 @@ const generateClient = (
       ({ importPath, hash }) =>
         `import { frourioSpec as frourioSpec_${hash} } from '${importPath}'`,
     ) ?? []),
-    ...childDirs.map(
+    ...[...childDirs, ...childParamOnlyDirs].map(
       (child) =>
         `import { frourioSpec as frourioSpec_${child.hash} } from './${child.import}/frourio'`,
     ),

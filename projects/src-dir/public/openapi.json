@@ -10,7 +10,6 @@
     }
   ],
   "paths": {
-    "/blog/{slug}": {},
     "/{a}/arrayBuffer": {
       "get": {
         "parameters": [
@@ -159,12 +158,12 @@
           "byteLength": {
             "type": "number"
           },
-          "__@toStringTag@15101": {
+          "__@toStringTag@15317": {
             "type": "string"
           }
         },
         "required": [
-          "__@toStringTag@15101",
+          "__@toStringTag@15317",
           "byteLength"
         ]
       },

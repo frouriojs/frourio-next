@@ -64,7 +64,7 @@ const methods_uq501x = (option?: FrourioClientOption) => ({
       {
         method: 'POST',
         ...option?.init,
-        body: JSON.stringify(parsedBody.data),
+        body: parsedBody.data,
         ...req.init,
         headers: { ...option?.init?.headers, 'content-type': 'application/octet-stream', ...req.init?.headers },
       }

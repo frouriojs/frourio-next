@@ -64,7 +64,7 @@ const methods_bfn325 = (option?: FrourioClientOption) => ({
       {
         method: 'POST',
         ...option?.init,
-        body: JSON.stringify(parsedBody.data),
+        body: parsedBody.data,
         ...req.init,
         headers: { ...option?.init?.headers, 'content-type': 'text/plain', ...req.init?.headers },
       }

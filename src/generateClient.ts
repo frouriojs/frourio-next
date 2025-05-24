@@ -451,7 +451,7 @@ ${
           method.body?.isFormData
             ? '\n        body: formData,'
             : method.body
-              ? '\n        body: JSON.stringify(parsedBody.data),'
+              ? `\n        body: ${method.body.type === 'json' ? 'JSON.stringify(parsedBody.data)' : 'parsedBody.data'},`
               : ''
         }
         ...req${params || method.hasHeaders || method.query || method.body ? '' : '?'}.init,

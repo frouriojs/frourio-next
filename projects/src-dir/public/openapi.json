@@ -11,7 +11,7 @@
   ],
   "paths": {
     "/{a}/arrayBuffer": {
-      "get": {
+      "post": {
         "parameters": [
           {
             "name": "a",
@@ -22,6 +22,15 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArrayBuffer"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "",
@@ -37,7 +46,7 @@
       }
     },
     "/{a}/blob": {
-      "get": {
+      "post": {
         "parameters": [
           {
             "name": "a",
@@ -48,6 +57,15 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Blob"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "",
@@ -63,7 +81,7 @@
       }
     },
     "/{a}/text": {
-      "get": {
+      "post": {
         "parameters": [
           {
             "name": "a",
@@ -74,6 +92,15 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "",
@@ -141,17 +168,6 @@
   },
   "components": {
     "schemas": {
-      "12qbo1n": {
-        "type": "object",
-        "properties": {
-          "body": {
-            "$ref": "#/components/schemas/ArrayBuffer"
-          }
-        },
-        "required": [
-          "body"
-        ]
-      },
       "ArrayBuffer": {
         "type": "object",
         "properties": {
@@ -167,11 +183,11 @@
           "byteLength"
         ]
       },
-      "24ay5f": {
+      "12qbo1n": {
         "type": "object",
         "properties": {
           "body": {
-            "$ref": "#/components/schemas/Blob"
+            "$ref": "#/components/schemas/ArrayBuffer"
           }
         },
         "required": [
@@ -194,6 +210,17 @@
         "required": [
           "size",
           "type"
+        ]
+      },
+      "24ay5f": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "$ref": "#/components/schemas/Blob"
+          }
+        },
+        "required": [
+          "body"
         ]
       },
       "1ycd0h9": {

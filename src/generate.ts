@@ -21,8 +21,8 @@ export type MethodInfo = {
   hasHeaders: boolean;
   query: PropOption[] | null;
   body:
-    | { isFormData: true; data: PropOption[] | null }
-    | { isFormData: false; data?: undefined }
+    | { isFormData: true; data: PropOption[] }
+    | { isFormData: false; type: 'text' | 'json' | 'arrayBuffer' | 'blob' }
     | null;
   res:
     | {
@@ -91,6 +91,10 @@ export const generate = async ({ appDir, basePath }: Config): Promise<void> => {
               const queryZodType = querySymbol ? inferZodType(checker, querySymbol) : null;
               const bodySymbol = props.find((p) => p.getName() === 'body');
               const bodyZodType = bodySymbol ? inferZodType(checker, bodySymbol) : null;
+              const bodyType =
+                bodyZodType?.valueDeclaration &&
+                checker.getTypeOfSymbolAtLocation(bodyZodType, bodyZodType.valueDeclaration);
+              const blobType = getGlobalType('Blob', checker);
               const res = props.find((p) => p.getName() === 'res');
               const resType =
                 res?.valueDeclaration &&
@@ -102,8 +106,20 @@ export const generate = async ({ appDir, basePath }: Config): Promise<void> => {
                 query: queryZodType ? getPropOptions(checker, queryZodType) : null,
                 body: props.some((p) => p.getName() === 'body')
                   ? props.some((p) => p.getName() === 'format') && bodyZodType
-                    ? { isFormData: true, data: getPropOptions(checker, bodyZodType) }
-                    : { isFormData: false }
+                    ? { isFormData: true, data: getPropOptions(checker, bodyZodType) ?? [] }
+                    : bodyType
+                      ? {
+                          isFormData: false,
+                          type:
+                            bodyType.getSymbol()?.getName() === 'ArrayBuffer'
+                              ? ('arrayBuffer' as const)
+                              : blobType && checker.isTypeAssignableTo(bodyType, blobType)
+                                ? ('blob' as const)
+                                : checker.isTypeAssignableTo(bodyType, checker.getStringType())
+                                  ? ('text' as const)
+                                  : ('json' as const),
+                        }
+                      : null
                   : null,
                 res: resType
                   ?.getProperties()
@@ -125,7 +141,6 @@ export const generate = async ({ appDir, basePath }: Config): Promise<void> => {
                         resBodyZodType,
                         resBodyZodType.valueDeclaration,
                       );
-                    const blobType = getGlobalType('Blob', checker);
 
                     return {
                       status: s.getName(),

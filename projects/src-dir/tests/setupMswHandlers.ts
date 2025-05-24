@@ -9,23 +9,23 @@ export function setupMswHandlers(option?: { baseURL: string }): RequestHandler[]
   const baseURL = option?.baseURL.replace(/\/$/, '') ?? '';
 
   return [
-    http.get(`${baseURL}/:a/arrayBuffer`, ({ request }) => {
+    http.post(`${baseURL}/:a/arrayBuffer`, ({ request }) => {
       const pathChunks = request.url.replace(baseURL || /https?:\/\/[^/]+/, '').split('/');
       const params = { 'a': `${pathChunks[1]}` };
 
-      return route_og4f3x.GET(request, { params: Promise.resolve(params) });
+      return route_og4f3x.POST(request, { params: Promise.resolve(params) });
     }),
-    http.get(`${baseURL}/:a/blob`, ({ request }) => {
+    http.post(`${baseURL}/:a/blob`, ({ request }) => {
       const pathChunks = request.url.replace(baseURL || /https?:\/\/[^/]+/, '').split('/');
       const params = { 'a': `${pathChunks[1]}` };
 
-      return route_uq501x.GET(request, { params: Promise.resolve(params) });
+      return route_uq501x.POST(request, { params: Promise.resolve(params) });
     }),
-    http.get(`${baseURL}/:a/text`, ({ request }) => {
+    http.post(`${baseURL}/:a/text`, ({ request }) => {
       const pathChunks = request.url.replace(baseURL || /https?:\/\/[^/]+/, '').split('/');
       const params = { 'a': `${pathChunks[1]}` };
 
-      return route_bfn325.GET(request, { params: Promise.resolve(params) });
+      return route_bfn325.POST(request, { params: Promise.resolve(params) });
     }),
     http.post(`${baseURL}/api`, ({ request }) => {
       return route_36xt6y.POST(request);

@@ -456,7 +456,16 @@ ${
         }
         ...req${params || method.hasHeaders || method.query || method.body ? '' : '?'}.init,
         headers: { ...option?.init?.headers, ${
-          method.body?.isFormData === false ? "'content-type': 'application/json', " : ''
+          method.body?.isFormData === false
+            ? `'content-type': '${
+                {
+                  text: 'text/plain',
+                  json: 'application/json',
+                  arrayBuffer: 'application/octet-stream',
+                  blob: 'application/octet-stream',
+                }[method.body.type]
+              }', `
+            : ''
         }${method.hasHeaders ? '...parsedHeaders.data as HeadersInit, ' : ''}...req${
           params || method.hasHeaders || method.query || method.body ? '' : '?'
         }.init?.headers },

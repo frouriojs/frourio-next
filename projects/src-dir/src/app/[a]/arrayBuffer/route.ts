@@ -1,7 +1,7 @@
 import { createRoute } from './frourio.server';
 
-export const { GET } = createRoute({
-  get: async () => {
-    return { status: 200, body: new ArrayBuffer(128) };
+export const { POST } = createRoute({
+  post: async ({ body }) => {
+    return { status: 200, body };
   },
 });

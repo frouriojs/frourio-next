@@ -203,7 +203,7 @@ ${m.query
       m.body && [
         'body',
         `frourioSpec.${m.name}.body.safeParse(${
-          m.body.data
+          m.body.isFormData
             ? `
         Object.fromEntries(
           [
@@ -221,7 +221,7 @@ ${m.body.data
   .join('\n')}
           ].filter(entry => entry[1] !== undefined),
         ),\n      `
-            : 'await req.json().catch(() => undefined)'
+            : `await req.${m.body.type}().catch(() => undefined)`
         })`,
       ],
     ].filter((r) => !!r);

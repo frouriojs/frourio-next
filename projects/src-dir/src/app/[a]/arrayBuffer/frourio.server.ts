@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { frourioSpec } from './frourio';
-import type { GET } from './route';
+import type { POST } from './route';
 
-type RouteChecker = [typeof GET];
+type RouteChecker = [typeof POST];
 
 export const paramsSchema = z.object({ 'a': z.string() });
 
@@ -12,14 +12,15 @@ type ParamsType = z.infer<typeof paramsSchema>;
 type SpecType = typeof frourioSpec;
 
 type Controller = {
-  get: (
+  post: (
     req: {
       params: ParamsType;
+      body: z.infer<SpecType['post']['body']>;
     },
   ) => Promise<
     | {
         status: 200;
-        body: z.infer<SpecType['get']['res'][200]['body']>;
+        body: z.infer<SpecType['post']['res'][200]['body']>;
       }
   >;
 };
@@ -31,7 +32,7 @@ type NextParams<T extends Record<string, unknown>> = {
 type MethodHandler = (req: NextRequest | Request, option: { params: Promise<NextParams<ParamsType>> }) => Promise<NextResponse>;
 
 type ResHandler = {
-  GET: MethodHandler
+  POST: MethodHandler
 };
 
 export const createRoute = (controller: Controller): ResHandler => {
@@ -50,12 +51,16 @@ export const createRoute = (controller: Controller): ResHandler => {
   };
 
   return {
-    GET: middleware(async ({ req, params }) => {
-      const res = await controller.get({ params });
+    POST: middleware(async ({ req, params }) => {
+      const body = frourioSpec.post.body.safeParse(await req.arrayBuffer().catch(() => undefined));
+
+      if (body.error) return createReqErr(body.error);
+
+      const res = await controller.post({ body: body.data, params });
 
       switch (res.status) {
         case 200: {
-          const body = frourioSpec.get.res[200].body.safeParse(res.body);
+          const body = frourioSpec.post.res[200].body.safeParse(res.body);
 
           if (body.error) return createResErr();
 

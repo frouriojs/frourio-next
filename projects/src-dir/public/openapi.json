@@ -24,7 +24,7 @@
         ],
         "requestBody": {
           "content": {
-            "application/json": {
+            "application/octet-stream": {
               "schema": {
                 "$ref": "#/components/schemas/ArrayBuffer"
               }
@@ -35,7 +35,7 @@
           "200": {
             "description": "",
             "content": {
-              "application/json": {
+              "application/octet-stream": {
                 "schema": {
                   "$ref": "#/components/schemas/ArrayBuffer"
                 }
@@ -59,7 +59,7 @@
         ],
         "requestBody": {
           "content": {
-            "application/json": {
+            "application/octet-stream": {
               "schema": {
                 "$ref": "#/components/schemas/Blob"
               }
@@ -70,7 +70,7 @@
           "200": {
             "description": "",
             "content": {
-              "application/json": {
+              "application/octet-stream": {
                 "schema": {
                   "$ref": "#/components/schemas/Blob"
                 }
@@ -94,7 +94,7 @@
         ],
         "requestBody": {
           "content": {
-            "application/json": {
+            "text/plain": {
               "schema": {
                 "type": "string"
               }
@@ -105,7 +105,7 @@
           "200": {
             "description": "",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
                   "type": "string"
                 }

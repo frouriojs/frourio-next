@@ -255,7 +255,13 @@ type AllParams = [${hasParamsDirs.map((_, i) => `z.infer<typeof paramsSchema${i}
 
       const reqContentType =
         ((headersDef?.properties?.['content-type'] as TJS.Definition)?.const as string) ??
-        (reqFormat === 'formData' ? 'multipart/form-data' : 'application/json');
+        (reqFormat === 'formData'
+          ? 'multipart/form-data'
+          : props.body?.$ref?.includes('Blob') || props.body?.$ref?.includes('ArrayBuffer')
+            ? 'application/octet-stream'
+            : typeof props.body?.type === 'string' && props.body.type === 'string'
+              ? 'text/plain'
+              : 'application/json');
 
       const resDef =
         props.res &&
@@ -291,7 +297,19 @@ type AllParams = [${hasParamsDirs.map((_, i) => `z.infer<typeof paramsSchema${i}
                   ((statusDef.properties as Record<string, TJS.Definition>)?.format?.const ===
                   'formData'
                     ? 'multipart/form-data'
-                    : 'application/json');
+                    : (
+                          statusDef.properties as Record<string, TJS.Definition>
+                        )?.body?.$ref?.includes('Blob') ||
+                        (
+                          statusDef.properties as Record<string, TJS.Definition>
+                        )?.body?.$ref?.includes('ArrayBuffer')
+                      ? 'application/octet-stream'
+                      : typeof (statusDef.properties as Record<string, TJS.Definition>)?.body
+                            ?.type === 'string' &&
+                          (statusDef.properties as Record<string, TJS.Definition>)?.body?.type ===
+                            'string'
+                        ? 'text/plain'
+                        : 'application/json');
 
                 return {
                   ...dict,

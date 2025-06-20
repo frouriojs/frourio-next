@@ -845,7 +845,7 @@ const paramsSchema_13e9lnf = z.object({ 'y': z.string() });
 
 const paramsSchema_knqmrp = z.object({ 'a': frourioSpec_knqmrp.param });
 
-const paramsSchema_2ijh4e = z.object({ 'a': frourioSpec_knqmrp.param, 'b': z.string(), 'c': z.array(z.string()) });
+const paramsSchema_2ijh4e = z.object({ 'a': frourioSpec_knqmrp.param, 'b': z.string(), 'c': z.tuple([z.string()]).rest(z.string()) });
 
 const paramsSchema_1yzfjrp = z.object({ 'a': frourioSpec_knqmrp.param, 'b': z.string() });
 

@@ -31,7 +31,7 @@ export const fc_2ijh4e = fc;
 
 export const $fc_2ijh4e = $fc;
 
-const paramsSchema_2ijh4e = z.object({ 'a': frourioSpec_knqmrp.param, 'b': z.string(), 'c': z.array(z.string()) });
+const paramsSchema_2ijh4e = z.object({ 'a': frourioSpec_knqmrp.param, 'b': z.string(), 'c': z.tuple([z.string()]).rest(z.string()) });
 
 const $url_2ijh4e = (option?: FrourioClientOption) => ({
   post(req: { params: z.infer<typeof paramsSchema_2ijh4e> }): { isValid: true; data: string; reason?: undefined } | { isValid: false, data?: undefined; reason: z.ZodError } {

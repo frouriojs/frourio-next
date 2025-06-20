@@ -114,7 +114,7 @@ export const clientParamsToText = (hash: string, params: ClientParamsInfo): stri
             params.current.param
               ? `frourioSpec_${hash}.param`
               : params.current.array
-                ? `z.array(z.string())${params.current.array.isOptional ? '.optional()' : ''}`
+                ? `z.tuple([z.string()]).rest(z.string())${params.current.array.isOptional ? '.optional()' : ''}`
                 : 'z.string()'
           }`,
         ]

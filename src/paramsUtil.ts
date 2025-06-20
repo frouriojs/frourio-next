@@ -91,7 +91,7 @@ export const paramsToText = (params: ParamsInfo): string => {
   const ancestor = 'ancestorParamsSchema';
   const paramText = 'frourioSpec.param';
   const current = params.current
-    ? `z.object({ '${params.current.name}': ${params.current.param ? (params.current.param.typeName === 'number' ? (params.current.param.isArray ? `paramToNumArr(${paramText})` : `paramToNum(${paramText})`) : paramText) : params.current.array ? `z.array(z.string())${params.current.array.isOptional ? '.optional()' : ''}` : 'z.string()'} })`
+    ? `z.object({ '${params.current.name}': ${params.current.param ? (params.current.param.typeName === 'number' ? (params.current.param.isArray ? `paramToNumArr(${paramText})` : `paramToNum(${paramText})`) : paramText) : params.current.array ? `z.tuple([z.string()]).rest(z.string())${params.current.array.isOptional ? '.optional()' : ''}` : 'z.string()'} })`
     : '';
   const middles = `z.object({ ${params.middleNames.map((middle) => `'${middle}': z.string()`).join(', ')} })`;
 

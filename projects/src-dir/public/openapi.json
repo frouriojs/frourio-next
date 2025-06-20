@@ -174,12 +174,12 @@
           "byteLength": {
             "type": "number"
           },
-          "__@toStringTag@15317": {
+          "__@toStringTag@15327": {
             "type": "string"
           }
         },
         "required": [
-          "__@toStringTag@15317",
+          "__@toStringTag@15327",
           "byteLength"
         ]
       },

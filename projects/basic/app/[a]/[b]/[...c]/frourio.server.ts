@@ -8,7 +8,7 @@ import type { POST, middleware } from './route';
 
 type RouteChecker = [typeof POST, typeof middleware];
 
-export const paramsSchema = z.object({ 'c': z.array(z.string()) }).and(ancestorParamsSchema).and(z.object({ 'b': z.string() }));
+export const paramsSchema = z.object({ 'c': z.tuple([z.string()]).rest(z.string()) }).and(ancestorParamsSchema).and(z.object({ 'b': z.string() }));
 
 type ParamsType = z.infer<typeof paramsSchema>;
 

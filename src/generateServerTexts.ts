@@ -190,7 +190,7 @@ ${methods
       m.query && [
         'query',
         `frourioSpec.${m.name}.query.safeParse({
-${m.query
+${m.query.props
   .map((p) => {
     const fn = `req.nextUrl.searchParams.get${p.isArray ? 'All' : ''}('${p.name}')${p.isArray ? '' : ' ?? undefined'}`;
     const wrapped = `${p.typeName === 'string' ? '' : `queryTo${p.typeName === 'number' ? 'Num' : 'Bool'}${p.isArray ? 'Arr' : ''}(`}${fn}${p.typeName === 'string' ? '' : ')'}`;
@@ -293,11 +293,11 @@ ${m.res
   ].filter((txt) => txt !== undefined && txt !== false);
 
   const suffixes: string[] = [
-    methods.some((m) => m.query?.some((q) => q.typeName === 'number')) && queryToNumText,
-    methods.some((m) => m.query?.some((q) => q.typeName === 'number' && q.isArray)) &&
+    methods.some((m) => m.query?.props.some((q) => q.typeName === 'number')) && queryToNumText,
+    methods.some((m) => m.query?.props.some((q) => q.typeName === 'number' && q.isArray)) &&
       queryToNumArrText,
-    methods.some((m) => m.query?.some((q) => q.typeName === 'boolean')) && queryToBoolText,
-    methods.some((m) => m.query?.some((q) => q.typeName === 'boolean' && q.isArray)) &&
+    methods.some((m) => m.query?.props.some((q) => q.typeName === 'boolean')) && queryToBoolText,
+    methods.some((m) => m.query?.props.some((q) => q.typeName === 'boolean' && q.isArray)) &&
       queryToBoolArrText,
     methods.some((m) => m.body?.isFormData && m.body.data?.some((b) => b.typeName === 'number')) &&
       formDataToNumText,

@@ -165,13 +165,13 @@ const generateLowLevel$build = (
   return getMethod
     ? hasMethodReqKeys(getMethod, params)
       ? `
-${indent}  $build(req: Parameters<ReturnType<typeof methods_${hash}>['$get']>[0] | null): [
+${indent}  $build(req${getMethod.query?.isOptional ? '?' : ''}: Parameters<ReturnType<typeof methods_${hash}>['$get']>[0] | null): [
 ${indent}    key: { lowLevel: true; baseURL: FrourioClientOption['baseURL']; dir: string } & Omit<Parameters<ReturnType<typeof methods_${hash}>['$get']>[0], 'init'> | null,
 ${indent}    fetcher: () => Promise<NonNullable<Awaited<ReturnType<ReturnType<typeof methods_${hash}>['$get']>>>>,
 ${indent}  ] {
 ${indent}    if (req === null) return [null, () => Promise.reject(new Error('Fetcher is disabled.'))];
 
-${indent}    const { init, ...rest } = req;
+${indent}    const { init, ...rest } = req${getMethod.query?.isOptional ? ' ?? {}' : ''};
 
 ${indent}    return [{ lowLevel: true, baseURL: option?.baseURL, dir: '${relativePath || '/'}', ...rest }, () => methods_${hash}(option).$get(req)];
 ${indent}  },`
@@ -194,7 +194,7 @@ const generateHighLevel$url = (
   return `${indent}  $url: {${methods
     .map(
       (method) => `
-${indent}    ${method.name}(${hasMethodReqKeys(method, params) ? `req: Parameters<ReturnType<typeof $url_${hash}>['${method.name}']>[0]` : ''}): string {
+${indent}    ${method.name}(${hasMethodReqKeys(method, params) ? `req${method.query?.isOptional ? '?' : ''}: Parameters<ReturnType<typeof $url_${hash}>['${method.name}']>[0]` : ''}): string {
 ${indent}      const result = $url_${hash}(option).${method.name}(${hasMethodReqKeys(method, params) ? 'req' : ''});
 
 ${indent}      if (!result.isValid) throw result.reason;
@@ -235,13 +235,13 @@ const generateHighLevelMethods = (
         method.name === 'get'
           ? hasMethodReqKeys(method, params)
             ? `
-${indent}  $build(req: Parameters<ReturnType<typeof methods_${hash}>['$get']>[0] | null): [
+${indent}  $build(req${method.query?.isOptional ? '?' : ''}: Parameters<ReturnType<typeof methods_${hash}>['$get']>[0] | null): [
 ${indent}    key: { lowLevel: false; baseURL: FrourioClientOption['baseURL']; dir: string } & Omit<Parameters<ReturnType<typeof methods_${hash}>['$get']>[0], 'init'> | null,
 ${indent}    fetcher: () => Promise<${resType}>,
 ${indent}  ] {
 ${indent}    if (req === null) return [null, () => Promise.reject(new Error('Fetcher is disabled.'))];
 
-${indent}    const { init, ...rest } = req;
+${indent}    const { init, ...rest } = req${method.query?.isOptional ? ' ?? {}' : ''};
 
 ${indent}    return [{ lowLevel: false, baseURL: option?.baseURL, dir: '${relativePath || '/'}', ...rest }, () => $${CLIENT_NAME}(option)${propKey ? `['${propKey}']` : ''}.$get(req)];
 ${indent}  },`
@@ -289,10 +289,12 @@ const generateUrlFn = (
   .map(
     (method) => `\n  ${method.name}(${
       params || method.query
-        ? `req: { ${[
+        ? `req${params || method.query?.isOptional === false ? '' : '?'}: { ${[
             ...(params ? [`params: z.infer<typeof paramsSchema_${hash}>`] : []),
             ...(method.query
-              ? [`query: z.infer<typeof frourioSpec_${hash}.${method.name}.query>`]
+              ? [
+                  `query${method.query.isOptional ? '?' : ''}: z.infer<typeof frourioSpec_${hash}.${method.name}.query>`,
+                ]
               : []),
           ].join(',')} }`
         : ''
@@ -305,11 +307,30 @@ ${
     : ''
 }${
       method.query
-        ? `    const parsedQuery = frourioSpec_${hash}.${method.name}.query.safeParse(req.query);
+        ? `    const parsedQuery = frourioSpec_${hash}.${method.name}.query.safeParse(req${method.query.isOptional ? '?' : ''}.query);
 
     if (!parsedQuery.success) return { isValid: false, reason: parsedQuery.error };
 
-    const searchParams = new URLSearchParams();
+    ${
+      method.query.isOptional
+        ? `let searchParams: URLSearchParams | undefined = undefined;
+
+    if (parsedQuery.data !== undefined) {
+      const sp = new URLSearchParams();
+
+      Object.entries(parsedQuery.data).forEach(([key, value]) => {
+        if (value === undefined) return;
+
+        if (Array.isArray(value)) {
+          value.forEach(item => sp.append(key, item.toString()));
+        } else {
+          sp.append(key, value.toString());
+        }
+      });
+
+      searchParams = sp;
+    }`
+        : `const searchParams = new URLSearchParams();
 
     Object.entries(parsedQuery.data).forEach(([key, value]) => {
       if (value === undefined) return;
@@ -319,7 +340,8 @@ ${
       } else {
         searchParams.append(key, value.toString());
       }
-    });\n\n`
+    });`
+    }\n\n`
         : ''
     }    return { isValid: true, data: \`\${option?.baseURL?.replace(/\\/$/, '') ?? ''}${
       params
@@ -331,7 +353,13 @@ ${
             .replace(/\[\.\.\.(.+?)\]/, "${parsedParams.data.$1.join('/')}")
             .replace(/\[(.+?)\]/g, '${parsedParams.data.$1}')
         : apiPath
-    }${method.query ? `?\${searchParams.toString()}` : ''}\` };
+    }${
+      method.query === null
+        ? ''
+        : method.query.isOptional
+          ? `\${searchParams ? \`?\${searchParams.toString()}\`: ''}`
+          : `?\${searchParams.toString()}`
+    }\` };
   },`,
   )
   .join('')}
@@ -345,14 +373,16 @@ const generateMethodsFn = (
   return `(option?: FrourioClientOption) => ({${methods
     .map((method) => {
       return `\n  async $${method.name}(req${
-        params || method.hasHeaders || method.query || method.body ? '' : '?'
+        params || method.hasHeaders || method.query?.isOptional === false || method.body ? '' : '?'
       }: { ${[
         ...(params ? [`params: z.infer<typeof paramsSchema_${hash}>`] : []),
         ...(method.hasHeaders
           ? [`headers: z.infer<typeof frourioSpec_${hash}.${method.name}.headers>`]
           : []),
         ...(method.query
-          ? [`query: z.infer<typeof frourioSpec_${hash}.${method.name}.query>`]
+          ? [
+              `query${method.query.isOptional ? '?' : ''}: z.infer<typeof frourioSpec_${hash}.${method.name}.query>`,
+            ]
           : []),
         ...(method.body ? [`body: z.infer<typeof frourioSpec_${hash}.${method.name}.body>`] : []),
         'init?: RequestInit',
@@ -454,7 +484,7 @@ ${
               ? `\n        body: ${method.body.type === 'json' ? 'JSON.stringify(parsedBody.data)' : 'parsedBody.data'},`
               : ''
         }
-        ...req${params || method.hasHeaders || method.query || method.body ? '' : '?'}.init,
+        ...req${params || method.hasHeaders || method.query?.isOptional === false || method.body ? '' : '?'}.init,
         headers: { ...option?.init?.headers, ${
           method.body?.isFormData === false
             ? `'content-type': '${
@@ -467,7 +497,9 @@ ${
               }', `
             : ''
         }${method.hasHeaders ? '...parsedHeaders.data as HeadersInit, ' : ''}...req${
-          params || method.hasHeaders || method.query || method.body ? '' : '?'
+          params || method.hasHeaders || method.query?.isOptional === false || method.body
+            ? ''
+            : '?'
         }.init?.headers },
       }
     ).then(res => ({ success: true, res } as const)).catch(error => ({ success: false, error }));

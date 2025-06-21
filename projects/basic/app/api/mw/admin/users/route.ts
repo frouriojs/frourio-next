@@ -21,7 +21,7 @@ export const { middleware, GET } = createRoute({
     console.log('GET Handler (/api/mw/admin/users): Received query:', query);
 
     const users = ['user1', 'user2', 'admin1'];
-    const filteredUsers = query.role
+    const filteredUsers = query?.role
       ? users.filter((u) => u.includes(query.role as string))
       : users;
 

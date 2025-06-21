@@ -18,7 +18,8 @@ export const getPropOptions = (checker: ts.TypeChecker, target: ts.Symbol): Prop
 
   if (!type) return null;
 
-  return type
+  return checker
+    .getNonNullableType(type)
     .getProperties()
     .map((p) =>
       target.valueDeclaration

@@ -19,7 +19,7 @@ export type MiddlewareDict = Record<string, { hasCtx: boolean } | undefined>;
 export type MethodInfo = {
   name: string;
   hasHeaders: boolean;
-  query: PropOption[] | null;
+  query: { isOptional: boolean; props: PropOption[] } | null;
   body:
     | { isFormData: true; data: PropOption[] }
     | { isFormData: false; type: 'text' | 'json' | 'arrayBuffer' | 'blob' }
@@ -103,7 +103,24 @@ export const generate = async ({ appDir, basePath }: Config): Promise<void> => {
               return {
                 name: t.getName(),
                 hasHeaders: props.some((p) => p.getName() === 'headers'),
-                query: queryZodType ? getPropOptions(checker, queryZodType) : null,
+                query: queryZodType
+                  ? {
+                      isOptional: (() => {
+                        if (!queryZodType.valueDeclaration) return false;
+
+                        const zodType = checker.getTypeOfSymbolAtLocation(
+                          queryZodType,
+                          queryZodType.valueDeclaration,
+                        );
+
+                        return (
+                          zodType.isUnion() &&
+                          zodType.types.some((t) => t.flags & ts.TypeFlags.Undefined)
+                        );
+                      })(),
+                      props: getPropOptions(checker, queryZodType) ?? [],
+                    }
+                  : null,
                 body: props.some((p) => p.getName() === 'body')
                   ? props.some((p) => p.getName() === 'format') && bodyZodType
                     ? { isFormData: true, data: getPropOptions(checker, bodyZodType) ?? [] }
